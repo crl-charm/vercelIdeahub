@@ -113,6 +113,12 @@
 <!-- IdeaHub Toast Container -->
 <div id="ih-toast-container"></div>
 
+<!-- Vercel Web Analytics -->
+<script type="module">
+  import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@2/dist/index.mjs';
+  inject();
+</script>
+
 <script>
 function showToast(message, type) {
   type = type || "success";
