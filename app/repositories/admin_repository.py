@@ -31,6 +31,9 @@ class AdminRepository:
     def delete_staff_attendance(self, user_id: int) -> None:
         StaffAttendance.query.filter_by(user_id=user_id).delete()
 
+    def clear_user_orders(self, user_id: int) -> None:
+        Order.query.filter_by(handled_by=user_id).update({"handled_by": None})
+
     def list_customer_sessions(self) -> list[CustomerSession]:
         return (
             CustomerSession.query.options(

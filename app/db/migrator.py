@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 from sqlalchemy import text
+from app.models.idea import Idea, IdeaVote
+from app.models.finance import FinanceBudget, FinanceTransaction
+from app.models.management import Department
+from app.models.soft_balance import SoftBalanceEntry
+from app.models.space_price_history import SpacePriceHistory
 
 
 class SchemaMigrator:
@@ -12,6 +17,7 @@ class SchemaMigrator:
 
     def run(self) -> None:
         db = self._db
+        _ = (Idea, IdeaVote, FinanceBudget, FinanceTransaction, Department, SoftBalanceEntry, SpacePriceHistory)
         db.create_all()
         checks = [
             (
@@ -69,6 +75,11 @@ class SchemaMigrator:
                 "space_types",
                 "qr_token",
                 "ALTER TABLE space_types ADD COLUMN qr_token VARCHAR(50) NULL UNIQUE",
+            ),
+            (
+                "staff_performance_logs",
+                "customers_served",
+                "ALTER TABLE staff_performance_logs ADD COLUMN customers_served INT NOT NULL DEFAULT 0",
             ),
         ]
         for table_name, column_name, ddl in checks:

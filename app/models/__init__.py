@@ -1,5 +1,6 @@
 from .user import User
 from .space_type import SpaceType
+from .space_price_history import SpacePriceHistory
 from .customer_session import CustomerSession
 from .menu_item import MenuItem
 from .order import Order
@@ -14,3 +15,8 @@ from .expense import Expense
 from .staff_performance import StaffPerformanceLog
 from .daily_sales_report import DailySalesReport
 from .reservation import Reservation
+from .soft_balance import SoftBalanceEntry
+from .base_model import BaseModel
+from .management import Department, UserRole
+from .idea import Idea, IdeaVote
+from .finance import FinanceBudget, FinanceTransaction

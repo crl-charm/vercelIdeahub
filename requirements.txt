@@ -1,8 +1,14 @@
 Flask
 Flask-SQLAlchemy
 Flask-SocketIO
+Flask-WTF
+Flask-Limiter
+Flask-CORS
 PyMySQL
 SQLAlchemy
 bcrypt
 weasyprint
 qrcode
+Pillow
+python-dotenv
+openpyxl

@@ -48,7 +48,7 @@
             <td>₱{{ "%.2f"|format(exp.amount) }}</td>
             <td>{{ exp.logged_by }}</td>
             <td>
-              <button class="btn btn-sm btn-danger" onclick="deleteExpense({{ exp.id }})">Delete</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteExpense('{{ exp.id }}')">Delete</button>
             </td>
           </tr>
           {% endfor %}
@@ -103,6 +103,27 @@
 
 {% block scripts %}
 <script>
+// Socket.IO for real-time updates
+const socket = io();
+
+socket.on('expenses_update', function(data) {
+  console.log('Expenses update:', data);
+  loadExpenses();
+  if (data.event === 'create') {
+    showToast('✓ New expense logged!', 'success');
+  } else if (data.event === 'delete') {
+    showToast('✓ Expense deleted!', 'success');
+  }
+});
+
+socket.on('connect', function() {
+  console.log('Connected to server for real-time updates');
+});
+
+socket.on('disconnect', function() {
+  console.log('Disconnected from server');
+});
+
 document.addEventListener('DOMContentLoaded', function() {
   loadExpenses();
 });
@@ -139,7 +160,7 @@ function createExpense() {
     expense_date: document.getElementById('expenseDate').value,
   };
 
-  fetch('/admin/expenses/api/expenses', {
+  csrfFetch('/admin/expenses/api/expenses', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -160,7 +181,7 @@ function createExpense() {
 
 function deleteExpense(expId) {
   if (!confirm('Delete this expense?')) return;
-  fetch(`/admin/expenses/api/expenses/${expId}`, { method: 'DELETE' })
+  csrfFetch(`/admin/expenses/api/expenses/${expId}`, { method: 'DELETE' })
     .then(r => r.json()).then(data => {
       if (data.success) {
         showToast('Expense deleted', 'success');

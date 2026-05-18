@@ -3,6 +3,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 from app.models import MenuItem, SpaceType
+from app.models.user import User
+from app.models.management import Department
+from app.models.finance import FinanceBudget
+from app.models.idea import Idea
 
 
 class DatabaseSeeder:
@@ -101,3 +105,41 @@ class DatabaseSeeder:
         if to_add:
             db.session.add_all(to_add)
         db.session.commit()
+
+        if not User.query.filter_by(username="admin").first():
+            admin = User(full_name="System Admin", username="admin", role="admin", job_role="admin")
+            admin.set_password("admin123")
+            db.session.add(admin)
+            db.session.commit()
+
+        for dept_name in ("Operations", "Finance", "Technology"):
+            if not Department.query.filter_by(_name=dept_name).first():
+                db.session.add(Department(_name=dept_name))
+        db.session.commit()
+
+        if FinanceBudget.query.count() == 0:
+            db.session.add(FinanceBudget(_name="Main Budget", _total_budget=Decimal("0.00"), _allocated=Decimal("0.00")))
+            db.session.commit()
+
+        if Idea.query.count() == 0:
+            owner = User.query.filter_by(username="admin").first()
+            departments = Department.query.order_by(Department.id.asc()).all()
+            sample = [
+                ("Queue Improvement", "Improve checkout queue handoff.", "pending"),
+                ("Self-order Kiosk", "Add guided ordering tablets.", "approved"),
+                ("Supplier Alerts", "Email alert for low stock.", "pending"),
+                ("Expense Auto-tagging", "Auto-categorize finance entries.", "rejected"),
+                ("Loyalty Program", "Points for returning lounge users.", "approved"),
+            ]
+            for idx, (title, desc, status) in enumerate(sample):
+                dept = departments[idx % len(departments)] if departments else None
+                db.session.add(
+                    Idea(
+                        _title=title,
+                        _description=desc,
+                        _status=status,
+                        _user_id=owner.id,
+                        _department_id=dept.id if dept else None,
+                    )
+                )
+            db.session.commit()

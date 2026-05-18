@@ -15,6 +15,12 @@ _service = OrderService(repo=OrderRepository(), notifier=get_notifier())
 # ----------------------------------
 # GET MENU ITEMS
 # ----------------------------------
+@order_bp.route("/menu")
+@login_required
+def menu_page():
+    return render_template("menu.html")
+
+
 @order_bp.route("/api/menu")
 @login_required
 def get_menu():

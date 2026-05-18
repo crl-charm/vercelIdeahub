@@ -355,10 +355,9 @@ function submitBooking() {
     return;
   }
 
-  fetch("/api/book-lounge", {
+  csrfFetch("/api/book-lounge", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(payload)
   })
   .then(r => r.json())
@@ -378,9 +377,8 @@ function submitBooking() {
 }
 
 function startBooking(id) {
-  fetch(`/api/lounge-bookings/${id}/start`, {
-    method: "POST",
-    credentials: "include"
+  csrfFetch(`/api/lounge-bookings/${id}/start`, {
+    method: "POST"
   })
   .then(r => r.json())
   .then(data => {
@@ -431,10 +429,9 @@ function submitExtend() {
     return;
   }
 
-  fetch(`/api/lounge-bookings/${extendBookingId}/extend`, {
+  csrfFetch(`/api/lounge-bookings/${extendBookingId}/extend`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify({ minutes })
   })
   .then(r => r.json())
@@ -457,9 +454,8 @@ function cancelBooking(id) {
     "Cancel Booking",
     "Are you sure you want to cancel this booking?",
     () => {
-      fetch(`/api/lounge-bookings/${id}`, {
-        method: "DELETE",
-        credentials: "include"
+      csrfFetch(`/api/lounge-bookings/${id}`, {
+        method: "DELETE"
       })
       .then(r => r.json())
       .then(data => {

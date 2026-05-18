@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
-from app import socketio
 from app.repositories.menu_repository import MenuRepository
 
 
@@ -17,9 +16,11 @@ class MenuService:
             {
                 "id": item.id,
                 "name": item.name,
+                "description": item.description,
                 "price": float(item.price),
                 "category": item.category,
                 "is_available": item.is_available,
+                "image_url": item.image_url,
             }
             for item in items
         ]
@@ -30,26 +31,38 @@ class MenuService:
             {
                 "id": item.id,
                 "name": item.name,
+                "description": item.description,
                 "price": float(item.price),
                 "category": item.category,
+                "image_url": item.image_url,
             }
             for item in items
         ]
 
-    def create(self, name: str, price: float, category: str) -> dict[str, Any]:
+    def create(self, name: str, price: float, category: str, description: Optional[str] = None, image_url: Optional[str] = None) -> dict[str, Any]:
         item = self.repo.create(name, price, category)
+        if description:
+            item.description = description
+        if image_url:
+            item.image_url = image_url
         self.repo.save()
-        socketio.emit("menu_item_created", {"id": item.id, "name": item.name})
         return {"success": True, "data": {"id": item.id}}
 
     def update(
-        self, item_id: int, name: str, price: float, category: str
+        self, item_id: int, name: Optional[str] = None, price: Optional[float] = None, 
+        category: Optional[str] = None, description: Optional[str] = None, image_url: Optional[str] = None
     ) -> dict[str, Any] | tuple[dict[str, Any], int]:
         success = self.repo.update(item_id, name, price, category)
         if not success:
             return {"error": "Menu item not found"}, 404
+        
+        item = self.repo.get(item_id)
+        if description is not None:
+            item.description = description
+        if image_url:
+            item.image_url = image_url
+        
         self.repo.save()
-        socketio.emit("menu_item_updated", {"id": item_id, "name": name})
         return {"success": True}
 
     def toggle_availability(
@@ -60,10 +73,6 @@ class MenuService:
             return {"error": "Menu item not found"}, 404
         self.repo.save()
         item = self.repo.get(item_id)
-        socketio.emit(
-            "menu_item_updated",
-            {"id": item_id, "is_available": item.is_available},
-        )
         return {"success": True, "is_available": item.is_available}
 
     def delete(self, item_id: int) -> dict[str, Any] | tuple[dict[str, Any], int]:
@@ -71,5 +80,4 @@ class MenuService:
         if not success:
             return {"error": "Menu item not found"}, 404
         self.repo.save()
-        socketio.emit("menu_item_deleted", {"id": item_id})
         return {"success": True}

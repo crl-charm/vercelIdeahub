@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block title %}Expenses - Staff View - IdeaHub{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Expenses Log</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5>All Expenses</h5>
+    </div>
+    <div class="card-body">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Logged By</th>
+          </tr>
+        </thead>
+        <tbody id="expenses-table-body">
+          {% for exp in expenses %}
+          <tr>
+            <td>{{ exp.category }}</td>
+            <td>{{ exp.description }}</td>
+            <td>₱{{ "%.2f"|format(exp.amount) }}</td>
+            <td>{{ exp.expense_date }}</td>
+            <td>{{ exp.logged_by_user.username if exp.logged_by_user else "Unknown" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+  .today-expense td:nth-child(1),
+  .today-expense td:nth-child(2),
+  .today-expense td:nth-child(3),
+  .today-expense td:nth-child(4) {
+    background-color: #ffcccc !important;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadExpenses();
+});
+
+function loadExpenses() {
+  fetch('/expenses-view/api/expenses').then(r => r.json()).then(data => {
+    if (data.success) {
+      const tbody = document.getElementById('expenses-table-body');
+      tbody.innerHTML = '';
+      const today = new Date().toISOString().split('T')[0];
+      data.data.forEach(exp => {
+        const isToday = exp.expense_date === today;
+        const rowClass = isToday ? 'today-expense' : '';
+        tbody.innerHTML += `
+          <tr class="${rowClass}">
+            <td>${exp.category}</td>
+            <td>${exp.description}</td>
+            <td>₱${exp.amount.toFixed(2)}</td>
+            <td>${exp.expense_date}</td>
+            <td>${exp.logged_by_username || 'Unknown'}</td>
+          </tr>
+        `;
+      });
+    }
+  });
+}
+</script>
+{% endblock %}

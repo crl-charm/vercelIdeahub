@@ -5,6 +5,7 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 <title>{% block title %}IdeaHub{% endblock %}</title>
 
@@ -12,6 +13,9 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Socket.IO -->
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <!-- Custom CSS -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -171,13 +175,19 @@
   <a class="btn btn-outline-dark" href="/orders">Orders</a>
   <a class="btn btn-outline-dark" href="/checkout-records">Records</a>
   <a class="btn btn-outline-dark" href="/lounge-booking">Booking</a>
+  {% if session.get("role") in ["admin", "staff"] %}
   <a class="btn btn-outline-dark" href="/admin/inventory">Inventory</a>
-  <a class="btn btn-outline-dark" href="/admin/receivables">Debts</a>
-  <a class="btn btn-outline-dark" href="/admin/daily-balance">Balance</a>
-  <a class="btn btn-outline-dark" href="/admin/expenses">Expenses</a>
-  <a class="btn btn-outline-dark" href="/admin/staff-performance">Staff</a>
   <a class="btn btn-outline-dark" href="/admin/menu">Menu</a>
+  <a class="btn btn-outline-dark" href="/admin/expenses">Expenses</a>
+  <a class="btn btn-outline-dark" href="/admin/receivables">Receivables</a>
+  {% endif %}
+  {% if session.get("role") == "admin" %}
+  <a class="btn btn-outline-dark" href="/admin/daily-balance">Balance</a>
+  <a class="btn btn-outline-dark" href="/admin/staff-performance">Staff</a>
+  <a class="btn btn-outline-dark" href="/analytics">Analytics</a>
+  <a class="btn btn-outline-dark" href="/performance">Performance</a>
   <a class="btn btn-outline-dark" href="/admin/reservations">Reservations</a>
+  {% endif %}
 </div>
 
 <div class="d-flex">
@@ -187,6 +197,12 @@
 
         <!-- NAVIGATION -->
         <div class="sidebar-section-label">Navigation</div>
+
+        {% if session.get("role") == "admin" %}
+        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" style="background-color: #fff3cd; border: 2px solid #ffc107; color: #856404; font-weight: 600;" onclick="window.location.href='/admin'">
+            <i class="bi bi-shield-lock me-2"></i>Admin Panel
+        </button>
+        {% endif %}
 
         <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/dashboard'">
             <i class="bi bi-grid me-2"></i>Dashboard
@@ -221,6 +237,29 @@
             <i class="bi bi-building me-2"></i>Boardroom
         </button>
 
+        <!-- STAFF OPERATIONS (visible to all staff and admin) -->
+        {% if session.get("role") in ["admin", "staff"] %}
+        <div class="sidebar-section-label">Operations</div>
+
+        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/inventory'">
+            <i class="bi bi-boxes me-2"></i>Inventory
+        </button>
+
+        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/menu'">
+            <i class="bi bi-menu-button-wide me-2"></i>Menu
+        </button>
+
+        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/expenses'">
+            <i class="bi bi-wallet2 me-2"></i>Expenses
+        </button>
+
+        <button class="btn w-100 text-start mb-2 sidebar-btn nav-btn" onclick="window.location.href='/admin/receivables'">
+            <i class="bi bi-people me-2"></i>Receivables
+            <span id="debt-badge" class="badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
+        </button>
+        {% endif %}
+
+        {% if session.get("role") == "admin" %}
         <!-- MANAGEMENT -->
         <div class="sidebar-section-label sidebar-collapse-toggle" data-bs-toggle="collapse" data-bs-target="#mgmtLinks">
             <span>Management</span>
@@ -258,7 +297,7 @@
 
             <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/receivables'">
                 <i class="bi bi-people me-2"></i>Receivables
-                <span id="debt-badge" class="badge bg-danger ms-1" style="display:none;">!</span>
+                <span id="debt-badge" class="badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
             </button>
         </div>
 
@@ -273,15 +312,16 @@
                 <i class="bi bi-trophy me-2"></i>Performance
             </button>
 
-            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/analytics'">
+            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/analytics'">
                 <i class="bi bi-graph-up me-2"></i>Analytics
             </button>
         </div>
+        {% endif %}
 
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="content p-3 p-md-4 w-100">
+    <div class="content p-3 p-md-4 w-100" id="main-content">
 
         {% block content %}
         {% endblock %}
@@ -318,6 +358,37 @@ function dismissToast(toast) {
   toast.classList.add("hide");
   setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
 }
+
+/**
+ * CSRF-aware fetch wrapper
+ * Automatically includes CSRF token from meta tag for state-changing requests
+ */
+window.csrfFetch = function(url, options) {
+  options = options || {};
+  
+  // Get CSRF token from meta tag
+  const csrfToken = document.querySelector('meta[name="csrf-token"]');
+  const token = csrfToken ? csrfToken.getAttribute('content') : '';
+  
+  // Initialize headers if not present
+  if (!options.headers) {
+    options.headers = {};
+  }
+  
+  // Add CSRF token for state-changing requests
+  const method = (options.method || 'GET').toUpperCase();
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method) && token) {
+    options.headers['X-CSRFToken'] = token;
+  }
+  
+  // Always include credentials for session/cookie handling
+  if (!('credentials' in options)) {
+    options.credentials = 'include';
+  }
+  
+  return fetch(url, options);
+};
+
 </script>
 
 <script>
@@ -365,30 +436,142 @@ function dismissToast(toast) {
 {% endblock %}
 
 <script>
-  (function setActiveNavigation() {
-    const path = window.location.pathname;
+  (function enableSpaNav() {
+    function extractUrl(el) {
+      if (!el) return null;
+      if (el.tagName === "A") return el.getAttribute("href");
+      const clickText = el.getAttribute("onclick") || "";
+      const match = clickText.match(/href='([^']+)'/);
+      return match ? match[1] : null;
+    }
 
-    document.querySelectorAll(".top-nav-link").forEach(link => {
-      if (path === "/logout") return;
-      const href = link.getAttribute("href");
-      if (href === path || (href === "/orders" && path.startsWith("/orders/"))) {
-        link.classList.add("active");
-      }
-    });
+    async function navigate(url, clickedEl) {
+      if (!url || url.startsWith("#") || url.startsWith("javascript:")) return;
+      window.history.pushState({}, "", url);
+      document.querySelectorAll(".top-nav-link, .nav-btn").forEach((node) => node.classList.remove("active"));
+      if (clickedEl) clickedEl.classList.add("active");
 
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-      const clickText = btn.getAttribute("onclick") || "";
-      const urlMatch = clickText.match(/href='([^']+)'/);
-      if (!urlMatch) return;
-      const btnPath = urlMatch[1].split("?")[0];
-      if (btnPath === path || (path.startsWith(btnPath) && btnPath !== "/dashboard")) {
-        btn.classList.add("active");
+      const sidebar = document.querySelector(".sidebar");
+      if (sidebar) sessionStorage.setItem("navScrollPos", String(sidebar.scrollTop));
+
+      const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }, credentials: "include" });
+      if (!res.ok) {
+        window.location.href = url;
+        return;
       }
+      const html = await res.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const newMain = doc.querySelector("#main-content");
+      const currentMain = document.querySelector("#main-content");
+      if (newMain && currentMain) {
+        currentMain.innerHTML = newMain.innerHTML;
+        window.scrollTo(0, 0);
+      } else {
+        window.location.href = url;
+      }
+    }
+
+    document.querySelectorAll(".top-nav-link, .mobile-quick-nav a, .sidebar .nav-btn, .sidebar .space-btn")
+      .forEach((el) => {
+        el.addEventListener("click", function (e) {
+          // Only intercept links explicitly marked for SPA.
+          // Most admin pages rely on page-level scripts that must run on full load.
+          if (!this.classList.contains("spa-enabled")) return;
+          const url = extractUrl(this);
+          if (!url) return;
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          navigate(url, this).catch(() => { window.location.href = url; });
+        }, true);
+      });
+
+    window.addEventListener("popstate", () => {
+      const pos = sessionStorage.getItem("navScrollPos");
+      const sidebar = document.querySelector(".sidebar");
+      if (pos && sidebar) sidebar.scrollTop = parseInt(pos, 10);
+      navigate(window.location.pathname + window.location.search, null).catch(() => {});
     });
   })();
 </script>
 
 <script>
+  (function setActiveNavigation() {
+    const path = window.location.pathname;
+    const basePath = path.split('?')[0];
+
+    // Set active for top navigation links
+    document.querySelectorAll(".top-nav-link").forEach(link => {
+      if (basePath === "/logout") return;
+      const href = link.getAttribute("href");
+      if (href === basePath || (href === "/orders" && basePath.startsWith("/orders/"))) {
+        link.classList.add("active");
+      } else {
+        link.classList.remove("active");
+      }
+    });
+
+    // Set active for sidebar navigation buttons
+    document.querySelectorAll(".sidebar-btn").forEach(btn => {
+      const clickText = btn.getAttribute("onclick") || "";
+      const urlMatch = clickText.match(/href='([^']*)'|href=\"([^\"]*)\"/);  
+      if (!urlMatch) {
+        btn.classList.remove("active");
+        return;
+      }
+      const btnPath = (urlMatch[1] || urlMatch[2]).split("?")[0];
+      
+      // Check if this button matches current path
+      let isActive = false;
+      if (btnPath === basePath) {
+        isActive = true;
+      } else if (btnPath !== "/dashboard" && basePath.startsWith(btnPath)) {
+        isActive = true;
+      } else if (btnPath === "/dashboard" && basePath === "/dashboard") {
+        isActive = true;
+      }
+      
+      if (isActive) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+  })();
+  
+  // Re-run on page load and when navigating
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+      const evt = new Event('navigationReady');
+      document.dispatchEvent(evt);
+      (function setActiveNavigation() {
+        const path = window.location.pathname;
+        const basePath = path.split('?')[0];
+        document.querySelectorAll(".sidebar-btn").forEach(btn => {
+          const clickText = btn.getAttribute("onclick") || "";
+          const urlMatch = clickText.match(/href='([^']*)'|href=\"([^\"]*)\"/);  
+          if (!urlMatch) {
+            btn.classList.remove("active");
+            return;
+          }
+          const btnPath = (urlMatch[1] || urlMatch[2]).split("?")[0];
+          let isActive = false;
+          if (btnPath === basePath) {
+            isActive = true;
+          } else if (btnPath !== "/dashboard" && basePath.startsWith(btnPath)) {
+            isActive = true;
+          } else if (btnPath === "/dashboard" && basePath === "/dashboard") {
+            isActive = true;
+          }
+          if (isActive) {
+            btn.classList.add("active");
+          } else {
+            btn.classList.remove("active");
+          }
+        });
+      })();
+    }, 100);
+  });
   async function updateOrdersBadge() {
     const badge = document.getElementById("orders-badge");
     if (!badge) return;
@@ -430,24 +613,25 @@ function dismissToast(toast) {
 </script>
 
 <script>
-  /* Poll for overdue receivables and show red dot on sidebar link */
+  /* Poll for unpaid receivables and show count badge on sidebar link */
   (function debtDueNotifier() {
     const alerted = new Set();
     const badge = document.getElementById("debt-badge");
     async function poll() {
       try {
-        const res = await fetch("/admin/receivables/api/due-today", { credentials: "include" });
+        const res = await fetch("/admin/receivables/api/receivables/unpaid", { credentials: "include" });
         if (!res.ok) return;
         const data = await res.json();
         if (!data.success) return;
-        const due = data.data || [];
-        if (due.length > 0 && badge) badge.style.display = "inline-block";
-        due.forEach(rec => {
-          const key = String(rec.id);
-          if (alerted.has(key)) return;
-          alerted.add(key);
-          showToast(`Debt due today: ${rec.customer_name} owes ₱${rec.amount_owed}`, "warning");
-        });
+        const unpaid = data.data || [];
+        if (unpaid.length > 0) {
+          if (badge) {
+            badge.style.display = "inline-block";
+            badge.textContent = unpaid.length;
+          }
+        } else {
+          if (badge) badge.style.display = "none";
+        }
       } catch (_) {}
     }
     window.createSmartPoller(poll, 60000);

@@ -1,0 +1,33 @@
+<div class="container-fluid">
+  <h2 class="mb-3">Performance</h2>
+  <div class="card card-body mb-3">
+    <div>Engagement Rate: {{ "%.2f"|format(engagement_rate) }}</div>
+    <div>Avg Votes per Idea: {{ "%.2f"|format(avg_votes_per_idea) }}</div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card card-body">
+        <h5>Ideas Per User</h5>
+        <ul class="mb-0">
+          {% for item in ideas_per_user %}
+          <li>{{ item.username }}: {{ item.count }}</li>
+          {% else %}
+          <li>No data available.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card card-body">
+        <h5>Top Ideas</h5>
+        <ul class="mb-0">
+          {% for item in top_ideas %}
+          <li>{{ item.title }} ({{ item.votes }} votes)</li>
+          {% else %}
+          <li>No votes yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

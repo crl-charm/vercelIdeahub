@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request, render_template, session
 from app.repositories.receivable_repository import ReceivableRepository
 from app.services.receivable_service import ReceivableService
 from app.utils.auth import admin_required, login_required
+from app.core.socketio_handlers import emit_receivables_update
 
 receivables_bp = Blueprint("receivables", __name__, url_prefix="/admin/receivables")
 
@@ -12,7 +13,7 @@ _service = ReceivableService(repo=ReceivableRepository())
 
 
 @receivables_bp.route("", methods=["GET"])
-@admin_required
+@login_required
 def list_receivables() -> str:
     receivables = _service.list_all()
     return render_template("admin/receivables.html", receivables=receivables)
@@ -26,7 +27,7 @@ def api_list_receivables() -> tuple:
 
 
 @receivables_bp.route("/api/receivables", methods=["POST"])
-@admin_required
+@login_required
 def api_create_receivable() -> tuple:
     data = request.get_json()
     result = _service.create(
@@ -38,15 +39,19 @@ def api_create_receivable() -> tuple:
         created_by=session.get("user_id"),
         session_id=data.get("session_id"),
     )
+    if result.get("success"):
+        emit_receivables_update('create', result.get("data", {}))
     return jsonify(result), 201
 
 
 @receivables_bp.route("/api/receivables/<int:rec_id>/mark-paid", methods=["PATCH"])
-@admin_required
+@login_required
 def api_mark_paid(rec_id: int) -> tuple:
     result = _service.mark_paid(rec_id)
     if isinstance(result, tuple):
         return jsonify(result[0]), result[1]
+    if result.get("success"):
+        emit_receivables_update('mark_paid', {'receivable_id': rec_id})
     return jsonify(result), 200
 
 

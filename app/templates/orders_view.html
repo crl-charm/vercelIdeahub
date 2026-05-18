@@ -102,10 +102,9 @@ function loadOrders() {
 
 // Toggle a single item's status (preparing <-> done)
 function toggleItemStatus(itemId) {
-  fetch(`/api/order-item-status/${itemId}`, {
+  csrfFetch(`/api/order-item-status/${itemId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include"
+    headers: { "Content-Type": "application/json" }
   })
   .then(res => res.json())
   .then(data => {
@@ -126,10 +125,9 @@ function markServed() {
   btn.disabled = true;
   btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Marking...';
 
-  fetch(`/api/session-served/${sessionId}`, {
+  csrfFetch(`/api/session-served/${sessionId}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include"
+    headers: { "Content-Type": "application/json" }
   })
   .then(res => res.json())
   .then(data => {

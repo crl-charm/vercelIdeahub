@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadSpaces() {
-  fetch('/api/spaces').then(r => r.json()).then(data => {
+  fetch('/admin/reservations/api/spaces').then(r => r.json()).then(data => {
     if (data.success) {
       const select = document.getElementById('spaceTypeId');
       select.innerHTML = '<option value="">Select space...</option>';

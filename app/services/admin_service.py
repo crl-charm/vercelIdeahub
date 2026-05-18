@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any
 
 from app.dto.serializers import serialize_user
@@ -19,16 +20,30 @@ class AdminService:
         job_role = data.get("job_role", "general").strip().lower()
         password = data.get("password", "")
         valid_job_roles = {"general", "cashier", "cook", "server"}
+
+        # Enhanced validation
         if not full_name or not username or not password:
             return {"error": "All fields are required."}, 400
-        if len(password) < 8:
-            return {"error": "Password must be at least 8 characters."}, 400
+
+        if len(username) < 3:
+            return {"error": "Username must be at least 3 characters."}, 400
+
+        if len(full_name) < 2:
+            return {"error": "Full name must be at least 2 characters."}, 400
+
+        # Password strength validation is now handled in User model
+        try:
+            user = User(full_name=full_name, username=username, role=role, job_role=job_role)
+            user.set_password(password)
+        except ValueError as e:
+            return {"error": str(e)}, 400
+
         if job_role not in valid_job_roles:
             return {"error": "Invalid job role."}, 400
+
         if User.query.filter_by(username=username).first():
             return {"error": "Username already exists."}, 409
-        user = User(full_name=full_name, username=username, role=role, job_role=job_role)
-        user.set_password(password)
+
         self.repo.add(user)
         self.repo.save()
         return {"message": "Staff created successfully."}, 201
@@ -66,6 +81,7 @@ class AdminService:
         if not user:
             return {"error": "Staff not found."}, 404
         self.repo.delete_staff_attendance(user_id)
+        self.repo.clear_user_orders(user_id)
         from app import db
 
         db.session.delete(user)
@@ -86,8 +102,8 @@ class AdminService:
                     "name": s.customer_name,
                     "orders": ", ".join(ordered_items) if ordered_items else "No orders",
                     "room": s.space_type.name if s.space_type else "N/A",
-                    "time_in": s.time_in.strftime("%Y-%m-%d %I:%M %p") if s.time_in else "N/A",
-                    "time_out": s.time_out.strftime("%Y-%m-%d %I:%M %p") if s.time_out else "Active",
+                    "time_in": (s.time_in + timedelta(hours=8)).strftime("%Y-%m-%d %I:%M %p") if s.time_in else "N/A",
+                    "time_out": (s.time_out + timedelta(hours=8)).strftime("%Y-%m-%d %I:%M %p") if s.time_out else "Active",
                 }
             )
         return records
@@ -98,8 +114,8 @@ class AdminService:
             {
                 "id": log.id,
                 "name": log.user.full_name,
-                "time_in": log.time_in.strftime("%Y-%m-%d %I:%M %p") if log.time_in else "N/A",
-                "time_out": log.time_out.strftime("%Y-%m-%d %I:%M %p") if log.time_out else "Active",
+                "time_in": (log.time_in + timedelta(hours=8)).strftime("%Y-%m-%d %I:%M %p") if log.time_in else "N/A",
+                "time_out": (log.time_out + timedelta(hours=8)).strftime("%Y-%m-%d %I:%M %p") if log.time_out else "Active",
             }
             for log in logs
             if log.user and log.user.role == "staff"

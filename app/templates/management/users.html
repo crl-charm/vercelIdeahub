@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %}Management Users | IdeaHub{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h2 class="mb-3">Users</h2>
+  <div class="card card-body">
+    <ul class="mb-0">
+      {% for u in users["items"] %}
+      <li>#{{ u.id }} - {{ u.username }} ({{ u.role }})</li>
+      {% else %}
+      <li>No users found.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

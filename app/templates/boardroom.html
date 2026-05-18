@@ -116,7 +116,7 @@ function loadBookings() {
 // BOOK FUNCTION
 function bookBoardroom() {
 
-    fetch("/api/book-boardroom", {
+    csrfFetch("/api/book-boardroom", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

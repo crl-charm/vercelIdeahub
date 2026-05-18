@@ -4,82 +4,363 @@
 
 {% block content %}
 
-<div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Inventory Management</h1>
-    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addItemModal">
-      + Add Item
+<style>
+  .inventory-container {
+    padding: 2rem 0;
+  }
+
+  .inventory-header {
+    margin-bottom: 3rem;
+  }
+
+  .inventory-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+
+  .inventory-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-card.danger {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  .stat-card.success {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+
+  .stat-card.warning {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+  }
+
+  .header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .btn-add-inventory {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+  }
+
+  .btn-add-inventory:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .inventory-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border-left: 4px solid #667eea;
+  }
+
+  .inventory-card.low-stock {
+    border-left-color: #f5576c;
+  }
+
+  .inventory-card.warning-stock {
+    border-left-color: #fee140;
+  }
+
+  .inventory-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .inventory-item-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .inventory-item-label {
+    color: #999;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+  }
+
+  .inventory-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f9f9f9;
+    border-radius: 8px;
+  }
+
+  .inventory-stat {
+    text-align: center;
+  }
+
+  .inventory-stat-label {
+    font-size: 0.8rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .inventory-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-top: 0.25rem;
+  }
+
+  .stock-bar {
+    width: 100%;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+
+  .stock-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  .stock-bar.danger .stock-bar-fill {
+    background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  .stock-bar.warning .stock-bar-fill {
+    background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .status-ok {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  .status-low {
+    background: #ffebee;
+    color: #c62828;
+  }
+
+  .status-warning {
+    background: #fff3e0;
+    color: #e65100;
+  }
+
+  .inventory-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-icon {
+    flex: 1;
+    min-width: 80px;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+
+  .btn-edit-stock {
+    background: #e3f2fd;
+    color: #2196f3;
+  }
+
+  .btn-edit-stock:hover {
+    background: #2196f3;
+    color: white;
+  }
+
+  .btn-logs {
+    background: #f3e5f5;
+    color: #9c27b0;
+  }
+
+  .btn-logs:hover {
+    background: #9c27b0;
+    color: white;
+  }
+
+  .btn-delete-item {
+    background: #ffebee;
+    color: #d32f2f;
+  }
+
+  .btn-delete-item:hover {
+    background: #d32f2f;
+    color: white;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #999;
+  }
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state h3 {
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state p {
+    color: #999;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .inventory-header h1 {
+      font-size: 2rem;
+    }
+
+    .inventory-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .inventory-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .header-controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn-add-inventory {
+      width: 100%;
+    }
+
+    .inventory-actions {
+      flex-direction: column;
+    }
+
+    .btn-icon {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="container-fluid inventory-container">
+  <!-- Header -->
+  <div class="inventory-header">
+    <h1>📦 Inventory Management</h1>
+  </div>
+
+  <!-- Stats -->
+  <div class="inventory-stats">
+    <div class="stat-card danger">
+      <div class="stat-label">🔴 Low Stock Items</div>
+      <div class="stat-value" id="lowStockCount">0</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-label">🟡 Warning Stock</div>
+      <div class="stat-value" id="warningStockCount">0</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">✅ Total Items</div>
+      <div class="stat-value" id="totalItemsCount">0</div>
+    </div>
+  </div>
+
+  <!-- Header Controls -->
+  <div class="header-controls">
+    <button class="btn-add-inventory" data-bs-toggle="modal" data-bs-target="#addItemModal">
+      ➕ Add Inventory Item
     </button>
   </div>
 
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card bg-danger text-white">
-        <div class="card-body">
-          <h5 class="card-title">Low Stock Items</h5>
-          <p class="card-text display-6" id="low-stock-count">0</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card bg-info text-white">
-        <div class="card-body">
-          <h5 class="card-title">Total Items</h5>
-          <p class="card-text display-6" id="total-items-count">0</p>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Inventory Grid -->
+  <div class="inventory-grid" id="inventoryGrid"></div>
 
-  <div class="card">
-    <div class="card-header">
-      <h5>Inventory Items</h5>
-    </div>
-    <div class="card-body">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Menu Item</th>
-            <th>Stock</th>
-            <th>Unit</th>
-            <th>Threshold</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="inventory-table-body">
-          {% for item in items %}
-          <tr>
-            <td>{{ item.menu_item_name }}</td>
-            <td>{{ item.stock_qty }}</td>
-            <td>{{ item.unit }}</td>
-            <td>{{ item.low_stock_threshold }}</td>
-            <td>
-              {% if item.is_low %}
-              <span class="badge bg-danger">Low Stock</span>
-              {% else %}
-              <span class="badge bg-success">OK</span>
-              {% endif %}
-            </td>
-            <td>
-              <button class="btn btn-sm btn-primary" onclick="editItem({{ item.id }})">Edit</button>
-              <button class="btn btn-sm btn-info" onclick="viewLogs({{ item.id }})">Logs</button>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <!-- Empty State -->
+  <div class="empty-state" id="emptyState" style="display: none;">
+    <div class="empty-icon">📭</div>
+    <h3>No inventory items yet</h3>
+    <p>Add your first inventory item to get started</p>
   </div>
 </div>
 
 <!-- Add Item Modal -->
 <div class="modal fade" id="addItemModal" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add Inventory Item</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+        <h5 class="modal-title">➕ Add Inventory Item</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="mb-3">
@@ -87,6 +368,11 @@
           <select id="menuItemSelect" class="form-select" required>
             <option value="">Select a menu item...</option>
           </select>
+          <div class="form-text">Or type a new ingredient name below.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">New Ingredient Name</label>
+          <input type="text" id="ingredientName" class="form-control" placeholder="e.g. Chicken Breast">
         </div>
         <div class="mb-3">
           <label class="form-label">Initial Stock</label>
@@ -102,8 +388,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-warning" onclick="createItem()">Create</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn-add-inventory" onclick="createItem()">Create</button>
       </div>
     </div>
   </div>
@@ -111,11 +397,11 @@
 
 <!-- Edit Stock Modal -->
 <div class="modal fade" id="editStockModal" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
         <h5 class="modal-title">Update Stock</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="mb-3">
@@ -134,8 +420,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-warning" onclick="updateStock()">Update</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn-add-inventory" onclick="updateStock()">Update</button>
       </div>
     </div>
   </div>
@@ -143,23 +429,23 @@
 
 <!-- Logs Modal -->
 <div class="modal fade" id="logsModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Inventory Logs</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+        <h5 class="modal-title">📊 Inventory Logs</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <table class="table table-sm">
+        <table class="table table-sm table-hover">
           <thead>
-            <tr>
+            <tr style="background: #f5f5f5;">
               <th>Date</th>
               <th>Change</th>
               <th>Reason</th>
               <th>Changed By</th>
             </tr>
           </thead>
-          <tbody id="logs-body"></tbody>
+          <tbody id="logsBody"></tbody>
         </table>
       </div>
     </div>
@@ -172,6 +458,30 @@
 <script>
 let currentItemId = null;
 let menuItems = [];
+let inventoryItems = [];
+
+// Socket.IO for real-time updates
+const socket = io();
+
+socket.on('inventory_update', function(data) {
+  console.log('Inventory update:', data);
+  loadInventory();
+  if (data.event === 'create') {
+    showToast('✓ New inventory item added!', 'success');
+  } else if (data.event === 'stock_change') {
+    showToast('✓ Stock quantity updated!', 'success');
+  } else if (data.event === 'delete') {
+    showToast('✓ Inventory item removed!', 'success');
+  }
+});
+
+socket.on('connect', function() {
+  console.log('Connected to server for real-time updates');
+});
+
+socket.on('disconnect', function() {
+  console.log('Disconnected from server');
+});
 
 document.addEventListener('DOMContentLoaded', function() {
   loadMenuItems();
@@ -179,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadMenuItems() {
-  fetch('/api/menu-items').then(r => r.json()).then(data => {
+  fetch('/admin/menu/api/menu-items').then(r => r.json()).then(data => {
     menuItems = data.success ? data.data : [];
     const select = document.getElementById('menuItemSelect');
     select.innerHTML = '<option value="">Select a menu item...</option>';
@@ -192,47 +502,112 @@ function loadMenuItems() {
 function loadInventory() {
   fetch('/admin/inventory/api/items').then(r => r.json()).then(data => {
     if (data.success) {
-      const tbody = document.getElementById('inventory-table-body');
-      tbody.innerHTML = '';
-      data.data.forEach(item => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${item.menu_item_name}</td>
-            <td>${item.stock_qty}</td>
-            <td>${item.unit}</td>
-            <td>${item.low_stock_threshold}</td>
-            <td>${item.is_low ? '<span class="badge bg-danger">Low Stock</span>' : '<span class="badge bg-success">OK</span>'}</td>
-            <td>
-              <button class="btn btn-sm btn-primary" onclick="editItem(${item.id})">Edit</button>
-              <button class="btn btn-sm btn-info" onclick="viewLogs(${item.id})">Logs</button>
-            </td>
-          </tr>
-        `;
-      });
-      document.getElementById('total-items-count').textContent = data.data.length;
-      const lowStock = data.data.filter(i => i.is_low).length;
-      document.getElementById('low-stock-count').textContent = lowStock;
+      inventoryItems = data.data;
+      renderInventoryGrid();
+      updateStats();
     }
   });
 }
 
+function updateStats() {
+  const lowStock = inventoryItems.filter(i => i.is_low).length;
+  const totalItems = inventoryItems.length;
+  const warningStock = inventoryItems.filter(i => {
+    // Warning if NOT low stock and stock is less than 1.5x threshold
+    const stockPercent = Math.min((i.stock_qty / i.low_stock_threshold) * 100, 100);
+    return !i.is_low && stockPercent < 150;
+  }).length;
+  
+  document.getElementById('lowStockCount').textContent = lowStock;
+  document.getElementById('warningStockCount').textContent = warningStock;
+  document.getElementById('totalItemsCount').textContent = totalItems;
+}
+
+function renderInventoryGrid() {
+  const grid = document.getElementById('inventoryGrid');
+  const emptyState = document.getElementById('emptyState');
+  
+  if (inventoryItems.length === 0) {
+    grid.innerHTML = '';
+    emptyState.style.display = 'block';
+    return;
+  }
+  
+  emptyState.style.display = 'none';
+  grid.innerHTML = inventoryItems.map(item => {
+    const stockPercent = Math.min((item.stock_qty / item.low_stock_threshold) * 100, 100);
+    const statusClass = item.is_low ? 'low-stock' : 'warning-stock';
+    const badgeClass = item.is_low ? 'status-low' : (stockPercent < 150 ? 'status-warning' : 'status-ok');
+    const statusText = item.is_low ? '🔴 Low Stock' : (stockPercent < 150 ? '🟡 Warning' : '✅ OK');
+    
+    return `
+      <div class="inventory-card ${statusClass}">
+        <h3 class="inventory-item-name">${item.menu_item_name}</h3>
+        <span class="status-badge ${badgeClass}">${statusText}</span>
+        
+        <div class="stock-bar ${item.is_low ? 'danger' : (stockPercent < 150 ? 'warning' : '')}">
+          <div class="stock-bar-fill" style="width: ${Math.min(stockPercent, 100)}%"></div>
+        </div>
+        
+        <div class="inventory-info">
+          <div class="inventory-stat">
+            <div class="inventory-stat-label">Current Stock</div>
+            <div class="inventory-stat-value">${item.stock_qty}</div>
+          </div>
+          <div class="inventory-stat">
+            <div class="inventory-stat-label">Unit</div>
+            <div class="inventory-stat-value" style="font-size: 1rem;">${item.unit}</div>
+          </div>
+          <div class="inventory-stat">
+            <div class="inventory-stat-label">Threshold</div>
+            <div class="inventory-stat-value">${item.low_stock_threshold}</div>
+          </div>
+        </div>
+        
+        <div class="inventory-actions">
+          <button class="btn-icon btn-edit-stock" onclick="editItem(${item.id})">
+            📝 Edit
+          </button>
+          <button class="btn-icon btn-logs" onclick="viewLogs(${item.id})">
+            📊 Logs
+          </button>
+          <button class="btn-icon btn-delete-item" onclick="deleteItem(${item.id})">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function createItem() {
   const menuItemId = document.getElementById('menuItemSelect').value;
+  const ingredientName = document.getElementById('ingredientName').value.trim();
   const stockQty = document.getElementById('initialStock').value;
   const unit = document.getElementById('unit').value;
   const threshold = document.getElementById('threshold').value;
 
-  fetch('/admin/inventory/api/items', {
+  csrfFetch('/admin/inventory/api/items', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ menu_item_id: menuItemId, stock_qty: stockQty, unit, low_stock_threshold: threshold })
+    body: JSON.stringify({ 
+      menu_item_id: menuItemId || null, 
+      ingredient_name: ingredientName, 
+      stock_qty: stockQty, 
+      unit, 
+      low_stock_threshold: threshold 
+    })
   }).then(r => r.json()).then(data => {
     if (data.success) {
-      showToast('Inventory item created', 'success');
+      showToast('✓ Inventory item created successfully!', 'success');
       bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
+      document.getElementById('ingredientName').value = '';
+      document.getElementById('initialStock').value = '0';
+      document.getElementById('unit').value = 'pieces';
+      document.getElementById('threshold').value = '10';
       loadInventory();
     } else {
-      showToast('Error creating item', 'error');
+      showToast('✗ Error: ' + (data.error || 'Failed to create item'), 'error');
     }
   });
 }
@@ -253,11 +628,11 @@ function updateStock() {
     })
   }).then(r => r.json()).then(data => {
     if (data.success) {
-      showToast('Stock updated', 'success');
+      showToast('✓ Stock updated successfully!', 'success');
       bootstrap.Modal.getInstance(document.getElementById('editStockModal')).hide();
       loadInventory();
     } else {
-      showToast('Error updating stock', 'error');
+      showToast('✗ Error updating stock', 'error');
     }
   });
 }
@@ -265,13 +640,15 @@ function updateStock() {
 function viewLogs(itemId) {
   fetch(`/admin/inventory/api/items/${itemId}/logs`).then(r => r.json()).then(data => {
     if (data.success) {
-      const tbody = document.getElementById('logs-body');
+      const tbody = document.getElementById('logsBody');
       tbody.innerHTML = '';
       data.data.forEach(log => {
         tbody.innerHTML += `
           <tr>
             <td>${log.created_at}</td>
-            <td>${log.change_qty > 0 ? '+' : ''}${log.change_qty}</td>
+            <td><strong style="color: ${log.change_qty > 0 ? '#2e7d32' : '#c62828'}">
+              ${log.change_qty > 0 ? '+' : ''}${log.change_qty}
+            </strong></td>
             <td>${log.reason}</td>
             <td>${log.changed_by}</td>
           </tr>
@@ -281,5 +658,52 @@ function viewLogs(itemId) {
     }
   });
 }
+
+function deleteItem(itemId) {
+  const item = inventoryItems.find(i => i.id === itemId);
+  if (!item) return;
+  
+  if (!confirm(`Are you sure you want to delete "${item.menu_item_name}" from inventory? This action cannot be undone.`)) {
+    return;
+  }
+
+  csrfFetch(`/admin/inventory/api/items/${itemId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' }
+  }).then(r => r.json()).then(data => {
+    if (data.success) {
+      showToast('✓ Inventory item deleted successfully!', 'success');
+      loadInventory();
+    } else {
+      showToast('✗ Error: ' + (data.error || 'Failed to delete item'), 'error');
+    }
+  }).catch(error => {
+    showToast('✗ Error deleting item', 'error');
+    console.error(error);
+  });
+}
+
+function showLowStockNotification(data) {
+  const notification = document.createElement('div');
+  notification.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+  notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px; animation: slideIn 0.3s ease;';
+  notification.innerHTML = `
+    <strong>🔴 Low Stock Alert!</strong><br>
+    ${data.menu_item}: Only ${data.stock_qty} remaining (Threshold: ${data.threshold})
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  document.body.appendChild(notification);
+  setTimeout(() => notification.remove(), 6000);
+}
+
+function showToast(message, type) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
+  alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+  alertDiv.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+  document.body.appendChild(alertDiv);
+  setTimeout(() => alertDiv.remove(), 4000);
+}
 </script>
 {% endblock %}
+

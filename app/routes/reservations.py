@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request, render_template
 
 from app.repositories.reservation_repository import ReservationRepository
 from app.services.reservation_service import ReservationService
-from app.utils.auth import admin_required, login_required
+from app.utils.auth import admin_required
 
 reservations_bp = Blueprint("reservations", __name__, url_prefix="/admin/reservations")
 
@@ -19,7 +19,7 @@ def list_page() -> str:
 
 
 @reservations_bp.route("/api/reservations", methods=["GET"])
-@login_required
+@admin_required
 def api_list() -> tuple:
     reservations = _service.list_all()
     return jsonify({"success": True, "data": reservations}), 200
@@ -59,3 +59,13 @@ def api_delete(res_id: int) -> tuple:
     if isinstance(result, tuple):
         return jsonify(result[0]), result[1]
     return jsonify(result), 200
+
+
+@reservations_bp.route("/api/spaces", methods=["GET"])
+@admin_required
+def api_spaces() -> tuple:
+    from app.models import SpaceType
+
+    spaces = SpaceType.query.order_by(SpaceType.name.asc()).all()
+    data = [{"id": s.id, "name": s.name} for s in spaces]
+    return jsonify({"success": True, "data": data}), 200

@@ -80,7 +80,7 @@ def serialize_transaction(transaction):
         "total_bill": float(transaction.total_bill),
         "seconds_spent": seconds_spent,
         "minutes_spent": round(seconds_spent / 60, 2) if seconds_spent is not None else None,
-        "created_date": transaction.created_at.strftime("%Y-%m-%d") if transaction.created_at else None,
+        "created_date": (transaction.created_at + timedelta(hours=8)).strftime("%Y-%m-%d") if transaction.created_at else None,
     }
 
 def serialize_user(user):

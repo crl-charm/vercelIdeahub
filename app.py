@@ -13,4 +13,9 @@ if not os.environ.get("VERCEL"):
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    # Disable debug mode in production
+    debug_mode = os.environ.get('FLASK_ENV') != 'production'
+    socketio.run(app, debug=debug_mode)
+    
+
+

@@ -23,10 +23,7 @@
             <th>#</th>
             <th>Staff</th>
             <th>Shift Date</th>
-            <th>Orders</th>
-            <th>Avg Order Time</th>
-            <th>Sessions</th>
-            <th>Upsells</th>
+            <th>Customers Served</th>
             <th>Score</th>
             <th>Notes</th>
           </tr>
@@ -37,10 +34,7 @@
             <td></td>
             <td>{{ log.username }}</td>
             <td>{{ log.shift_date }}</td>
-            <td>{{ log.orders_handled }}</td>
-            <td>{{ "%.2f"|format(log.avg_order_minutes) }} min</td>
-            <td>{{ log.sessions_managed }}</td>
-            <td>{{ log.upsell_count }}</td>
+            <td>{{ log.customers_served }}</td>
             <td><strong>{{ "%.2f"|format(log.score) }}</strong></td>
             <td>{{ log.admin_note or "-" }}</td>
           </tr>
@@ -71,20 +65,8 @@
           <input type="date" id="shiftDate" class="form-control" required>
         </div>
         <div class="mb-3">
-          <label class="form-label">Orders Handled *</label>
-          <input type="number" id="ordersHandled" class="form-control" value="0" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Avg Order Time (minutes) *</label>
-          <input type="number" id="avgOrderMin" class="form-control" step="0.01" value="0" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Sessions Managed *</label>
-          <input type="number" id="sessionsMgd" class="form-control" value="0" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Upsells *</label>
-          <input type="number" id="upsells" class="form-control" value="0" required>
+          <label class="form-label">Customers Served *</label>
+          <input type="number" id="customersServed" class="form-control" value="0" required>
         </div>
         <div class="mb-3">
           <label class="form-label">Admin Notes</label>
@@ -131,10 +113,7 @@ function loadLogs() {
             <td>${idx + 1}</td>
             <td>${log.username}</td>
             <td>${log.shift_date}</td>
-            <td>${log.orders_handled}</td>
-            <td>${log.avg_order_minutes.toFixed(2)} min</td>
-            <td>${log.sessions_managed}</td>
-            <td>${log.upsell_count}</td>
+            <td>${log.customers_served}</td>
             <td><strong>${log.score.toFixed(2)}</strong></td>
             <td>${log.admin_note || '-'}</td>
           </tr>
@@ -148,10 +127,7 @@ function createLog() {
   const payload = {
     user_id: document.getElementById('userId').value,
     shift_date: document.getElementById('shiftDate').value,
-    orders_handled: document.getElementById('ordersHandled').value,
-    avg_order_minutes: document.getElementById('avgOrderMin').value,
-    sessions_managed: document.getElementById('sessionsMgd').value,
-    upsell_count: document.getElementById('upsells').value,
+    customers_served: document.getElementById('customersServed').value,
     admin_note: document.getElementById('adminNote').value,
   };
 
@@ -165,10 +141,7 @@ function createLog() {
       bootstrap.Modal.getInstance(document.getElementById('addLogModal')).hide();
       document.getElementById('userId').value = '';
       document.getElementById('shiftDate').value = '';
-      document.getElementById('ordersHandled').value = '0';
-      document.getElementById('avgOrderMin').value = '0';
-      document.getElementById('sessionsMgd').value = '0';
-      document.getElementById('upsells').value = '0';
+      document.getElementById('customersServed').value = '0';
       document.getElementById('adminNote').value = '';
       loadLogs();
     } else {

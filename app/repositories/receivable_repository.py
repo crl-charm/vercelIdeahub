@@ -15,9 +15,10 @@ class ReceivableRepository:
         return Receivable.query.order_by(Receivable.due_date).all()
 
     def list_unpaid(self) -> list[Receivable]:
-        return Receivable.query.filter(Receivable.paid == False).order_by(
-            Receivable.due_date
-        ).all()
+        return Receivable.query.filter(
+            Receivable.paid == False,
+            Receivable.due_date <= date.today(),
+        ).order_by(Receivable.due_date).all()
 
     def list_due_today(self) -> list[Receivable]:
         return Receivable.query.filter(

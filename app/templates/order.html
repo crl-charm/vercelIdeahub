@@ -4,324 +4,830 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<style>
+/* Modern Order Page Styles */
+.modern-order-page {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+}
 
-    <h3 class="mb-4">Add Order</h3>
+.menu-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
-    <div class="row">
+.cart-sidebar {
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, var(--card) 0%, #fafbfc 100%);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  position: sticky;
+  top: 100px;
+  max-height: calc(100vh - 140px);
+}
 
-        <!-- MENU -->
-        <div class="col-md-8">
-            <h5>Menu</h5>
-            <div id="menu-container" class="row"></div>
-        </div>
+.cart-header {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: white;
+  padding: 20px;
+  border-bottom: none;
+}
 
-        <!-- CART -->
-        <div class="col-md-4">
-            <h5>Current Orders</h5>
-            <ul id="current-orders-list" class="list-group mb-3"></ul>
-            <h6 class="mb-3">Current Food Total: ₱<span id="current-food-total">0.00</span></h6>
+.cart-header h5 {
+  margin: 0;
+  font-weight: 700;
+  font-size: 18px;
+}
 
-            <hr />
+.cart-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
 
-            <h5>New Items</h5>
-            <ul id="cart-list" class="list-group mb-3"></ul>
+.cart-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
 
-            <h5>Total: ₱<span id="total">0.00</span></h5>
+.current-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-            <button class="btn btn-success w-100 mt-3" onclick="submitOrder()">
-                Place Order
-            </button>
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  gap: 8px;
+}
 
-            <button class="btn btn-secondary w-100 mt-2" onclick="goBack()">
-                Back
-            </button>
-        </div>
+.order-item:hover {
+  background: #f3f4f6;
+  border-color: var(--brand);
+}
 
+.order-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.order-item-meta {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.order-item-price {
+  font-weight: 700;
+  color: var(--brand);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.void-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.void-btn:hover {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.current-total {
+  padding: 12px;
+  background: linear-gradient(135deg, #f7efd2 0%, #fef8e7 100%);
+  border-radius: 12px;
+  border: 1px solid var(--brand);
+  text-align: center;
+}
+
+.current-total-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.current-total-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  gap: 8px;
+}
+
+.cart-item:hover {
+  border-color: var(--brand);
+  box-shadow: 0 4px 12px rgba(231, 197, 91, 0.1);
+}
+
+.cart-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+.cart-item-qty-price {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.cart-item-quantity {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.cart-item-price {
+  font-weight: 700;
+  color: var(--brand);
+  font-size: 14px;
+}
+
+.cart-item-remove {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  text-align: center;
+}
+
+.cart-item-remove:hover {
+  background: #fecaca;
+}
+
+.cart-footer {
+  border-top: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fafbfc;
+}
+
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid var(--brand);
+}
+
+.order-total-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.order-total-amount {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--brand-dark);
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(231, 197, 91, 0.3);
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(231, 197, 91, 0.4);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.back-btn {
+  background: var(--border);
+  color: var(--text);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  background: #d1d5db;
+  color: var(--text);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-container {
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(231, 197, 91, 0.1);
+  background: #fafbfc;
+}
+
+.category-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.category-filter {
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.category-filter:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.category-filter.active {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: white;
+  border-color: var(--brand);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  animation: fadeIn 0.4s ease;
+}
+
+@media (max-width: 1200px) {
+  .menu-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .modern-order-page {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .cart-sidebar {
+    width: 100%;
+    position: relative;
+    top: 0;
+    max-height: none;
+  }
+
+  .menu-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+.menu-item-card {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.menu-item-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--brand);
+  box-shadow: 0 16px 32px rgba(231, 197, 91, 0.15);
+}
+
+.menu-item-image {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.menu-item-card:hover .menu-item-image {
+  background: linear-gradient(135deg, var(--brand-soft) 0%, #f7efd2 100%);
+}
+
+.menu-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.menu-item-card:hover .menu-item-image img {
+  transform: scale(1.1);
+}
+
+.menu-item-content {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.menu-item-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+}
+
+.menu-item-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--brand);
+  margin: 6px 0 12px 0;
+}
+
+.add-to-cart-btn {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: white;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(231, 197, 91, 0.2);
+}
+
+.add-to-cart-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(231, 197, 91, 0.3);
+}
+
+.add-to-cart-btn:active {
+  transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.empty-cart-placeholder {
+  text-align: center;
+  padding: 24px 12px;
+  color: #9ca3af;
+}
+
+.empty-cart-placeholder-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+</style>
+
+<div class="modern-order-page">
+  <!-- MENU SECTION -->
+  <div class="menu-section">
+    <div class="page-header">
+      <div class="page-title">🍽️ Browse Menu</div>
+      <div class="search-container">
+        <input type="text" id="menu-search" class="search-input" placeholder="🔍 Search menu items...">
+      </div>
     </div>
 
+    <div class="category-filters" id="category-filters"></div>
+    <div class="menu-grid" id="menu-container"></div>
+  </div>
+
+  <!-- CART SIDEBAR -->
+  <div class="cart-sidebar">
+    <div class="cart-header">
+      <h5>🛒 Order Summary</h5>
+    </div>
+
+    <div class="cart-content">
+      <!-- CURRENT ORDERS SECTION -->
+      <div id="current-orders-section" style="display: none;">
+        <div class="cart-section-title">Active Orders</div>
+        <div id="current-orders-list" class="current-orders-list"></div>
+        <div class="current-total">
+          <div class="current-total-label">Current Total</div>
+          <div class="current-total-amount">₱<span id="current-food-total">0.00</span></div>
+        </div>
+        <div class="divider"></div>
+      </div>
+
+      <!-- NEW ITEMS SECTION -->
+      <div id="new-items-section">
+        <div class="cart-section-title">New Items</div>
+        <div id="cart-list" class="cart-list">
+          <div class="empty-cart-placeholder">
+            <div class="empty-cart-placeholder-icon">📭</div>
+            <div>Cart is empty</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cart-footer">
+      <div class="order-total">
+        <div class="order-total-label">Total</div>
+        <div class="order-total-amount">₱<span id="total">0.00</span></div>
+      </div>
+      <button class="submit-btn" onclick="submitOrder()" id="submit-btn">Place Order</button>
+      <button class="back-btn" onclick="goBack()">← Back</button>
+    </div>
+  </div>
 </div>
 
 {% endblock %}
 
-
 {% block scripts %}
-
 <script>
-
 const sessionId = parseInt("{{ session_id }}");
 let cart = [];
 let currentOrders = [];
 let menuById = {};
+let allMenuData = [];
+let activeCategory = "All";
+let searchTerm = "";
 
-// LOAD MENU
-function loadMenu() {
-
-    fetch("/api/menu", {
-        credentials: "include"
-    })
-    .then(res => res.json())
-    .then(data => {
-        let container = document.getElementById("menu-container");
-        container.innerHTML = "";
-
-        menuById = {};
-
-        if (!Array.isArray(data) || data.length === 0) {
-            container.innerHTML = '<div class="col-12 text-center text-muted">No menu items available.</div>';
-            return;
-        }
-
-        function parseCategory(category) {
-            // Categories can be like:
-            // "MainDish - Silog", "Snacks - Pancit", "Drinks - Coffee (Hot)"
-            // Backward compatible categories like "Drink", "Food", "Snack" are also supported.
-            if (!category) return { major: "Other", sub: "Other" };
-
-            const parts = String(category).split(" - ");
-            const majorToken = (parts[0] || "").trim();
-            const sub = parts.length > 1 ? parts.slice(1).join(" - ").trim() : "All";
-
-            const majorMap = {
-                "MainDish": "MainDish",
-                "Food": "MainDish",
-                "Snacks": "Snacks",
-                "Snack": "Snacks",
-                "Drinks": "Drinks",
-                "Drink": "Drinks"
-            };
-
-            return { major: majorMap[majorToken] || majorToken || "Other", sub };
-        }
-
-        // grouped[major][sub] = [items...]
-        const grouped = {};
-        const majorOrder = ["MainDish", "Snacks", "Drinks", "Other"];
-
-        data.forEach(item => {
-            menuById[item.id] = { name: item.name, price: item.price };
-
-            const parsed = parseCategory(item.category);
-            const major = parsed.major;
-            const sub = parsed.sub || "All";
-
-            if (!grouped[major]) grouped[major] = { subOrder: [], subs: {} };
-            if (!grouped[major].subs[sub]) {
-                grouped[major].subs[sub] = [];
-                grouped[major].subOrder.push(sub);
-            }
-
-            grouped[major].subs[sub].push(item);
-        });
-
-        let html = "";
-        majorOrder.forEach(major => {
-            if (!grouped[major] || !grouped[major].subOrder.length) return;
-
-            const majorTitleMap = {
-                "MainDish": "Main Dish",
-                "Snacks": "Snacks",
-                "Drinks": "Drinks",
-                "Other": "Other"
-            };
-
-            html += `
-                <div class="col-12 mb-4">
-                    <h5 class="mb-3">${majorTitleMap[major] || major}</h5>
-            `;
-
-            grouped[major].subOrder.forEach(sub => {
-                const items = grouped[major].subs[sub] || [];
-                if (!items.length) return;
-
-                html += `
-                    <h6 class="text-muted mb-2">${sub}</h6>
-                    <div class="row g-2 mb-3">
-                `;
-
-                items.forEach(item => {
-                    html += `
-                        <div class="col-6 col-md-4">
-                            <div class="card shadow-sm p-3 h-100">
-                                <h5 class="fs-6 mb-2">${item.name}</h5>
-                                <p class="mb-3 text-muted">₱${Number(item.price).toFixed(2)}</p>
-                                <button class="btn btn-primary btn-sm w-100"
-                                    onclick="addToCart(${item.id})">
-                                    Add
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                html += `
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
-        });
-
-        container.innerHTML = html;
-    })
-    .catch(err => {
-        showToast("Failed to load menu. Please refresh the page.", "error");
-    });
+function parseCategory(category) {
+  if (!category) return { major: "Other", sub: "Other" };
+  const parts = String(category).split(" - ");
+  const majorToken = (parts[0] || "").trim();
+  const sub = parts.length > 1 ? parts.slice(1).join(" - ").trim() : "All";
+  const majorMap = {
+    "MainDish": "Main Dish",
+    "Food": "Main Dish",
+    "Snacks": "Snacks",
+    "Snack": "Snacks",
+    "Drinks": "Beverages",
+    "Drink": "Beverages",
+    "Beverages": "Beverages",
+    "Beverage": "Beverages"
+  };
+  return { major: majorMap[majorToken] || majorToken || "Other", sub };
 }
 
-// LOAD CURRENT ORDERS (existing order items for this session)
-function loadCurrentOrders() {
-    fetch(`/api/session-orders/${sessionId}`, { credentials: "include" })
+function buildCategoryFilters() {
+  const categories = ["All", "Main Dish", "Beverages", "Snacks"];
+  const filtersContainer = document.getElementById("category-filters");
+  filtersContainer.innerHTML = "";
+
+  categories.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.className = "category-filter" + (cat === "All" ? " active" : "");
+    btn.textContent = cat;
+    btn.onclick = () => filterByCategory(cat);
+    filtersContainer.appendChild(btn);
+  });
+}
+
+function filterByCategory(category) {
+  activeCategory = category;
+  document.querySelectorAll(".category-filter").forEach(btn => {
+    btn.classList.toggle("active", btn.textContent === category);
+  });
+  renderMenuItems();
+}
+
+function renderMenuItems() {
+  const container = document.getElementById("menu-container");
+  let filtered = allMenuData;
+  
+  if (activeCategory !== "All") {
+    filtered = filtered.filter(item => {
+      const parsed = parseCategory(item.category);
+      return parsed.major === activeCategory;
+    });
+  }
+  
+  if (searchTerm) {
+    const term = searchTerm.toLowerCase();
+    filtered = filtered.filter(item => 
+      item.name.toLowerCase().includes(term) || 
+      (item.category && item.category.toLowerCase().includes(term))
+    );
+  }
+  
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: #9ca3af;"><div style="font-size: 3rem; margin-bottom: 12px;">🔍</div><div>No items found</div></div>`;
+    return;
+  }
+  container.innerHTML = "";
+  filtered.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "menu-item-card";
+    card.innerHTML = `
+      <div class="menu-item-image">${item.image_url ? `<img src="${item.image_url}" alt="${item.name}">` : '🍽️'}</div>
+      <div class="menu-item-content">
+        <h6 class="menu-item-name">${item.name}</h6>
+        <div class="menu-item-price">₱${Number(item.price).toFixed(2)}</div>
+        <button class="add-to-cart-btn" onclick="addToCart(${item.id})">+ Add</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function loadMenu() {
+  fetch("/api/menu", { credentials: "include" })
     .then(res => res.json())
     .then(data => {
-        currentOrders = data.orders || [];
-
-        let list = document.getElementById("current-orders-list");
-        list.innerHTML = "";
-
-        let currentFoodTotal = data.food_total ?? 0;
-        document.getElementById("current-food-total").innerText = Number(currentFoodTotal).toFixed(2);
-
-        if (!currentOrders.length) {
-            list.innerHTML = `<li class="list-group-item text-center text-muted">No orders yet.</li>`;
-            return;
-        }
-
-        currentOrders.forEach(item => {
-            list.innerHTML += `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        ${item.item_name} x${item.quantity}
-                        <div class="text-muted" style="font-size:13px;">₱${item.total.toFixed(2)}</div>
-                    </div>
-                    <button class="btn btn-sm btn-outline-danger" onclick="voidExistingItem(${item.id})">
-                        Void
-                    </button>
-                </li>
-            `;
-        });
+      allMenuData = data || [];
+      menuById = {};
+      allMenuData.forEach(item => {
+        menuById[item.id] = { name: item.name, price: item.price };
+      });
+      buildCategoryFilters();
+      renderMenuItems();
     })
-    .catch(err => {
-        showToast("Failed to load current orders.", "error");
-    });
+    .catch(err => showToast("Failed to load menu. Please refresh the page.", "error"));
+}
+
+function loadCurrentOrders() {
+  fetch(`/api/session-orders/${sessionId}`, { credentials: "include" })
+    .then(res => res.json())
+    .then(data => {
+      currentOrders = data.orders || [];
+      const section = document.getElementById("current-orders-section");
+      const list = document.getElementById("current-orders-list");
+      const currentFoodTotal = data.food_total ?? 0;
+      document.getElementById("current-food-total").innerText = Number(currentFoodTotal).toFixed(2);
+      if (!currentOrders.length) {
+        section.style.display = "none";
+        return;
+      }
+      section.style.display = "block";
+      list.innerHTML = "";
+      currentOrders.forEach(item => {
+        const li = document.createElement("div");
+        li.className = "order-item";
+        li.innerHTML = `
+          <div class="order-item-info">
+            <div class="order-item-name">${item.item_name}</div>
+            <div class="order-item-meta">Qty: ${item.quantity}</div>
+          </div>
+          <div class="order-item-price">₱${item.total.toFixed(2)}</div>
+          <button class="void-btn" onclick="voidExistingItem(${item.id})">Void</button>
+        `;
+        list.appendChild(li);
+      });
+    })
+    .catch(err => showToast("Failed to load current orders.", "error"));
 }
 
 function voidExistingItem(itemId) {
-    if (!confirm("Remove this order item?")) return;
-    fetch(`/api/void-item/${itemId}`, { method: "DELETE", credentials: "include" })
+  if (!confirm("Remove this order item?")) return;
+  csrfFetch(`/api/void-item/${itemId}`, { method: "DELETE" })
     .then(res => res.json())
     .then(data => {
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
-        showToast("Item removed successfully.", "success");
-        loadCurrentOrders();
-    })
-    .catch(err => {
-        showToast("Failed to remove item. Please try again.", "error");
-    });
-}
-
-
-// ADD TO CART
-function addToCart(id) {
-    const meta = menuById[id];
-    if (!meta) return;
-    const name = meta.name;
-    const price = meta.price;
-
-    let existing = cart.find(item => item.id === id);
-
-    if (existing) {
-        existing.quantity += 1;
-    } else {
-        cart.push({ id, name, price, quantity: 1 });
-    }
-
-    renderCart();
-}
-
-
-// RENDER CART
-function renderCart() {
-
-    let list = document.getElementById("cart-list");
-    let total = 0;
-
-    list.innerHTML = "";
-
-    cart.forEach(item => {
-
-        let itemTotal = item.price * item.quantity;
-        total += itemTotal;
-
-        list.innerHTML += `
-            <li class="list-group-item d-flex justify-content-between">
-                ${item.name} x${item.quantity}
-                <span>₱${itemTotal.toFixed(2)}</span>
-            </li>
-        `;
-    });
-
-    document.getElementById("total").innerText = total.toFixed(2);
-}
-
-
-// 🔥 SUBMIT ORDER
-function submitOrder() {
-
-    if (cart.length === 0) {
-        showToast("Cart is empty!", "error");
+      if (data.error) {
+        showToast(data.error, "error");
         return;
-    }
-
-    let items = cart.map(item => ({
-        menu_item_id: item.id,
-        quantity: item.quantity
-    }));
-
-    fetch("/api/add-order", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
-            session_id: sessionId,
-            items: items
-        })
+      }
+      showToast("Item removed successfully.", "success");
+      loadCurrentOrders();
     })
+    .catch(err => showToast("Failed to remove item.", "error"));
+}
+
+function addToCart(id) {
+  const meta = menuById[id];
+  if (!meta) return;
+  const existing = cart.find(item => item.id === id);
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({ id, name: meta.name, price: meta.price, quantity: 1 });
+  }
+  renderCart();
+  showToast(`${meta.name} added!`, "success");
+}
+
+function renderCart() {
+  const list = document.getElementById("cart-list");
+  let total = 0;
+  if (cart.length === 0) {
+    list.innerHTML = `<div class="empty-cart-placeholder"><div class="empty-cart-placeholder-icon">📭</div><div>Cart is empty</div></div>`;
+    document.getElementById("submit-btn").disabled = true;
+    document.getElementById("total").innerText = "0.00";
+    return;
+  }
+  document.getElementById("submit-btn").disabled = false;
+  list.innerHTML = "";
+  cart.forEach(item => {
+    const itemTotal = item.price * item.quantity;
+    total += itemTotal;
+    const li = document.createElement("div");
+    li.className = "cart-item";
+    li.innerHTML = `
+      <div class="cart-item-name">${item.name}</div>
+      <div class="cart-item-qty-price">
+        <div class="cart-item-quantity">x${item.quantity}</div>
+        <div class="cart-item-price">₱${itemTotal.toFixed(2)}</div>
+        <button class="cart-item-remove" onclick="removeFromCart(${item.id})">×</button>
+      </div>
+    `;
+    list.appendChild(li);
+  });
+  document.getElementById("total").innerText = total.toFixed(2);
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(item => item.id !== id);
+  renderCart();
+}
+
+function submitOrder() {
+  if (cart.length === 0) {
+    showToast("Cart is empty!", "error");
+    return;
+  }
+  const submitBtn = document.getElementById("submit-btn");
+  submitBtn.disabled = true;
+  submitBtn.innerText = "Placing Order...";
+  const items = cart.map(item => ({
+    menu_item_id: item.id,
+    quantity: item.quantity
+  }));
+  csrfFetch("/api/add-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: sessionId, items: items })
+  })
     .then(res => res.json())
     .then(data => {
-
-        if (data.error) {
-            showToast(data.error, "error");
-            return;
-        }
-
-        showToast("Order placed successfully!", "success");
-        cart = [];
-        renderCart();
-        loadCurrentOrders();
-
+      if (data.error) {
+        showToast(data.error, "error");
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Place Order";
+        return;
+      }
+      showToast("Order placed successfully! 🎉", "success");
+      cart = [];
+      renderCart();
+      loadCurrentOrders();
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Place Order";
     })
     .catch(err => {
-        showToast("Failed to place order. Please try again.", "error");
+      showToast("Failed to place order. Please try again.", "error");
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Place Order";
     });
 }
 
-
-// 🔙 BACK BUTTON
 function goBack() {
-    window.location.href = "/dashboard";
+  window.location.href = "/dashboard";
 }
 
+// Setup search
+document.getElementById("menu-search").addEventListener("input", (e) => {
+  searchTerm = e.target.value;
+  renderMenuItems();
+});
 
-// LOAD MENU ON PAGE LOAD
 loadMenu();
 loadCurrentOrders();
-
 </script>
-
 {% endblock %}

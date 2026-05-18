@@ -38,19 +38,13 @@ class StaffRepository:
         self,
         user_id: int,
         shift_date: date,
-        orders_handled: int,
-        avg_order_minutes: Decimal,
-        sessions_managed: int,
-        upsell_count: int,
-        admin_note: Optional[str],
+        customers_served: int,
+        admin_note: Optional[str] = None,
     ) -> StaffPerformanceLog:
         log = StaffPerformanceLog(
             user_id=user_id,
             shift_date=shift_date,
-            orders_handled=orders_handled,
-            avg_order_minutes=avg_order_minutes,
-            sessions_managed=sessions_managed,
-            upsell_count=upsell_count,
+            customers_served=customers_served,
             admin_note=admin_note,
         )
         log.score = log.calculate_score()

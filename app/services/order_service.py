@@ -16,13 +16,28 @@ class OrderService:
 
     def list_menu(self) -> list[dict[str, Any]]:
         items = self.repo.list_menu_items()
-        return [{"id": i.id, "name": i.name, "price": float(i.price), "category": i.category} for i in items]
+        return [{"id": i.id, "name": i.name, "price": float(i.price), "category": i.category, "description": i.description, "image_url": i.image_url} for i in items]
 
     def add_order(self, *, session_id: int, items: list[dict], handled_by: Optional[int]) -> dict[str, Any] | tuple[dict[str, Any], int]:
         sess = self.repo.get_session(session_id)
         if not sess:
             return {"error": "Session not found"}, 404
         order_id = self.repo.add_order_with_items(session_id=session_id, handled_by=handled_by, items=items)
+        
+        # Deduct inventory for each item in the order
+        from app.repositories.inventory_repository import InventoryRepository
+        from app.services.inventory_service import InventoryService
+        from app import socketio
+        
+        inv_repo = InventoryRepository()
+        inv_service = InventoryService(repo=inv_repo)
+        
+        for item in items:
+            menu_item_id = item.get("menu_item_id")
+            qty = item.get("quantity", 1)
+            if menu_item_id:
+                inv_service.deduct_on_order(menu_item_id, qty)
+        
         self.notifier.order_status_changed({"order_id": order_id, "status": "preparing", "session_id": session_id})
         return {"message": "Order added successfully", "order_id": order_id}
 

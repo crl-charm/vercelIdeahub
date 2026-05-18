@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %}Management Departments | IdeaHub{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h2 class="mb-3">Departments</h2>
+  <div class="card card-body">
+    <ul class="mb-0">
+      {% for d in departments %}
+      <li>{{ d.name }}</li>
+      {% else %}
+      <li>No departments configured.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

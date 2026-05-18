@@ -1,0 +1,211 @@
+<div class="container-fluid">
+  <h2 class="mb-4">Analytics</h2>
+  
+  <!-- Date Range Selector -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4">
+          <label class="form-label">Start Date</label>
+          <input type="date" id="startDate" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">End Date</label>
+          <input type="date" id="endDate" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-warning w-100 text-white" onclick="updateAnalytics()">
+            <i class="bi bi-search me-1"></i>Update
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="row g-3">
+    <!-- Daily Sales Bar Chart -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Daily Sales</h5>
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Foods Pie Chart -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Top Selling Foods</h5>
+          <canvas id="foodsChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let salesChartInstance = null;
+let foodsChartInstance = null;
+
+function initializeDatePickers() {
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  document.getElementById('endDate').valueAsDate = today;
+  document.getElementById('startDate').valueAsDate = thirtyDaysAgo;
+}
+
+function formatDate(date) {
+  if (typeof date === 'string') {
+    return date;
+  }
+  const d = new Date(date);
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + month + '-' + day;
+}
+
+async function loadAnalytics() {
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  
+  if (!startDate || !endDate) {
+    initializeDatePickers();
+    return;
+  }
+  
+  try {
+    const params = new URLSearchParams({
+      start_date: startDate,
+      end_date: endDate,
+    });
+    
+    const response = await fetch(`/api/analytics/summary?${params}`, {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      console.error('Failed to load analytics');
+      return;
+    }
+    
+    const data = await response.json();
+    const analyticsData = data.data || {};
+    
+    updateSalesChart(analyticsData.daily_sales || []);
+    updateFoodsChart(analyticsData.top_foods || []);
+  } catch (error) {
+    console.error('Error loading analytics:', error);
+  }
+}
+
+function updateSalesChart(dailySales) {
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  
+  // Destroy previous chart if exists
+  if (salesChartInstance) {
+    salesChartInstance.destroy();
+  }
+  
+  const labels = dailySales.map(d => d.date);
+  const revenues = dailySales.map(d => d.revenue);
+  
+  salesChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Revenue',
+        data: revenues,
+        backgroundColor: '#e7c55b',
+        borderColor: '#c9a43a',
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '₱' + value.toFixed(0);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateFoodsChart(topFoods) {
+  const ctx = document.getElementById('foodsChart').getContext('2d');
+  
+  // Destroy previous chart if exists
+  if (foodsChartInstance) {
+    foodsChartInstance.destroy();
+  }
+  
+  const labels = topFoods.map(f => f.name);
+  const quantities = topFoods.map(f => f.quantity);
+  
+  const colors = [
+    '#e7c55b', '#f7efd2', '#c9a43a', '#ffc107', '#ff9800',
+    '#ff7043', '#f44336', '#e91e63', '#9c27b0', '#673ab7'
+  ];
+  
+  foodsChartInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: quantities,
+        backgroundColor: colors.slice(0, topFoods.length),
+        borderColor: '#fff',
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': ' + context.parsed + ' items';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateAnalytics() {
+  loadAnalytics();
+}
+
+// Load analytics on page load
+document.addEventListener('DOMContentLoaded', function() {
+  initializeDatePickers();
+  loadAnalytics();
+});
+</script>

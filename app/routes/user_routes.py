@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, render_template, session, redirect
 from app.models import User
-from app.utils.auth import login_required
+from app.utils.auth import login_required, admin_required
 
 user_bp = Blueprint("user_routes", __name__)
 
@@ -34,3 +34,11 @@ def profile_page():
         return redirect("/login")
 
     return render_template("profile.html", user=user)
+
+
+@user_bp.route("/api/users")
+@admin_required
+def list_users():
+    users = User.query.order_by(User.username.asc()).all()
+    data = [{"id": u.id, "username": u.username, "role": u.role} for u in users]
+    return jsonify({"success": True, "data": data})

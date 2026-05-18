@@ -7,7 +7,7 @@ from decimal import Decimal
 from sqlalchemy import func
 
 from app import db
-from app.models import Transaction, DailySalesReport, Order, CustomerSession
+from app.models import Transaction, DailySalesReport, Order, CustomerSession, Expense, SoftBalanceEntry
 
 
 class SalesRepository:
@@ -84,3 +84,37 @@ class SalesRepository:
 
     def save(self) -> None:
         db.session.commit()
+
+    def sum_expenses_for_day(self, target_date: date) -> Decimal:
+        value = (
+            db.session.query(func.coalesce(func.sum(Expense.amount), 0))
+            .filter(Expense.expense_date == target_date)
+            .scalar()
+        )
+        return Decimal(str(value or 0))
+
+    def list_soft_balances(self) -> list[SoftBalanceEntry]:
+        return SoftBalanceEntry.query.order_by(SoftBalanceEntry.balance_date.desc(), SoftBalanceEntry.period.asc()).all()
+
+    def create_soft_balance(
+        self,
+        balance_date: date,
+        period: str,
+        total_revenue: Decimal,
+        total_expenses: Decimal,
+        net_balance: Decimal,
+        generated_by: int,
+        notes: Optional[str],
+    ) -> SoftBalanceEntry:
+        entry = SoftBalanceEntry(
+            balance_date=balance_date,
+            period=period,
+            total_revenue=total_revenue,
+            total_expenses=total_expenses,
+            net_balance=net_balance,
+            generated_by=generated_by,
+            notes=notes,
+        )
+        db.session.add(entry)
+        db.session.flush()
+        return entry

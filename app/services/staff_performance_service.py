@@ -5,6 +5,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, Optional
 
+from sqlalchemy import func, and_
+from app import db
+from app.models import Order, User
 from app.repositories.staff_repository import StaffRepository
 
 
@@ -20,10 +23,7 @@ class StaffPerformanceService:
                 "user_id": log.user_id,
                 "username": log.user.username if log.user else "Unknown",
                 "shift_date": log.shift_date.strftime("%Y-%m-%d"),
-                "orders_handled": log.orders_handled,
-                "avg_order_minutes": float(log.avg_order_minutes),
-                "sessions_managed": log.sessions_managed,
-                "upsell_count": log.upsell_count,
+                "customers_served": log.customers_served,
                 "score": float(log.score),
                 "admin_note": log.admin_note,
             }
@@ -37,9 +37,7 @@ class StaffPerformanceService:
             {
                 "id": log.id,
                 "username": log.user.username,
-                "orders_handled": log.orders_handled,
-                "sessions_managed": log.sessions_managed,
-                "upsell_count": log.upsell_count,
+                "customers_served": log.customers_served,
                 "score": float(log.score),
             }
             for log in logs
@@ -51,8 +49,7 @@ class StaffPerformanceService:
             {
                 "id": log.id,
                 "shift_date": log.shift_date.strftime("%Y-%m-%d"),
-                "orders_handled": log.orders_handled,
-                "sessions_managed": log.sessions_managed,
+                "customers_served": log.customers_served,
                 "score": float(log.score),
             }
             for log in logs
@@ -62,21 +59,27 @@ class StaffPerformanceService:
         self,
         user_id: int,
         shift_date: str,
-        orders_handled: int,
-        avg_order_minutes: float,
-        sessions_managed: int,
-        upsell_count: int,
-        admin_note: Optional[str],
+        customers_served: int,
+        admin_note: Optional[str] = None,
     ) -> dict[str, Any]:
         date_obj = date.fromisoformat(shift_date)
         log = self.repo.create(
             user_id,
             date_obj,
-            orders_handled,
-            Decimal(str(avg_order_minutes)),
-            sessions_managed,
-            upsell_count,
+            customers_served,
             admin_note,
         )
         self.repo.save()
         return {"success": True, "data": {"id": log.id, "score": float(log.score)}}
+
+    def calculate_customer_count(self, user_id: int, shift_date: date) -> int:
+        """Calculate unique customers served by a staff member on a shift date."""
+        count = db.session.query(
+            func.count(func.distinct(Order.customer_session_id))
+        ).filter(
+            and_(
+                Order.handled_by == user_id,
+                func.date(Order.created_at) == shift_date,
+            )
+        ).scalar() or 0
+        return int(count)

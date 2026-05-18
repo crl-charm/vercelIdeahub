@@ -1,0 +1,19 @@
+<div class="container-fluid">
+  <h2 class="mb-3">Finance</h2>
+  <div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="card card-body">Total Budget: {{ total_budget }}</div></div>
+    <div class="col-md-3"><div class="card card-body">Allocated: {{ allocated }}</div></div>
+    <div class="col-md-3"><div class="card card-body">Spent: {{ spent }}</div></div>
+    <div class="col-md-3"><div class="card card-body">Remaining: {{ remaining }}</div></div>
+  </div>
+  <div class="card card-body">
+    <h5>Recent Transactions</h5>
+    <ul class="mb-0">
+      {% for txn in transactions %}
+      <li>{{ txn.created_at }} - {{ txn.type }} - {{ txn.amount }} - {{ txn.description or "-" }}</li>
+      {% else %}
+      <li>No transactions yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>

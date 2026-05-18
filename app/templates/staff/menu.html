@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block title %}Menu Items - Staff View - IdeaHub{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Menu Management</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5>Menu Items</h5>
+    </div>
+    <div class="card-body">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Item Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Availability</th>
+          </tr>
+        </thead>
+        <tbody id="menu-table-body">
+          {% for item in items %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.category or "-" }}</td>
+            <td>₱{{ "%.2f"|format(item.price or 0) }}</td>
+            <td>{{ item.status }}</td>
+            <td>
+              {% if item.is_available %}
+              <span class="badge bg-success">Available</span>
+              {% else %}
+              <span class="badge bg-danger">Unavailable</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+  .unavailable td:nth-child(1),
+  .unavailable td:nth-child(2),
+  .unavailable td:nth-child(3),
+  .unavailable td:nth-child(4) {
+    background-color: #ffcccc !important;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadMenu();
+});
+
+function loadMenu() {
+  fetch('/menu-view/api/items').then(r => r.json()).then(data => {
+    if (data.success) {
+      const tbody = document.getElementById('menu-table-body');
+      tbody.innerHTML = '';
+      data.data.forEach(item => {
+        const isUnavailable = !item.is_available;
+        const rowClass = isUnavailable ? 'unavailable' : '';
+        tbody.innerHTML += `
+          <tr class="${rowClass}">
+            <td>${item.name}</td>
+            <td>${item.category || '-'}</td>
+            <td>₱${(item.price || 0).toFixed(2)}</td>
+            <td>${item.status}</td>
+            <td>${isUnavailable ? '<span class="badge bg-danger">Unavailable</span>' : '<span class="badge bg-success">Available</span>'}</td>
+          </tr>
+        `;
+      });
+    }
+  });
+}
+</script>
+{% endblock %}

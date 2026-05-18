@@ -65,6 +65,16 @@ class InventoryService:
         self.repo.save()
         return {"success": True}
 
+    def delete(self, item_id: int) -> dict[str, Any] | tuple[dict[str, Any], int]:
+        item = self.repo.get_item(item_id)
+        if not item:
+            return {"error": "Inventory item not found"}, 404
+        success = self.repo.delete(item_id)
+        if success:
+            self.repo.save()
+            return {"success": True}
+        return {"error": "Failed to delete inventory item"}, 500
+
     def deduct_on_order(self, menu_item_id: int, qty: int) -> bool:
         item = self.repo.get_by_menu_item_id(menu_item_id)
         if not item:

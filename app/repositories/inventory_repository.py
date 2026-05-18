@@ -70,5 +70,15 @@ class InventoryRepository:
             .all()
         )
 
+    def delete(self, item_id: int) -> bool:
+        item = self.get_item(item_id)
+        if not item:
+            return False
+        # Delete all associated logs first
+        InventoryLog.query.filter_by(inventory_item_id=item_id).delete()
+        # Then delete the item
+        db.session.delete(item)
+        return True
+
     def save(self) -> None:
         db.session.commit()

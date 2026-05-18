@@ -194,10 +194,9 @@ function checkinCustomer() {
         return;
     }
 
-    fetch("/api/checkin", {
+    csrfFetch("/api/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
             customer_name: name,
             school: school,
@@ -266,9 +265,8 @@ function voidItem(itemId, sessionId) {
 
     if (!confirm("Remove this item?")) return;
 
-    fetch(`/api/void-item/${itemId}`, {
-        method: "DELETE",
-        credentials: "include"
+    csrfFetch(`/api/void-item/${itemId}`, {
+        method: "DELETE"
     })
     .then(res => res.json())
     .then(data => {
@@ -347,9 +345,8 @@ function viewOrder(sessionId) {
 
                 if (!confirm("Are you sure you want to checkout this customer?")) return;
 
-                fetch(`/api/checkout/${sessionId}`, {
-                    method: "POST",
-                    credentials: "include"
+                csrfFetch(`/api/checkout/${sessionId}`, {
+                    method: "POST"
                 })
                 .then(res => res.json())
                 .then(data => {

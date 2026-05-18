@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block title %}Inventory - Staff View - IdeaHub{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Inventory Management</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5>Stock Levels</h5>
+    </div>
+    <div class="card-body">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Item Name</th>
+            <th>Current Stock</th>
+            <th>Unit</th>
+            <th>Low Stock Threshold</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-table-body">
+          {% for item in items %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.stock_qty }}</td>
+            <td>{{ item.unit }}</td>
+            <td>{{ item.low_stock_threshold }}</td>
+            <td>
+              {% if item.stock_qty <= item.low_stock_threshold %}
+              <span class="badge bg-danger">Low Stock</span>
+              {% else %}
+              <span class="badge bg-success">OK</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+  .low-stock td:nth-child(1),
+  .low-stock td:nth-child(2),
+  .low-stock td:nth-child(3),
+  .low-stock td:nth-child(4) {
+    background-color: #ffcccc !important;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadInventory();
+});
+
+function loadInventory() {
+  fetch('/inventory/api/items').then(r => r.json()).then(data => {
+    if (data.success) {
+      const tbody = document.getElementById('inventory-table-body');
+      tbody.innerHTML = '';
+      data.data.forEach(item => {
+        const isLowStock = item.stock_qty <= item.low_stock_threshold;
+        const rowClass = isLowStock ? 'low-stock' : '';
+        tbody.innerHTML += `
+          <tr class="${rowClass}">
+            <td>${item.name}</td>
+            <td>${item.stock_qty}</td>
+            <td>${item.unit}</td>
+            <td>${item.low_stock_threshold}</td>
+            <td>${isLowStock ? '<span class="badge bg-danger">Low Stock</span>' : '<span class="badge bg-success">OK</span>'}</td>
+          </tr>
+        `;
+      });
+    }
+  });
+}
+</script>
+{% endblock %}
