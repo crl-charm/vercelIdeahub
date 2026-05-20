@@ -6,6 +6,7 @@ from decimal import Decimal
 from typing import Any, Optional
 
 from app.core.interfaces import Notifier
+from app.models import MenuItem
 from app.repositories.order_repository import OrderRepository
 
 
@@ -16,12 +17,35 @@ class OrderService:
 
     def list_menu(self) -> list[dict[str, Any]]:
         items = self.repo.list_menu_items()
-        return [{"id": i.id, "name": i.name, "price": float(i.price), "category": i.category, "description": i.description, "image_url": i.image_url} for i in items]
+        return [
+            {
+                "id": i.id,
+                "name": i.name,
+                "price": float(i.price),
+                "category": i.category,
+                "description": i.description,
+                "image_url": i.image_url,
+                "is_available": bool(i.is_available),
+            }
+            for i in items
+        ]
 
     def add_order(self, *, session_id: int, items: list[dict], handled_by: Optional[int]) -> dict[str, Any] | tuple[dict[str, Any], int]:
         sess = self.repo.get_session(session_id)
         if not sess:
             return {"error": "Session not found"}, 404
+
+        for item in items:
+            menu_item_id = item.get("menu_item_id")
+            if not menu_item_id:
+                return {"error": "Invalid menu item in order"}, 400
+
+            menu_item = MenuItem.query.get(menu_item_id)
+            if not menu_item or menu_item.status == "deleted":
+                return {"error": "One or more items are no longer on the menu"}, 400
+            if not menu_item.is_available:
+                return {"error": f"{menu_item.name} is not available"}, 400
+
         order_id = self.repo.add_order_with_items(session_id=session_id, handled_by=handled_by, items=items)
         
         # Deduct inventory for each item in the order

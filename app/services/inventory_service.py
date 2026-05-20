@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from app import socketio
 from app.repositories.inventory_repository import InventoryRepository
 
 
@@ -83,15 +82,14 @@ class InventoryService:
         if success:
             self.repo.save()
             if item.stock_qty < item.low_stock_threshold:
-                socketio.emit(
-                    "inventory_low_stock",
-                    {
-                        "item_id": item.id,
-                        "menu_item": item.menu_item.name,
-                        "stock_qty": item.stock_qty,
-                        "threshold": item.low_stock_threshold,
-                    },
-                )
+                from app.core.socketio_handlers import emit_inventory_low_stock
+
+                emit_inventory_low_stock({
+                    "item_id": item.id,
+                    "menu_item": item.menu_item.name,
+                    "stock_qty": item.stock_qty,
+                    "threshold": item.low_stock_threshold,
+                })
         return success
 
     def get_low_stock(self) -> list[dict[str, Any]]:

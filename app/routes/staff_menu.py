@@ -14,12 +14,12 @@ _service = MenuService(repo=MenuRepository())
 @staff_menu_bp.route("", methods=["GET"])
 @login_required
 def view_menu() -> str:
-    items = _service.list_menu()
+    items = _service.list_for_ordering()
     return render_template("staff/menu.html", items=items)
 
 
 @staff_menu_bp.route("/api/items", methods=["GET"])
 @login_required
 def api_list_items() -> tuple:
-    items = _service.list_menu()
+    items = _service.list_for_ordering()
     return jsonify({"success": True, "data": items}), 200

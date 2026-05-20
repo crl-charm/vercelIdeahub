@@ -7,7 +7,9 @@ from app.repositories.analytics_repository import AnalyticsRepository
 
 
 @dataclass(frozen=True)
-class AnalyticsService:
+class AnalyticsChartService:
+    """Chart.js datasets for /api/analytics/* chart endpoints."""
+
     repo: AnalyticsRepository
 
     def daily_revenue(self, days: int = 30) -> dict[str, Any]:

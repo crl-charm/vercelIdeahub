@@ -1,4 +1,4 @@
--- TODO(phase2): run this script in controlled deployment migration step.
+-- Reference DDL; indexes are applied automatically by app/db/migrator.py on startup.
 CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON transactions(created_at);
 CREATE INDEX IF NOT EXISTS idx_orders_session_status ON orders(customer_session_id, status, id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);

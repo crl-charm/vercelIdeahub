@@ -4,7 +4,7 @@ from datetime import date
 from typing import Optional
 from decimal import Decimal
 
-from sqlalchemy import func
+from sqlalchemy import case, func
 
 from app import db
 from app.models import Transaction, DailySalesReport, Order, CustomerSession, Expense, SoftBalanceEntry
@@ -57,6 +57,39 @@ class SalesRepository:
         db.session.add(report)
         db.session.flush()
         return report
+
+    def payment_totals_by_dates(self, dates: list[date]) -> dict[date, dict[str, float | int]]:
+        if not dates:
+            return {}
+        is_gcash = Transaction.payment_method == "gcash"
+        rows = (
+            Transaction.query.with_entities(
+                func.date(Transaction.created_at).label("tx_date"),
+                func.coalesce(
+                    func.sum(case((is_gcash, 0), else_=Transaction.total_bill)),
+                    0,
+                ).label("cash_total"),
+                func.coalesce(
+                    func.sum(case((is_gcash, Transaction.total_bill), else_=0)),
+                    0,
+                ).label("gcash_total"),
+                func.coalesce(func.sum(case((is_gcash, 0), else_=1)), 0).label("cash_count"),
+                func.coalesce(func.sum(case((is_gcash, 1), else_=0)), 0).label("gcash_count"),
+            )
+            .filter(func.date(Transaction.created_at).in_(dates))
+            .group_by(func.date(Transaction.created_at))
+            .all()
+        )
+        result: dict[date, dict[str, float | int]] = {}
+        for row in rows:
+            result[row.tx_date] = {
+                "cash_total": float(row.cash_total or 0),
+                "gcash_total": float(row.gcash_total or 0),
+                "cash_count": int(row.cash_count or 0),
+                "gcash_count": int(row.gcash_count or 0),
+            }
+        empty = {"cash_total": 0.0, "gcash_total": 0.0, "cash_count": 0, "gcash_count": 0}
+        return {d: result.get(d, empty) for d in dates}
 
     def get_daily_transactions(self, report_date: date) -> list[Transaction]:
         return (

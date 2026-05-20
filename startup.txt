@@ -1,0 +1,239 @@
+IdeaHub — System Overview for Your Client
+What IdeaHub is
+IdeaHub is a web-based management system for a student-focused café / workspace business. Staff use it in the browser (computer or tablet) to:
+
+Check customers in and out of lounge spaces
+Take food and drink orders
+Record Cash and GCash payments
+Track inventory, expenses, and money owed
+Produce daily sales and balance reports for the owner and accountant
+All important data is stored in a central database (MySQL), so records stay in one place instead of scattered notebooks or spreadsheets.
+
+Who uses the system
+Role	Who	What they can do
+Admin
+Owner / manager
+Everything staff can do, plus daily balance, analytics, staff performance, reservations, full admin panel
+Staff
+Front desk / barista
+Dashboard, orders, checkout records, menu, inventory, expenses, receivables, boardroom booking
+Login
+Everyone with an account
+Secure login; after login, each person only sees menus allowed for their role
+After login, admins go to the Admin Panel; staff go to the Dashboard.
+
+Main areas of the system (menu map)
+For everyone (staff and admin)
+Dashboard — Live view of who is in the shop right now
+Checkout Records — History of completed visits and bills
+Orders — Kitchen / service order list
+Boardroom Booking — Reserve and manage boardroom time
+Operations (staff + admin)
+Menu — Food and drinks (add, edit, enable/disable, photos)
+Inventory — Stock levels; auto-reduces when orders are placed
+Expenses — Record money spent (supplies, utilities, etc.)
+Receivables — Customers who owe money (track and mark paid)
+Admin only (finance and management)
+Daily Sales Balance — End-of-day reports and PDF / Excel / CSV export
+Daily Sales — Charts for revenue over time
+Analytics — Sales trends and top-selling items
+Staff Performance — Staff activity metrics
+Reservations — Advance bookings
+Admin Panel — Users, space capacity, prices, customer records
+A typical day — step by step
+1. Customer arrives (check-in)
+On the Dashboard, staff tap + (New Customer Check-in) and enter:
+
+Customer name
+School and course (optional, for records)
+Number of people
+Space type: Regular Lounge, Premium Lounge, or Boardroom
+The system:
+
+Starts a session (visit timer)
+Checks seat capacity so you do not overbook a lounge
+Shows the customer on the dashboard with a running bill (time + any orders)
+2. During the visit — food and drinks
+Staff open Orders for that customer’s session and add items from the menu.
+
+Only available items can be ordered; unavailable items show clearly
+When admin disables an item on the menu, it updates for staff ordering in real time
+Inventory can automatically go down when orders are placed; low stock alerts can appear
+3. Checkout (customer leaves)
+Staff open the customer’s bill and choose Checkout.
+
+They must select payment method:
+
+Cash
+GCash
+A confirmation dialog appears (no old browser pop-ups). After confirm:
+
+The visit is closed
+A transaction is saved (total bill, space charge, food charge, payment method)
+A receipt can be viewed/printed
+The customer disappears from the active dashboard list
+4. End of shift / end of day (admin)
+Admin goes to Daily Sales Balance and:
+
+Generates a daily report for a chosen date (revenue, expenses, net balance, order and session counts)
+Can also record soft balancing (AM / PM shift snapshots)
+Exports PDF — best for the client or accountant (easy to open on phone or email)
+Exports Excel or CSV — for deeper analysis in Excel
+The PDF includes:
+
+Total revenue, expenses, net balance
+Cash vs GCash totals and how many checkouts used each
+A per-day table with Cash and GCash columns
+Soft balancing history (if used)
+Spaces explained
+Space	Purpose
+Regular Lounge
+Standard seating; capacity tracked
+Premium Lounge
+Higher tier; separate capacity
+Boardroom
+Bookable room; booking module for schedules and extensions
+The dashboard can filter by space so staff see only Regular, Premium, or Boardroom customers.
+
+Money and audit — what the client cares about
+Checkout Records
+List of every completed checkout
+Shows customer, amounts, date/time
+Payment column: Cash or GCash
+Filter by payment type (all / cash / GCash)
+Summary cards: how much came in Cash vs GCash
+Use case: “How much GCash did we collect this week?”
+
+Daily Sales Balance
+Official daily snapshot when admin generates a report
+Combines sales from checkouts with expenses entered that day
+Net balance = revenue minus expenses
+Use case: End-of-day close and monthly review with accountant.
+
+Expenses
+Staff/admin log money going out (supplies, etc.) with date and amount
+Feeds into daily balance expense totals
+Receivables
+Track customers who owe money (description, amount, due date)
+Mark as paid when settled
+Alerts for due items
+Menu and inventory
+Menu (admin)
+Categories (e.g. main dish, snack, beverages)
+Name, price, description, photo
+Enable / disable items without deleting (disabled items stay in history but cannot be ordered)
+Delete uses soft delete so old orders still make sense historically
+Inventory (admin/staff)
+Stock per menu-linked item
+Low stock warnings
+Deduction when orders are placed (when inventory is linked)
+Boardroom and reservations
+Boardroom Booking — staff manage active bookings, extensions, overdue alerts
+Reservations (admin) — plan future visits/bookings
+Staff and performance
+Staff Performance (admin) — logs and metrics tied to staff activity
+Admin Panel — manage user accounts, space prices, capacity, customer records
+Reports your client can rely on
+Report	Where	Best for
+Daily Balance PDF
+Admin → Daily Balance → Export PDF
+Owner, accountant, audit
+Daily Balance Excel
+Same page → Excel
+Spreadsheets, pivot tables
+Daily Balance CSV
+Same page → CSV
+Simple data import
+Checkout Records
+Checkout Records (on screen)
+Daily Cash vs GCash check
+Analytics
+Admin → Analytics
+Trends, top foods, date range
+Receipt
+After checkout
+Customer copy
+Important for the client:
+
+GCash and Cash are recorded at checkout, not guessed later.
+Older checkouts from before GCash was added may show as Cash by default.
+Real-time updates (why screens stay in sync)
+When one computer changes the menu, inventory, expenses, or receivables, other logged-in devices can refresh automatically (live updates over the network).
+
+The dashboard refreshes active sessions on a short interval so bills stay current while customers are still inside.
+
+Security and access (simple terms)
+Password login required
+Sessions expire after inactivity (about 24 hours configured)
+Admin-only pages blocked for normal staff
+CSRF protection on forms (helps prevent fake submissions from other sites)
+Rate limiting on login (helps against password guessing)
+Production should use a strong secret key and HTTPS on the live server.
+
+Where data lives
+Primary database: MySQL (e.g. Railway in production)
+Backups: Client should arrange regular database backups with their host (Railway / provider)
+Exports: PDF/Excel are copies for audit; the database remains the source of truth
+How it is built (one paragraph for technical stakeholders)
+IdeaHub is a Python Flask application with a layered design: screens → business logic → database access → stored tables. It is roughly 70% structured in that pattern (services and repositories), which makes it maintainable as the business grows. The user interface is HTML pages with modern styling (Bootstrap); no separate phone app is required—only a web browser.
+
+What IdeaHub is not
+Not a full accounting system (no full chart of accounts, payroll, or BIR tax filing built in)
+Not automatic bank/GCash API sync—you record GCash when staff selects it at checkout
+Not Google Sheets sync yet (planned as a future phase; exports cover audit needs today)
+Suggested workflow for the client (owner + accountant)
+Daily (staff): Check-in → orders → checkout with correct Cash or GCash.
+
+Daily (admin): Review Checkout Records → generate Daily Sales Balance for that date.
+
+Weekly/monthly: Export PDF from Daily Balance → send to accountant. Use Analytics for trends.
+
+As needed: Update menu prices, log expenses, track receivables, adjust inventory.
+
+
+
+------------------------------------
+
+
+
+
+
+
+IdeaHub — Quick Start (Staff & Owner)
+Login: your shop link → Login
+
+For the owner (30 seconds)
+IdeaHub tracks who’s inside, orders, and Cash vs GCash at checkout. Staff follow the 4 steps below. You review Checkout Records anytime and Daily Balance → Export PDF at end of day for your accountant.
+
+Every shift — 4 steps
+Log in → you see the Dashboard (active customers).
+
+Check in — tap +, enter name, number of people, pick Regular / Premium / Boardroom, tap Check In.
+If it says full, that space has no seats left.
+
+Orders (if they buy food/drink) — Orders menu → add items. Don’t use gray / “Not Available” items.
+
+Checkout — open their bill → choose Cash or GCash → Confirm.
+Always pick how they actually paid — reports depend on this.
+
+Quick reference
+Task	Page
+Who’s inside now
+Dashboard
+Past sales & Cash/GCash
+Checkout Records
+Food orders
+Orders
+Boardroom
+Boardroom Booking
+Menu / stock / expenses / debts
+Menu, Inventory, Expenses, Receivables
+Admin only: Daily Balance, Analytics, Admin Panel
+
+End of day
+Staff: All customers checked out; tell admin if any payment looked wrong.
+Owner: Checkout Records → Daily Balance → Generate Report → Export PDF.
+Help
+Menu/prices/users → Admin
+Login issues → Admin Panel → users
+Remember: Check in → order → checkout with Cash or GCash → done.

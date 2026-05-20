@@ -39,6 +39,21 @@ class MenuService:
             for item in items
         ]
 
+    def list_for_ordering(self) -> list[dict[str, Any]]:
+        items = self.repo.list_for_ordering()
+        return [
+            {
+                "id": item.id,
+                "name": item.name,
+                "description": item.description,
+                "price": float(item.price),
+                "category": item.category,
+                "image_url": item.image_url,
+                "is_available": bool(item.is_available),
+            }
+            for item in items
+        ]
+
     def create(self, name: str, price: float, category: str, description: Optional[str] = None, image_url: Optional[str] = None) -> dict[str, Any]:
         item = self.repo.create(name, price, category)
         if description:
@@ -80,4 +95,7 @@ class MenuService:
         if not success:
             return {"error": "Menu item not found"}, 404
         self.repo.save()
-        return {"success": True}
+        return {
+            "success": True,
+            "message": "Menu item removed from the menu.",
+        }

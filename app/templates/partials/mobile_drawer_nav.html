@@ -1,0 +1,76 @@
+{# Shared mobile offcanvas navigation (mirrors desktop sidebar) #}
+<div class="sidebar-section-label">Navigation</div>
+{% if session.get("role") == "admin" %}
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" style="background-color: #fff3cd; border: 2px solid #ffc107; color: #856404; font-weight: 600;" data-href="/admin">
+  <i class="bi bi-shield-lock me-2"></i>Admin Panel
+</button>
+{% endif %}
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/dashboard">
+  <i class="bi bi-grid me-2"></i>Dashboard
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/checkout-records">
+  <i class="bi bi-receipt me-2"></i>Checkout Records
+</button>
+{% if session.get("role") == "admin" %}
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/daily-sales">
+  <i class="bi bi-bar-chart me-2"></i>Daily Sales
+</button>
+{% endif %}
+<button type="button" class="btn w-100 text-start mb-2 drawer-nav-btn nav-btn" data-href="/lounge-booking">
+  <i class="bi bi-calendar-check me-2"></i>Boardroom Booking
+</button>
+
+<div class="sidebar-section-label">Spaces</div>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn space-btn" data-href="/dashboard?space=Regular%20Lounge">
+  <i class="bi bi-person me-2"></i>Regular
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn space-btn" data-href="/dashboard?space=Premium%20Lounge">
+  <i class="bi bi-star me-2"></i>Premium
+</button>
+<button type="button" class="btn w-100 text-start mb-2 drawer-nav-btn space-btn" data-href="/dashboard?space=Boardroom">
+  <i class="bi bi-building me-2"></i>Boardroom
+</button>
+
+{% if session.get("role") in ["admin", "staff"] %}
+<div class="sidebar-section-label">Operations</div>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/inventory">
+  <i class="bi bi-boxes me-2"></i>Inventory
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/menu">
+  <i class="bi bi-menu-button-wide me-2"></i>Menu
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/expenses">
+  <i class="bi bi-wallet2 me-2"></i>Expenses
+</button>
+<button type="button" class="btn w-100 text-start mb-2 drawer-nav-btn nav-btn" data-href="/admin/receivables">
+  <i class="bi bi-people me-2"></i>Receivables
+  <span class="debt-badge-drawer badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
+</button>
+{% endif %}
+
+{% if session.get("role") == "admin" %}
+<div class="sidebar-section-label">Finance</div>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/daily-balance">
+  <i class="bi bi-cash-stack me-2"></i>Daily Balance
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/staff-performance">
+  <i class="bi bi-trophy me-2"></i>Performance
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/analytics">
+  <i class="bi bi-graph-up me-2"></i>Analytics
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/reservations">
+  <i class="bi bi-calendar-plus me-2"></i>Reservations
+</button>
+{% endif %}
+
+<div class="sidebar-section-label mt-2">Account</div>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/orders">
+  <i class="bi bi-bag me-2"></i>Orders
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/profile">
+  <i class="bi bi-person me-2"></i>Profile
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn text-danger" data-href="/logout">
+  <i class="bi bi-box-arrow-right me-2"></i>Logout
+</button>

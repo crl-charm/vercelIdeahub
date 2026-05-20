@@ -15,6 +15,7 @@ class Transaction(db.Model):
     time_bill = db.Column(db.Numeric(10,2), nullable=False)
     food_bill = db.Column(db.Numeric(10,2), nullable=False)
     total_bill = db.Column(db.Numeric(10,2), nullable=False)
+    payment_method = db.Column(db.String(50), nullable=False, default="cash")
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

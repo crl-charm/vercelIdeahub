@@ -5,7 +5,6 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Optional
 
-from app import socketio
 from app.core.interfaces import Clock
 from app.repositories.sales_repository import SalesRepository
 
@@ -62,20 +61,29 @@ class SalesService:
 
     def list_reports(self) -> list[dict[str, Any]]:
         reports = self.repo.list_reports()
-        return [
-            {
-                "id": r.id,
-                "report_date": r.report_date.strftime("%Y-%m-%d"),
-                "total_revenue": float(r.total_revenue),
-                "total_expenses": float(r.total_expenses),
-                "net_balance": float(r.net_balance),
-                "total_orders": r.total_orders,
-                "total_sessions": r.total_sessions,
-                "generated_by": r.generated_by_user.username if r.generated_by_user else "Unknown",
-                "notes": r.notes,
-            }
-            for r in reports
-        ]
+        report_dates = [r.report_date for r in reports]
+        payments = self.repo.payment_totals_by_dates(report_dates)
+        shaped: list[dict[str, Any]] = []
+        for r in reports:
+            pay = payments.get(r.report_date, {})
+            shaped.append(
+                {
+                    "id": r.id,
+                    "report_date": r.report_date.strftime("%Y-%m-%d"),
+                    "total_revenue": float(r.total_revenue),
+                    "total_expenses": float(r.total_expenses),
+                    "net_balance": float(r.net_balance),
+                    "total_orders": r.total_orders,
+                    "total_sessions": r.total_sessions,
+                    "generated_by": r.generated_by_user.username if r.generated_by_user else "Unknown",
+                    "notes": r.notes,
+                    "cash_total": float(pay.get("cash_total", 0)),
+                    "gcash_total": float(pay.get("gcash_total", 0)),
+                    "cash_count": int(pay.get("cash_count", 0)),
+                    "gcash_count": int(pay.get("gcash_count", 0)),
+                }
+            )
+        return shaped
 
     def list_soft_balances(self) -> list[dict[str, Any]]:
         entries = self.repo.list_soft_balances()
@@ -136,14 +144,13 @@ class SalesService:
             )
         self.repo.save()
 
-        socketio.emit(
-            "daily_sales_closed",
-            {
-                "report_date": report_date.strftime("%Y-%m-%d"),
-                "total_revenue": float(total_revenue),
-                "net_balance": float(net_balance),
-            },
-        )
+        from app.core.socketio_handlers import emit_daily_sales_closed
+
+        emit_daily_sales_closed({
+            "report_date": report_date.strftime("%Y-%m-%d"),
+            "total_revenue": float(total_revenue),
+            "net_balance": float(net_balance),
+        })
 
         return {
             "success": True,

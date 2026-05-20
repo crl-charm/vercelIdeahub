@@ -20,3 +20,34 @@ from .base_model import BaseModel
 from .management import Department, UserRole
 from .idea import Idea, IdeaVote
 from .finance import FinanceBudget, FinanceTransaction
+
+# Explicit exports for production safety
+# This prevents importing incorrect model names
+__all__ = [
+    'User',
+    'SpaceType',
+    'SpacePriceHistory',
+    'CustomerSession',
+    'MenuItem',
+    'Order',
+    'OrderItem',
+    'Transaction',
+    'BoardroomBooking',
+    'LoungeBooking',
+    'StaffAttendance',
+    'InventoryItem',
+    'InventoryLog',
+    'Receivable',
+    'Expense',
+    'StaffPerformanceLog',  # Note: NOT 'StaffPerformance'
+    'DailySalesReport',
+    'Reservation',
+    'SoftBalanceEntry',
+    'BaseModel',
+    'Department',
+    'UserRole',
+    'Idea',
+    'IdeaVote',
+    'FinanceBudget',
+    'FinanceTransaction',
+]

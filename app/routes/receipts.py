@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from app.repositories.session_repository import SessionRepository
 from app.utils.auth import login_required
+from app.utils.payment import payment_method_label
 
 receipts_bp = Blueprint("receipts", __name__, url_prefix="/receipt")
 
@@ -39,7 +40,7 @@ def view_receipt(session_id: int) -> str:
         time_bill=time_bill,
         food_bill=total_food,
         total_bill=time_bill + total_food,
-        payment_method=getattr(sess, "payment_method", "cash"),
+        payment_method=payment_method_label(getattr(sess, "payment_method", "cash")),
         amount_tendered=getattr(sess, "amount_tendered", None),
         receipt_date=(sess.time_in + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S"),
         orders=orders,

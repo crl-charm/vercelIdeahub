@@ -15,8 +15,8 @@ class AnalyticsSummary(TypedDict):
     date_range: dict
 
 
-class AnalyticsService(ExportService):
-    """Computes analytics insights for sales and food trends."""
+class AnalyticsReportService(ExportService):
+    """Admin analytics page: daily sales summary, top foods, PDF export."""
 
     def get_summary(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> AnalyticsSummary:
         """Get daily sales and top food analytics."""
@@ -105,3 +105,7 @@ class AnalyticsService(ExportService):
 
     def get_dashboard_data(self) -> dict:
         return self.get_summary()
+
+
+# Backward-compatible alias (deprecated name)
+AnalyticsService = AnalyticsReportService

@@ -53,7 +53,14 @@ def get_active_sessions():
 @session_bp.route("/api/checkout/<int:session_id>", methods=["POST"])
 @login_required
 def checkout(session_id):
-    resp = _service.checkout(session_id)
+    data = request.get_json(silent=True) or {}
+    payment_method = (
+        data.get("payment_method")
+        or request.form.get("payment_method")
+        or request.args.get("payment_method")
+        or "cash"
+    )
+    resp = _service.checkout(session_id, payment_method=payment_method)
     if isinstance(resp, tuple):
         payload, status = resp
         return jsonify(payload), status
@@ -81,6 +88,7 @@ def checkout_records():
     # Optional date-range filter (YYYY-MM-DD strings from the frontend)
     date_from_str = request.args.get("date_from", "").strip()
     date_to_str   = request.args.get("date_to",   "").strip()
+    payment_filter = request.args.get("payment_method", "").strip().lower()
 
     date_from = None
     date_to   = None
@@ -98,7 +106,10 @@ def checkout_records():
             continue
         if date_to and tx.created_at.date() > date_to:
             continue
-        result.append(serialize_transaction(tx))
+        serialized = serialize_transaction(tx)
+        if payment_filter and serialized.get("payment_method") != payment_filter:
+            continue
+        result.append(serialized)
 
     return jsonify(result)
 

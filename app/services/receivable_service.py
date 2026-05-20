@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any, Optional
 
-from app import socketio
 from app.repositories.receivable_repository import ReceivableRepository
 
 
@@ -64,17 +63,18 @@ class ReceivableService:
         if not success:
             return {"error": "Receivable not found"}, 404
         self.repo.save()
-        socketio.emit("receivable_marked_paid", {"receivable_id": receivable_id})
+        from app.core.socketio_handlers import emit_receivable_marked_paid
+
+        emit_receivable_marked_paid(receivable_id)
         return {"success": True}
 
     def emit_due_reminders(self) -> None:
         due_today = self.repo.list_due_today()
         for r in due_today:
-            socketio.emit(
-                "debt_due_reminder",
-                {
-                    "receivable_id": r.id,
-                    "customer_name": r.customer_name,
-                    "amount_owed": float(r.amount_owed),
-                },
-            )
+            from app.core.socketio_handlers import emit_debt_due_reminder
+
+            emit_debt_due_reminder({
+                "receivable_id": r.id,
+                "customer_name": r.customer_name,
+                "amount_owed": float(r.amount_owed),
+            })

@@ -135,6 +135,43 @@
 .sidebar-collapse-toggle.collapsed .bi {
   transform: rotate(-90deg);
 }
+
+/* IdeaHub confirm dialog */
+.ih-confirm-modal .modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+}
+.ih-confirm-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: linear-gradient(135deg, #f7efd2 0%, #fef8e7 100%);
+  border: 2px solid #e7c55b;
+}
+.ih-confirm-icon.gcash {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #3b82f6;
+}
+.ih-confirm-icon.cash {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #22c55e;
+}
+
+@media (max-width: 767.98px) {
+  #ih-toast-container {
+    left: 16px;
+    right: 16px;
+  }
+  .ih-toast {
+    width: calc(100vw - 32px);
+    max-width: 100%;
+  }
+}
 </style>
 
 </head>
@@ -142,16 +179,22 @@
 <body>
 
 <!-- TOP NAVBAR -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-3 px-md-4">
+<nav class="navbar navbar-expand-md mobile-top-bar navbar-light bg-white shadow-sm px-3 px-md-4">
 
-    <a class="navbar-brand fw-bold text-warning" href="/dashboard">IdeaHub</a>
+    <a class="navbar-brand fw-bold text-warning mb-0" href="/dashboard">IdeaHub</a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+    <div class="d-flex align-items-center gap-2 ms-auto d-md-none">
+      <a class="nav-link p-1 position-relative" href="/orders" aria-label="Orders">
+        <i class="bi bi-bag fs-5 text-secondary"></i>
+        <span id="orders-badge-mobile" class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-warning" style="display:none; font-size:10px;">0</span>
+      </a>
+      <button class="btn btn-outline-secondary mobile-menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#siteNavDrawer" aria-label="Open menu">
+        <i class="bi bi-list fs-4"></i>
+      </button>
+    </div>
 
-    <div class="collapse navbar-collapse" id="mainNavbarNav">
-      <div class="ms-auto d-grid d-lg-flex gap-2">
+    <div class="collapse navbar-collapse d-none d-md-flex" id="mainNavbarNav">
+      <div class="ms-auto d-flex gap-2">
 
         <a class="nav-link top-nav-link d-inline me-3" href="/dashboard">Dashboard</a>
         <a class="nav-link top-nav-link d-inline me-3" href="/orders">
@@ -170,24 +213,33 @@
 
 </nav>
 
-<div class="mobile-quick-nav d-md-none">
-  <a class="btn btn-warning" href="/dashboard">Dashboard</a>
-  <a class="btn btn-outline-dark" href="/orders">Orders</a>
-  <a class="btn btn-outline-dark" href="/checkout-records">Records</a>
-  <a class="btn btn-outline-dark" href="/lounge-booking">Booking</a>
-  {% if session.get("role") in ["admin", "staff"] %}
-  <a class="btn btn-outline-dark" href="/admin/inventory">Inventory</a>
-  <a class="btn btn-outline-dark" href="/admin/menu">Menu</a>
-  <a class="btn btn-outline-dark" href="/admin/expenses">Expenses</a>
-  <a class="btn btn-outline-dark" href="/admin/receivables">Receivables</a>
-  {% endif %}
-  {% if session.get("role") == "admin" %}
-  <a class="btn btn-outline-dark" href="/admin/daily-balance">Balance</a>
-  <a class="btn btn-outline-dark" href="/admin/staff-performance">Staff</a>
-  <a class="btn btn-outline-dark" href="/analytics">Analytics</a>
-  <a class="btn btn-outline-dark" href="/performance">Performance</a>
-  <a class="btn btn-outline-dark" href="/admin/reservations">Reservations</a>
-  {% endif %}
+<nav class="mobile-bottom-nav d-md-none" aria-label="Primary navigation">
+  <a href="/dashboard" class="mobile-bottom-nav-item" data-nav-path="/dashboard">
+    <i class="bi bi-grid"></i>
+    <span>Dashboard</span>
+  </a>
+  <a href="/orders" class="mobile-bottom-nav-item" data-nav-path="/orders">
+    <i class="bi bi-bag"></i>
+    <span>Orders</span>
+  </a>
+  <a href="/checkout-records" class="mobile-bottom-nav-item" data-nav-path="/checkout-records">
+    <i class="bi bi-receipt"></i>
+    <span>Records</span>
+  </a>
+  <button type="button" class="mobile-bottom-nav-item mobile-bottom-nav-more" data-bs-toggle="offcanvas" data-bs-target="#siteNavDrawer" aria-label="More navigation">
+    <i class="bi bi-three-dots"></i>
+    <span>More</span>
+  </button>
+</nav>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="siteNavDrawer" aria-labelledby="siteNavDrawerLabel">
+  <div class="offcanvas-header border-bottom">
+    <h5 class="offcanvas-title fw-bold" id="siteNavDrawerLabel">Menu</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body p-3">
+    {% include 'partials/mobile_drawer_nav.html' %}
+  </div>
 </div>
 
 <div class="d-flex">
@@ -334,6 +386,23 @@
 <!-- IdeaHub Toast Container -->
 <div id="ih-toast-container"></div>
 
+<!-- IdeaHub Confirm Dialog -->
+<div class="modal fade ih-confirm-modal" id="ihConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content ih-confirm-content border-0 shadow-lg">
+      <div class="modal-body text-center px-4 pt-4 pb-2">
+        <div id="ihConfirmIcon" class="ih-confirm-icon mb-3">✦</div>
+        <h5 id="ihConfirmTitle" class="fw-bold mb-2">Confirm</h5>
+        <p id="ihConfirmMessage" class="text-muted mb-0"></p>
+      </div>
+      <div class="modal-footer border-0 justify-content-center gap-2 px-4 pb-4 pt-2">
+        <button type="button" class="btn btn-light px-4" id="ihConfirmCancelBtn">Cancel</button>
+        <button type="button" class="btn btn-success px-4" id="ihConfirmBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 function showToast(message, type) {
   type = type || "success";
@@ -360,32 +429,88 @@ function dismissToast(toast) {
 }
 
 /**
+ * Modern confirm dialog (replaces browser confirm()).
+ * Returns a Promise that resolves true if confirmed, false if cancelled.
+ */
+window.showConfirmDialog = function(options) {
+  options = options || {};
+  return new Promise(function(resolve) {
+    var modalEl = document.getElementById("ihConfirmModal");
+    var titleEl = document.getElementById("ihConfirmTitle");
+    var messageEl = document.getElementById("ihConfirmMessage");
+    var iconEl = document.getElementById("ihConfirmIcon");
+    var confirmBtn = document.getElementById("ihConfirmBtn");
+    var cancelBtn = document.getElementById("ihConfirmCancelBtn");
+    var settled = false;
+
+    function finish(result) {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    }
+
+    titleEl.textContent = options.title || "Confirm";
+    messageEl.textContent = options.message || "Are you sure you want to continue?";
+    confirmBtn.textContent = options.confirmText || "Confirm";
+    confirmBtn.className = "btn px-4 " + (options.confirmClass || "btn-success");
+
+    var iconType = options.iconType || "default";
+    iconEl.className = "ih-confirm-icon mb-3 " + iconType;
+    iconEl.textContent = options.icon || (iconType === "gcash" ? "📱" : iconType === "cash" ? "💵" : "✦");
+
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+    function onConfirm() {
+      modal.hide();
+      finish(true);
+    }
+
+    function onCancel() {
+      modal.hide();
+      finish(false);
+    }
+
+    function onHidden() {
+      confirmBtn.removeEventListener("click", onConfirm);
+      cancelBtn.removeEventListener("click", onCancel);
+      modalEl.removeEventListener("hidden.bs.modal", onHidden);
+      finish(false);
+    }
+
+    confirmBtn.addEventListener("click", onConfirm);
+    cancelBtn.addEventListener("click", onCancel);
+    modalEl.addEventListener("hidden.bs.modal", onHidden);
+
+    modal.show();
+  });
+};
+
+/**
  * CSRF-aware fetch wrapper
  * Automatically includes CSRF token from meta tag for state-changing requests
  */
 window.csrfFetch = function(url, options) {
   options = options || {};
-  
-  // Get CSRF token from meta tag
+
+  const headers = new Headers(options.headers || {});
+  const method = (options.method || 'GET').toUpperCase();
   const csrfToken = document.querySelector('meta[name="csrf-token"]');
   const token = csrfToken ? csrfToken.getAttribute('content') : '';
-  
-  // Initialize headers if not present
-  if (!options.headers) {
-    options.headers = {};
-  }
-  
-  // Add CSRF token for state-changing requests
-  const method = (options.method || 'GET').toUpperCase();
+
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method) && token) {
-    options.headers['X-CSRFToken'] = token;
+    headers.set('X-CSRFToken', token);
   }
-  
-  // Always include credentials for session/cookie handling
+
+  if (['POST', 'PUT', 'PATCH'].includes(method) && options.body instanceof FormData) {
+    headers.delete('Content-Type');
+  }
+
+  options.headers = headers;
+
   if (!('credentials' in options)) {
     options.credentials = 'include';
   }
-  
+
   return fetch(url, options);
 };
 
@@ -472,7 +597,7 @@ window.csrfFetch = function(url, options) {
       }
     }
 
-    document.querySelectorAll(".top-nav-link, .mobile-quick-nav a, .sidebar .nav-btn, .sidebar .space-btn")
+    document.querySelectorAll(".top-nav-link, .sidebar .nav-btn, .sidebar .space-btn")
       .forEach((el) => {
         el.addEventListener("click", function (e) {
           // Only intercept links explicitly marked for SPA.
@@ -496,22 +621,37 @@ window.csrfFetch = function(url, options) {
 </script>
 
 <script>
+  function navPathMatches(basePath, btnPath) {
+    if (btnPath === basePath) return true;
+    if (btnPath === "/orders" && basePath.startsWith("/orders")) return true;
+    if (btnPath !== "/dashboard" && btnPath && basePath.startsWith(btnPath)) return true;
+    return false;
+  }
+
   (function setActiveNavigation() {
     const path = window.location.pathname;
     const basePath = path.split('?')[0];
 
-    // Set active for top navigation links
     document.querySelectorAll(".top-nav-link").forEach(link => {
       if (basePath === "/logout") return;
       const href = link.getAttribute("href");
-      if (href === basePath || (href === "/orders" && basePath.startsWith("/orders/"))) {
+      if (navPathMatches(basePath, href)) {
         link.classList.add("active");
       } else {
         link.classList.remove("active");
       }
     });
 
-    // Set active for sidebar navigation buttons
+    document.querySelectorAll(".mobile-bottom-nav-item[data-nav-path]").forEach(link => {
+      const navPath = link.getAttribute("data-nav-path");
+      link.classList.toggle("active", navPathMatches(basePath, navPath));
+    });
+
+    document.querySelectorAll(".drawer-nav-btn").forEach(btn => {
+      const btnPath = (btn.getAttribute("data-href") || "").split("?")[0];
+      btn.classList.toggle("active", navPathMatches(basePath, btnPath));
+    });
+
     document.querySelectorAll(".sidebar-btn").forEach(btn => {
       const clickText = btn.getAttribute("onclick") || "";
       const urlMatch = clickText.match(/href='([^']*)'|href=\"([^\"]*)\"/);  
@@ -574,20 +714,31 @@ window.csrfFetch = function(url, options) {
   });
   async function updateOrdersBadge() {
     const badge = document.getElementById("orders-badge");
-    if (!badge) return;
+    const badgeMobile = document.getElementById("orders-badge-mobile");
+    if (!badge && !badgeMobile) return;
     try {
       const res = await fetch("/api/orders/pending-count", { credentials: "include" });
       if (!res.ok) return;
       const data = await res.json();
       const count = Number((data && data.pending_sessions) || 0);
-      if (count > 0) {
-        badge.textContent = String(count);
-        badge.style.display = "inline-block";
-      } else {
-        badge.style.display = "none";
-      }
+      [badge, badgeMobile].forEach(el => {
+        if (!el) return;
+        if (count > 0) {
+          el.textContent = String(count);
+          el.style.display = "inline-block";
+        } else {
+          el.style.display = "none";
+        }
+      });
     } catch (_) {}
   }
+
+  document.querySelectorAll(".drawer-nav-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+      const href = this.getAttribute("data-href");
+      if (href) window.location.href = href;
+    });
+  });
   window.createSmartPoller(updateOrdersBadge, 15000);
 </script>
 
@@ -616,7 +767,7 @@ window.csrfFetch = function(url, options) {
   /* Poll for unpaid receivables and show count badge on sidebar link */
   (function debtDueNotifier() {
     const alerted = new Set();
-    const badge = document.getElementById("debt-badge");
+    const badges = document.querySelectorAll("#debt-badge, .debt-badge-drawer");
     async function poll() {
       try {
         const res = await fetch("/admin/receivables/api/receivables/unpaid", { credentials: "include" });
@@ -624,14 +775,15 @@ window.csrfFetch = function(url, options) {
         const data = await res.json();
         if (!data.success) return;
         const unpaid = data.data || [];
-        if (unpaid.length > 0) {
-          if (badge) {
+        badges.forEach(badge => {
+          if (!badge) return;
+          if (unpaid.length > 0) {
             badge.style.display = "inline-block";
             badge.textContent = unpaid.length;
+          } else {
+            badge.style.display = "none";
           }
-        } else {
-          if (badge) badge.style.display = "none";
-        }
+        });
       } catch (_) {}
     }
     window.createSmartPoller(poll, 60000);

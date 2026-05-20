@@ -8,12 +8,13 @@ from sqlalchemy.orm import selectinload
 
 from app import db
 from app.models import CustomerSession, MenuItem, Order, OrderItem
+from app.repositories.menu_repository import MenuRepository
 
 
 @dataclass(frozen=True)
 class OrderRepository:
     def list_menu_items(self) -> list[MenuItem]:
-        return MenuItem.query.order_by(MenuItem.category.asc(), MenuItem.name.asc()).all()
+        return MenuRepository().list_for_ordering()
 
     def get_session(self, session_id: int) -> Optional[CustomerSession]:
         return (

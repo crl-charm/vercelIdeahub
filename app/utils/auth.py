@@ -6,13 +6,26 @@ import logging
 security_logger = logging.getLogger('security')
 
 
+def _expects_json_response() -> bool:
+    """True for API/fetch calls that should receive JSON instead of redirects."""
+    path = request.path or ""
+    if path.startswith("/api/") or "/api/" in path:
+        return True
+    if path.startswith("/admin/") and "/api/" in path:
+        return True
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return True
+    best = request.accept_mimetypes.best_match(["application/json", "text/html"])
+    return best == "application/json" and best is not None
+
+
 def login_required(view_func):
     @wraps(view_func)
     def wrapper(*args, **kwargs):
         # Check if user is logged in
         if "user_id" not in session:
-            if request.path.startswith("/api/"):
-                return jsonify({"error": "Unauthorized"}), 401
+            if _expects_json_response():
+                return jsonify({"success": False, "error": "Unauthorized"}), 401
             flash("Please log in first!", "danger")
             return redirect("/login")
 
@@ -23,8 +36,8 @@ def login_required(view_func):
             if datetime.utcnow().timestamp() - last_activity > session_timeout:
                 security_logger.warning(f"Session timeout for user {session.get('username')} from {request.remote_addr}")
                 session.clear()
-                if request.path.startswith("/api/"):
-                    return jsonify({"error": "Session expired"}), 401
+                if _expects_json_response():
+                    return jsonify({"success": False, "error": "Session expired"}), 401
                 flash("Your session has expired. Please log in again.", "warning")
                 return redirect("/login")
 
@@ -40,8 +53,8 @@ def admin_required(view_func):
     def wrapper(*args, **kwargs):
         # Check authentication first
         if "user_id" not in session:
-            if request.path.startswith("/api/"):
-                return jsonify({"error": "Unauthorized"}), 401
+            if _expects_json_response():
+                return jsonify({"success": False, "error": "Unauthorized"}), 401
             flash("Please log in first!", "danger")
             return redirect("/login")
 
@@ -52,8 +65,8 @@ def admin_required(view_func):
             if datetime.utcnow().timestamp() - last_activity > session_timeout:
                 security_logger.warning(f"Session timeout for admin user {session.get('username')} from {request.remote_addr}")
                 session.clear()
-                if request.path.startswith("/api/"):
-                    return jsonify({"error": "Session expired"}), 401
+                if _expects_json_response():
+                    return jsonify({"success": False, "error": "Session expired"}), 401
                 flash("Your session has expired. Please log in again.", "warning")
                 return redirect("/login")
 
@@ -61,8 +74,8 @@ def admin_required(view_func):
         role = (session.get("role") or "").lower()
         if role not in {"admin", "manager"}:
             security_logger.warning(f"Unauthorized admin access attempt by {session.get('username')} from {request.remote_addr}")
-            if request.path.startswith("/api/"):
-                return jsonify({"error": "Forbidden"}), 403
+            if _expects_json_response():
+                return jsonify({"success": False, "error": "Forbidden"}), 403
             flash("Admin access required.", "danger")
             return redirect("/dashboard")
 

@@ -8,6 +8,7 @@ from typing import Any, Optional
 from app.core.interfaces import Clock, Notifier
 from app.models import CustomerSession, Transaction
 from app.repositories.session_repository import SessionRepository
+from app.utils.payment import normalize_payment_method, payment_method_label
 
 
 @dataclass(frozen=True)
@@ -113,12 +114,16 @@ class SessionService:
             "total_bill": float(total_bill),
         }
 
-    def checkout(self, session_id: int) -> dict[str, Any] | tuple[dict[str, Any], int]:
+    def checkout(
+        self, session_id: int, payment_method: str = "cash"
+    ) -> dict[str, Any] | tuple[dict[str, Any], int]:
         sess = self.repo.get_session(session_id)
         if not sess:
             return {"error": "Session not found"}, 404
         if sess.status == "completed":
             return {"error": "Session already checked out"}, 400
+
+        payment_method = normalize_payment_method(payment_method)
 
         time_out = self.clock.now()
         minutes_used = (time_out - sess.time_in).total_seconds() / 60
@@ -127,7 +132,14 @@ class SessionService:
         food_total = Decimal(str(self.repo.sum_food_total_for_session(session_id))).quantize(Decimal("0.01"))
         total_bill = (time_bill + food_total).quantize(Decimal("0.01"))
 
-        tx = Transaction(session_id=sess.id, time_bill=time_bill, food_bill=food_total, total_bill=total_bill)
+        sess.payment_method = payment_method
+        tx = Transaction(
+            session_id=sess.id,
+            time_bill=time_bill,
+            food_bill=food_total,
+            total_bill=total_bill,
+            payment_method=payment_method,
+        )
         self.repo.create_transaction(tx)
         self.repo.complete_session(sess, time_out)
         self.repo.link_booking_completion_if_any(sess.id, time_out)
@@ -149,6 +161,8 @@ class SessionService:
             "time_bill": float(time_bill),
             "food_bill": float(food_total),
             "total_bill": float(total_bill),
+            "payment_method": payment_method,
+            "payment_label": payment_method_label(payment_method),
             "status": sess.status,
         }
 

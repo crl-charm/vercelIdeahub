@@ -634,7 +634,7 @@ function saveItem() {
 }
 
 function toggleAvailability(itemId, currentState) {
-  fetch(`/admin/menu/api/items/${itemId}/availability`, {
+  csrfFetch(`/admin/menu/api/items/${itemId}/availability`, {
     method: 'PATCH'
   })
     .then(r => r.json())

@@ -18,7 +18,11 @@ class SchemaMigrator:
     def run(self) -> None:
         db = self._db
         _ = (Idea, IdeaVote, FinanceBudget, FinanceTransaction, Department, SoftBalanceEntry, SpacePriceHistory)
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f"⚠ Database migration skipped (database unavailable): {e}")
+            return
         checks = [
             (
                 "orders",
@@ -59,7 +63,12 @@ class SchemaMigrator:
             (
                 "customer_sessions",
                 "payment_method",
-                "ALTER TABLE customer_sessions ADD COLUMN payment_method VARCHAR(50) DEFAULT 'cash'",
+                "ALTER TABLE customer_sessions ADD COLUMN payment_method VARCHAR(50) NOT NULL DEFAULT 'cash'",
+            ),
+            (
+                "transactions",
+                "payment_method",
+                "ALTER TABLE transactions ADD COLUMN payment_method VARCHAR(50) NOT NULL DEFAULT 'cash'",
             ),
             (
                 "customer_sessions",
@@ -102,3 +111,63 @@ class SchemaMigrator:
                 db.session.commit()
             except Exception:
                 db.session.rollback()
+
+        self._ensure_indexes(db)
+
+    def _ensure_indexes(self, db) -> None:
+        """Create performance indexes idempotently (MySQL)."""
+        indexes = [
+            (
+                "transactions",
+                "idx_transactions_created_at",
+                "CREATE INDEX idx_transactions_created_at ON transactions (created_at)",
+            ),
+            (
+                "transactions",
+                "idx_transactions_payment_method",
+                "CREATE INDEX idx_transactions_payment_method ON transactions (payment_method)",
+            ),
+            (
+                "customer_sessions",
+                "idx_customer_sessions_time_in",
+                "CREATE INDEX idx_customer_sessions_time_in ON customer_sessions (time_in)",
+            ),
+            (
+                "orders",
+                "idx_orders_session_status",
+                "CREATE INDEX idx_orders_session_status ON orders (customer_session_id, status, id)",
+            ),
+            (
+                "order_items",
+                "idx_order_items_order_id",
+                "CREATE INDEX idx_order_items_order_id ON order_items (order_id)",
+            ),
+            (
+                "boardroom_bookings",
+                "idx_bookings_status_end",
+                "CREATE INDEX idx_bookings_status_end ON boardroom_bookings (status, expected_end_at)",
+            ),
+        ]
+        for table_name, index_name, ddl in indexes:
+            exists = db.session.execute(
+                text(
+                    """
+                SELECT INDEX_NAME
+                FROM information_schema.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = :table_name
+                AND INDEX_NAME = :index_name
+                LIMIT 1
+            """
+                ),
+                {"table_name": table_name, "index_name": index_name},
+            ).fetchone()
+            if exists:
+                continue
+            try:
+                db.session.execute(text(ddl))
+                db.session.commit()
+                print(f"✓ Created index {index_name} on {table_name}")
+            except Exception as exc:
+                db.session.rollback()
+                print(f"⚠ Index {index_name} skipped: {exc}")

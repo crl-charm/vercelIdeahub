@@ -4,41 +4,47 @@
 
 {% block content %}
 <div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
     <div>
       <h3 class="mb-0">Checkout Records</h3>
       <small id="checkout-count" class="text-muted">0 records</small>
     </div>
-    <!-- Search + Date filters -->
-    <div class="d-flex gap-2 align-items-center flex-wrap">
+    <!-- Search + Date filters: responsive layout -->
+    <div class="checkout-filters">
       <input
         type="text"
         id="checkoutSearch"
         class="form-control"
-        style="width:180px;"
         placeholder="Search customer..."
         oninput="loadCheckoutRecords()"
       >
-      <input
-        type="date"
-        id="dateFrom"
-        class="form-control"
-        style="width:150px;"
-        oninput="loadCheckoutRecords()"
-        title="From date"
-      >
-      <span class="text-muted">–</span>
-      <input
-        type="date"
-        id="dateTo"
-        class="form-control"
-        style="width:150px;"
-        oninput="loadCheckoutRecords()"
-        title="To date"
-      >
-      <button class="btn btn-outline-secondary btn-sm py-2" onclick="clearFilters()">Clear</button>
+      <div class="d-flex gap-2 align-items-center">
+        <input
+          type="date"
+          id="dateFrom"
+          class="form-control"
+          oninput="loadCheckoutRecords()"
+          title="From date"
+        >
+        <span class="text-muted d-none d-md-inline">–</span>
+        <input
+          type="date"
+          id="dateTo"
+          class="form-control"
+          oninput="loadCheckoutRecords()"
+          title="To date"
+        >
+      </div>
+      <select id="paymentFilter" class="form-select" onchange="loadCheckoutRecords()">
+        <option value="">All payments</option>
+        <option value="cash">Cash</option>
+        <option value="gcash">GCash</option>
+      </select>
+      <button class="btn btn-outline-secondary btn-sm py-2 w-100" onclick="clearFilters()">Clear</button>
     </div>
   </div>
+
+  <div id="payment-summary" class="row g-2 mb-3" style="display:none;"></div>
 
   <!-- Records rendered here, grouped by month -->
   <div id="checkout-records-container">
@@ -65,23 +71,84 @@ function monthLabel(yearMonth) {
   return d.toLocaleString("en-US", { month: "long", year: "numeric" });
 }
 
+function paymentBadge(method) {
+  if (method === "gcash") {
+    return '<span class="badge bg-primary">GCash</span>';
+  }
+  return '<span class="badge bg-success">Cash</span>';
+}
+
 function clearFilters() {
   document.getElementById("checkoutSearch").value = "";
   document.getElementById("dateFrom").value = "";
   document.getElementById("dateTo").value   = "";
+  document.getElementById("paymentFilter").value = "";
   loadCheckoutRecords();
+}
+
+function renderPaymentSummary(records) {
+  const summaryEl = document.getElementById("payment-summary");
+  if (!records.length) {
+    summaryEl.style.display = "none";
+    summaryEl.innerHTML = "";
+    return;
+  }
+
+  let cashTotal = 0;
+  let gcashTotal = 0;
+  let cashCount = 0;
+  let gcashCount = 0;
+
+  for (const record of records) {
+    if (record.payment_method === "gcash") {
+      gcashTotal += record.total_bill;
+      gcashCount += 1;
+    } else {
+      cashTotal += record.total_bill;
+      cashCount += 1;
+    }
+  }
+
+  summaryEl.style.display = "flex";
+  summaryEl.innerHTML = `
+    <div class="col-md-4">
+      <div class="card border-success h-100">
+        <div class="card-body py-2">
+          <small class="text-muted">Cash</small>
+          <div class="fw-bold">₱${cashTotal.toFixed(2)} <span class="text-muted fw-normal">(${cashCount})</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-primary h-100">
+        <div class="card-body py-2">
+          <small class="text-muted">GCash</small>
+          <div class="fw-bold">₱${gcashTotal.toFixed(2)} <span class="text-muted fw-normal">(${gcashCount})</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-dark h-100">
+        <div class="card-body py-2">
+          <small class="text-muted">Grand Total</small>
+          <div class="fw-bold">₱${(cashTotal + gcashTotal).toFixed(2)} <span class="text-muted fw-normal">(${records.length})</span></div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function loadCheckoutRecords() {
   const search   = document.getElementById("checkoutSearch").value.toLowerCase().trim();
   const dateFrom = document.getElementById("dateFrom").value;
   const dateTo   = document.getElementById("dateTo").value;
+  const paymentMethod = document.getElementById("paymentFilter").value;
 
-  // Build query string — backend filters by date, we filter by name client-side
   let url = "/api/checkout-records";
   const params = new URLSearchParams();
   if (dateFrom) params.set("date_from", dateFrom);
   if (dateTo)   params.set("date_to",   dateTo);
+  if (paymentMethod) params.set("payment_method", paymentMethod);
   if (params.toString()) url += "?" + params.toString();
 
   fetch(url, { credentials: "include" })
@@ -91,15 +158,16 @@ function loadCheckoutRecords() {
 
     if (!Array.isArray(data)) {
       container.innerHTML = `<p class="text-center text-danger py-4">Failed to load checkout records. Please refresh the page.</p>`;
+      renderPaymentSummary([]);
       return;
     }
 
-    // Client-side name filter
     const filtered = search
       ? data.filter(r => r.customer_name.toLowerCase().includes(search))
       : data;
 
     document.getElementById("checkout-count").innerText = `${filtered.length} record(s)`;
+    renderPaymentSummary(filtered);
 
     if (!filtered.length) {
       container.innerHTML = `<p class="text-center text-muted py-4">No checkout records found.</p>`;
@@ -124,8 +192,9 @@ function loadCheckoutRecords() {
       const label   = key === "Unknown" ? "Unknown Date" : monthLabel(key);
       const records = groups[key];
 
+      // Desktop table view
       html += `
-        <div class="mb-4">
+        <div class="mb-4 d-none d-md-block">
           <h6 class="text-muted fw-semibold mb-2 border-bottom pb-1">${label}</h6>
           <div class="card shadow-sm">
             <div class="table-responsive">
@@ -133,12 +202,13 @@ function loadCheckoutRecords() {
                 <thead>
                   <tr>
                     <th>Customer</th>
-                    <th class="d-none d-md-table-cell">Space</th>
-                    <th class="d-none d-md-table-cell">Time In</th>
-                    <th class="d-none d-md-table-cell">Time Out</th>
-                    <th class="d-none d-md-table-cell">Time Spent</th>
-                    <th class="d-none d-md-table-cell">Time Bill</th>
-                    <th class="d-none d-md-table-cell">Food Bill</th>
+                    <th>Space</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                    <th>Time Spent</th>
+                    <th>Time Bill</th>
+                    <th>Food Bill</th>
+                    <th>Payment</th>
                     <th>Total</th>
                   </tr>
                 </thead>
@@ -146,18 +216,60 @@ function loadCheckoutRecords() {
                   ${records.map(record => `
                     <tr>
                       <td>${record.customer_name}</td>
-                      <td class="d-none d-md-table-cell">${record.space_type}</td>
-                      <td class="d-none d-md-table-cell">${record.time_in}</td>
-                      <td class="d-none d-md-table-cell">${record.time_out}</td>
-                      <td class="d-none d-md-table-cell">${formatTime(record.seconds_spent)}</td>
-                      <td class="d-none d-md-table-cell">₱${record.time_bill.toFixed(2)}</td>
-                      <td class="d-none d-md-table-cell">₱${record.food_bill.toFixed(2)}</td>
+                      <td>${record.space_type}</td>
+                      <td>${record.time_in}</td>
+                      <td>${record.time_out}</td>
+                      <td>${formatTime(record.seconds_spent)}</td>
+                      <td>₱${record.time_bill.toFixed(2)}</td>
+                      <td>₱${record.food_bill.toFixed(2)}</td>
+                      <td>${paymentBadge(record.payment_method)}</td>
                       <td><strong>₱${record.total_bill.toFixed(2)}</strong></td>
                     </tr>
                   `).join("")}
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      `;
+
+      // Mobile card view
+      html += `
+        <div class="mb-4 d-md-none">
+          <h6 class="text-muted fw-semibold mb-2 border-bottom pb-1">${label}</h6>
+          <div class="d-flex flex-column gap-2">
+            ${records.map(record => `
+              <div class="checkout-record-card">
+                <div class="checkout-card-header">
+                  <div>
+                    <div class="checkout-card-customer">${record.customer_name}</div>
+                    <div class="checkout-card-space">${record.space_type}</div>
+                  </div>
+                  ${paymentBadge(record.payment_method)}
+                </div>
+                <div class="checkout-card-body">
+                  <div class="checkout-card-row">
+                    <span class="checkout-card-label">Date:</span>
+                    <span class="checkout-card-value">${record.time_in.split(' ')[0]}</span>
+                  </div>
+                  <div class="checkout-card-row">
+                    <span class="checkout-card-label">Duration:</span>
+                    <span class="checkout-card-value">${formatTime(record.seconds_spent)}</span>
+                  </div>
+                  <div class="checkout-card-row">
+                    <span class="checkout-card-label">Time Bill:</span>
+                    <span class="checkout-card-value">₱${record.time_bill.toFixed(2)}</span>
+                  </div>
+                  <div class="checkout-card-row">
+                    <span class="checkout-card-label">Food Bill:</span>
+                    <span class="checkout-card-value">₱${record.food_bill.toFixed(2)}</span>
+                  </div>
+                </div>
+                <div class="checkout-card-footer">
+                  <span class="checkout-card-total">₱${record.total_bill.toFixed(2)}</span>
+                </div>
+              </div>
+            `).join("")}
           </div>
         </div>
       `;

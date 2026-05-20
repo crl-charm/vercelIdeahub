@@ -8,6 +8,7 @@ PyMySQL
 SQLAlchemy
 bcrypt
 weasyprint
+xhtml2pdf
 qrcode
 Pillow
 python-dotenv

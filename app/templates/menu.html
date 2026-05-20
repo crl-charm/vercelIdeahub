@@ -424,21 +424,11 @@ let menuItems = [];
 let currentFilter = 'All';
 let detailItemId = null;
 let detailItemQuantity = 1;
+let detailItemAvailable = true;
 
 const socket = io();
 
-socket.on('menu_item_updated', function(data) {
-  console.log('Menu item updated:', data);
-  loadMenuItems();
-});
-
-socket.on('menu_item_created', function(data) {
-  console.log('Menu item created:', data);
-  loadMenuItems();
-});
-
-socket.on('menu_item_deleted', function(data) {
-  console.log('Menu item deleted:', data);
+socket.on('menu_update', function() {
   loadMenuItems();
 });
 
@@ -500,10 +490,10 @@ function renderMenuItems() {
         <div class="menu-item-price">₱${parseFloat(item.price).toFixed(2)}</div>
       </div>
       <div class="menu-item-actions">
-        <button class="btn-add-to-cart" onclick="quickAddToCart(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})">
-          🛒 Add to Cart
-        </button>
-        <button class="btn-view-details" onclick="showItemDetail(${item.id}, '${item.name.replace(/'/g, "\\'")}', '${item.category}', '${item.description?.replace(/'/g, "\\'") || ''}', ${item.price}, '${item.image_url || ''}')">
+        ${item.is_available === false
+          ? `<button type="button" class="btn-add-to-cart" style="opacity:0.6;cursor:not-allowed;" onclick="showToast('${item.name.replace(/'/g, "\\'")} is not available', 'error')">Not Available</button>`
+          : `<button type="button" class="btn-add-to-cart" onclick="quickAddToCart(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})">🛒 Add to Cart</button>`}
+        <button type="button" class="btn-view-details" onclick="showItemDetail(${item.id}, '${item.name.replace(/'/g, "\\'")}', '${item.category}', '${item.description?.replace(/'/g, "\\'") || ''}', ${item.price}, '${item.image_url || ''}', ${item.is_available !== false})">
           👀 Details
         </button>
       </div>
@@ -511,9 +501,10 @@ function renderMenuItems() {
   `).join('');
 }
 
-function showItemDetail(id, name, category, description, price, imageUrl) {
+function showItemDetail(id, name, category, description, price, imageUrl, isAvailable) {
   detailItemId = id;
   detailItemQuantity = 1;
+  detailItemAvailable = isAvailable !== false;
 
   document.getElementById('detailItemName').textContent = name;
   document.getElementById('detailName').textContent = name;
@@ -550,6 +541,10 @@ function quickAddToCart(itemId, itemName, price) {
 
 function addToCartFromModal() {
   const itemName = document.getElementById('detailName').textContent;
+  if (!detailItemAvailable) {
+    showToast(`${itemName} is not available`, 'error');
+    return;
+  }
   showToast(`✓ Added ${detailItemQuantity}x ${itemName} to cart!`, 'success');
   bootstrap.Modal.getInstance(document.getElementById('itemDetailModal')).hide();
 }

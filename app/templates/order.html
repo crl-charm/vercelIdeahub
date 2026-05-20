@@ -392,21 +392,118 @@
   }
 }
 
-@media (max-width: 768px) {
-  .modern-order-page {
-    flex-direction: column;
-    gap: 16px;
+@media (max-width: 767.98px) {
+  .order-mobile-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 4px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    border: 1px solid var(--border);
   }
 
-  .cart-sidebar {
+  .order-mobile-tab-btn {
+    flex: 1;
+    min-height: 44px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #6b7280;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .order-mobile-tab-btn.active {
+    background: #fff;
+    color: var(--brand-dark);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  }
+
+  .order-mobile-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 800;
+  }
+
+  .order-mobile-tab-badge[hidden] {
+    display: none;
+  }
+
+  .modern-order-page {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .order-page-wrap:not(.show-cart) .cart-sidebar {
+    display: none;
+  }
+
+  .order-page-wrap.show-cart .menu-section {
+    display: none;
+  }
+
+  .order-page-wrap.show-cart .cart-sidebar {
+    display: flex;
     width: 100%;
     position: relative;
     top: 0;
     max-height: none;
+    min-height: calc(100dvh - 200px);
+  }
+
+  .order-page-wrap.show-cart .order-mobile-cart-fab {
+    display: none !important;
   }
 
   .menu-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .search-container {
+    max-width: none;
+  }
+
+  .order-mobile-cart-fab {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    z-index: 1035;
+    min-height: 48px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 24px rgba(201, 164, 58, 0.45);
+    cursor: pointer;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+
+  .order-mobile-cart-fab[hidden] {
+    display: none !important;
   }
 }
 
@@ -500,6 +597,29 @@
   transform: scale(0.98);
 }
 
+.menu-item-card.unavailable {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.menu-item-card.unavailable:hover {
+  transform: none;
+  border-color: var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.add-to-cart-btn.unavailable-btn {
+  background: #e5e7eb;
+  color: #6b7280;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.add-to-cart-btn.unavailable-btn:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -523,7 +643,22 @@
 }
 </style>
 
-<div class="modern-order-page">
+<div class="order-page-wrap" id="orderPageWrap">
+  <div class="order-mobile-tabs d-md-none" role="tablist" aria-label="Order sections">
+    <button type="button" class="order-mobile-tab-btn active" role="tab" data-tab="menu"
+      aria-selected="true" onclick="setOrderMobileTab('menu')">Menu</button>
+    <button type="button" class="order-mobile-tab-btn" role="tab" data-tab="cart"
+      aria-selected="false" onclick="setOrderMobileTab('cart')">
+      Cart <span class="order-mobile-tab-badge" id="orderMobileTabBadge" hidden>0</span>
+    </button>
+  </div>
+
+  <button type="button" class="order-mobile-cart-fab d-md-none" id="orderMobileCartFab"
+    onclick="setOrderMobileTab('cart')" hidden aria-label="View cart">
+    View cart · <span id="orderMobileFabCount">0</span> items
+  </button>
+
+  <div class="modern-order-page">
   <!-- MENU SECTION -->
   <div class="menu-section">
     <div class="page-header">
@@ -576,6 +711,7 @@
       <button class="back-btn" onclick="goBack()">← Back</button>
     </div>
   </div>
+  </div>
 </div>
 
 {% endblock %}
@@ -583,12 +719,17 @@
 {% block scripts %}
 <script>
 const sessionId = parseInt("{{ session_id }}");
+const socket = io();
 let cart = [];
 let currentOrders = [];
 let menuById = {};
 let allMenuData = [];
 let activeCategory = "All";
 let searchTerm = "";
+
+socket.on('menu_update', function() {
+  loadMenu();
+});
 
 function parseCategory(category) {
   if (!category) return { major: "Other", sub: "Other" };
@@ -656,17 +797,23 @@ function renderMenuItems() {
   container.innerHTML = "";
   filtered.forEach(item => {
     const card = document.createElement("div");
-    card.className = "menu-item-card";
+    card.className = item.is_available === false ? "menu-item-card unavailable" : "menu-item-card";
     card.innerHTML = `
       <div class="menu-item-image">${item.image_url ? `<img src="${item.image_url}" alt="${item.name}">` : '🍽️'}</div>
       <div class="menu-item-content">
         <h6 class="menu-item-name">${item.name}</h6>
         <div class="menu-item-price">₱${Number(item.price).toFixed(2)}</div>
-        <button class="add-to-cart-btn" onclick="addToCart(${item.id})">+ Add</button>
+        ${item.is_available === false
+          ? `<button type="button" class="add-to-cart-btn unavailable-btn" onclick="showUnavailable('${item.name.replace(/'/g, "\\'")}')">Not Available</button>`
+          : `<button type="button" class="add-to-cart-btn" onclick="addToCart(${item.id})">+ Add</button>`}
       </div>
     `;
     container.appendChild(card);
   });
+}
+
+function showUnavailable(itemName) {
+  showToast(`${itemName} is not available`, "error");
 }
 
 function loadMenu() {
@@ -676,7 +823,11 @@ function loadMenu() {
       allMenuData = data || [];
       menuById = {};
       allMenuData.forEach(item => {
-        menuById[item.id] = { name: item.name, price: item.price };
+        menuById[item.id] = {
+          name: item.name,
+          price: item.price,
+          is_available: item.is_available !== false
+        };
       });
       buildCategoryFilters();
       renderMenuItems();
@@ -731,9 +882,51 @@ function voidExistingItem(itemId) {
     .catch(err => showToast("Failed to remove item.", "error"));
 }
 
+function getCartItemCount() {
+  return cart.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+function setOrderMobileTab(tab) {
+  const wrap = document.getElementById("orderPageWrap");
+  if (!wrap) return;
+  wrap.classList.toggle("show-cart", tab === "cart");
+  document.querySelectorAll(".order-mobile-tab-btn").forEach(btn => {
+    const isActive = btn.dataset.tab === tab;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+  updateMobileCartBadge();
+}
+
+function updateMobileCartBadge() {
+  const count = getCartItemCount();
+  const badge = document.getElementById("orderMobileTabBadge");
+  const fab = document.getElementById("orderMobileCartFab");
+  const fabCount = document.getElementById("orderMobileFabCount");
+  const wrap = document.getElementById("orderPageWrap");
+  const onMenuTab = wrap && !wrap.classList.contains("show-cart");
+
+  if (badge) {
+    if (count > 0) {
+      badge.hidden = false;
+      badge.textContent = count;
+    } else {
+      badge.hidden = true;
+    }
+  }
+  if (fab && fabCount) {
+    fabCount.textContent = count;
+    fab.hidden = !(count > 0 && onMenuTab);
+  }
+}
+
 function addToCart(id) {
   const meta = menuById[id];
   if (!meta) return;
+  if (!meta.is_available) {
+    showUnavailable(meta.name);
+    return;
+  }
   const existing = cart.find(item => item.id === id);
   if (existing) {
     existing.quantity += 1;
@@ -751,6 +944,7 @@ function renderCart() {
     list.innerHTML = `<div class="empty-cart-placeholder"><div class="empty-cart-placeholder-icon">📭</div><div>Cart is empty</div></div>`;
     document.getElementById("submit-btn").disabled = true;
     document.getElementById("total").innerText = "0.00";
+    updateMobileCartBadge();
     return;
   }
   document.getElementById("submit-btn").disabled = false;
@@ -771,6 +965,7 @@ function renderCart() {
     list.appendChild(li);
   });
   document.getElementById("total").innerText = total.toFixed(2);
+  updateMobileCartBadge();
 }
 
 function removeFromCart(id) {

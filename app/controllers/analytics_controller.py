@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from flask import Blueprint, Response, jsonify, render_template, request
+from flask import Blueprint, Response, render_template, request
 
 from app.controllers.base_controller import BaseController
-from app.services.analytics_oop_service import AnalyticsService
+from app.dto.api_response import api_ok
+from app.services.analytics_oop_service import AnalyticsReportService
 from app.utils.auth import admin_required
 
 
@@ -11,7 +12,7 @@ class AnalyticsController(BaseController):
     """Serves analytics pages and analytics API endpoints."""
 
     def __init__(self, db) -> None:
-        self._service = AnalyticsService(db)
+        self._service = AnalyticsReportService(db)
         self.blueprint = Blueprint("analytics_page", __name__)
         self._register_routes()
 
@@ -30,7 +31,7 @@ class AnalyticsController(BaseController):
             start_date = request.args.get("start_date")
             end_date = request.args.get("end_date")
             data = self._service.get_summary(start_date=start_date, end_date=end_date)
-            return jsonify({"success": True, "data": data})
+            return api_ok(data)
 
         @self.blueprint.get("/api/analytics/export")
         @admin_required

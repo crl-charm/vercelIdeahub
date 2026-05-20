@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from flask import Blueprint, jsonify, request, render_template, current_app
+from flask.views import MethodView
 import os
 import uuid
 from werkzeug.utils import secure_filename
@@ -10,6 +11,12 @@ from app.repositories.menu_repository import MenuRepository
 from app.services.menu_service import MenuService
 from app.utils.auth import admin_required, login_required
 from app.core.socketio_handlers import emit_menu_update
+from functools import wraps
+
+# Import CSRF protection from app module
+from app import csrf
+
+csrf_exempt = csrf.exempt
 
 menu_bp = Blueprint("menu", __name__, url_prefix="/admin/menu")
 
@@ -134,6 +141,7 @@ def menu_page() -> str:
 
 @menu_bp.route("/api/items", methods=["GET"])
 @login_required
+@csrf.exempt
 def api_list_items() -> tuple:
     items = _service.list_available()
     return jsonify({"success": True, "data": items}), 200
@@ -141,6 +149,7 @@ def api_list_items() -> tuple:
 
 @menu_bp.route("/api/items/all", methods=["GET"])
 @login_required
+@csrf.exempt
 def api_all_items() -> tuple:
     items = _service.list_all()
     return jsonify({"success": True, "data": items}), 200
@@ -148,12 +157,14 @@ def api_all_items() -> tuple:
 
 @menu_bp.route("/api/categories", methods=["GET"])
 @login_required
+@csrf.exempt
 def api_get_categories() -> tuple:
     return jsonify({"success": True, "data": VALID_CATEGORIES}), 200
 
 
 @menu_bp.route("/api/items", methods=["POST"])
 @login_required
+@csrf.exempt
 def api_create_item() -> tuple:
     category = request.form.get("category", "").strip()
     
@@ -200,6 +211,7 @@ def api_create_item() -> tuple:
 
 @menu_bp.route("/api/items/<int:item_id>", methods=["PATCH"])
 @login_required
+@csrf.exempt
 def api_update_item(item_id: int) -> tuple:
     from app.models.menu_item import MenuItem
     from app import db
@@ -258,6 +270,7 @@ def api_update_item(item_id: int) -> tuple:
 
 @menu_bp.route("/api/items/<int:item_id>/availability", methods=["PATCH"])
 @login_required
+@csrf.exempt
 def api_toggle_availability(item_id: int) -> tuple:
     result = _service.toggle_availability(item_id)
     if isinstance(result, tuple):
@@ -269,30 +282,38 @@ def api_toggle_availability(item_id: int) -> tuple:
 
 @menu_bp.route("/api/items/<int:item_id>", methods=["DELETE"])
 @login_required
+@csrf.exempt
 def api_delete_item(item_id: int) -> tuple:
     from app.models.menu_item import MenuItem
     from app import db
-    
-    # Get item to retrieve image URL for cleanup
+    from sqlalchemy.exc import SQLAlchemyError
+
     item = db.session.get(MenuItem, item_id)
-    image_url = item.image_url if item else None
-    
-    # Delete from database
-    result = _service.delete(item_id)
-    
-    # Delete image file if delete was successful
-    if isinstance(result, dict) and result.get("success"):
-        if image_url:
-            delete_old_image(image_url)
-        emit_menu_update('delete', {'item_id': item_id})
-    
+    if not item:
+        return jsonify({"success": False, "error": "Menu item not found"}), 404
+
+    image_url = item.image_url
+
+    try:
+        result = _service.delete(item_id)
+    except SQLAlchemyError as exc:
+        db.session.rollback()
+        logger.error(f"Menu delete failed for item {item_id}: {exc}")
+        return jsonify({
+            "success": False,
+            "error": "Could not remove this item. Please try again.",
+        }), 500
+
     if isinstance(result, tuple):
         return jsonify(result[0]), result[1]
+    if result.get("success"):
+        emit_menu_update("delete", {"item_id": item_id})
     return jsonify(result), 200
 
 
 @menu_bp.route("/api/menu-items", methods=["GET"])
 @login_required
+@csrf.exempt
 def api_menu_items_alias() -> tuple:
     items = _service.list_all()
     return jsonify({"success": True, "data": items}), 200

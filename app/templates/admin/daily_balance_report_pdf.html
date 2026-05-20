@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IdeaHub Daily Sales Balance</title>
+  <style>
+    @page { size: A4; margin: 1.5cm; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      color: #1f2937;
+      line-height: 1.4;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #c9a43a;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 22pt;
+      color: #92400e;
+    }
+    .header p {
+      margin: 4px 0 0;
+      color: #6b7280;
+      font-size: 10pt;
+    }
+    .summary {
+      display: table;
+      width: 100%;
+      margin-bottom: 16px;
+      border-collapse: separate;
+      border-spacing: 10px 0;
+    }
+    .summary-payments {
+      margin-bottom: 24px;
+    }
+    .summary-payments .summary-box {
+      width: 50%;
+    }
+    .summary-box {
+      display: table-cell;
+      width: 33%;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .summary-box .label {
+      font-size: 9pt;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .summary-box .value {
+      font-size: 14pt;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+    .summary-box .sub {
+      font-size: 9pt;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .revenue { color: #15803d; }
+    .expenses { color: #b45309; }
+    .net { color: #1d4ed8; }
+    .cash { color: #166534; }
+    .gcash { color: #1d4ed8; }
+    h2 {
+      font-size: 13pt;
+      color: #374151;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 6px;
+      margin: 20px 0 10px;
+    }
+    table.data {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 9pt;
+    }
+    table.data th {
+      background: #c9a43a;
+      color: #fff;
+      padding: 8px 5px;
+      text-align: left;
+    }
+    table.data td {
+      padding: 7px 5px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    table.data tr:nth-child(even) td {
+      background: #fafafa;
+    }
+    .amount { text-align: right; white-space: nowrap; }
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 9pt;
+      color: #9ca3af;
+    }
+    .empty {
+      color: #6b7280;
+      font-style: italic;
+      padding: 12px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>IdeaHub</h1>
+    <p>Daily Sales Balance Report</p>
+    <p>Generated on {{ generated_at }}</p>
+    {% if period_label %}
+    <p>Period: {{ period_label }}</p>
+    {% endif %}
+  </div>
+
+  <div class="summary">
+    <div class="summary-box">
+      <div class="label">Total Revenue</div>
+      <div class="value revenue">Php {{ "%.2f"|format(total_revenue) }}</div>
+    </div>
+    <div class="summary-box">
+      <div class="label">Total Expenses</div>
+      <div class="value expenses">Php {{ "%.2f"|format(total_expenses) }}</div>
+    </div>
+    <div class="summary-box">
+      <div class="label">Net Balance</div>
+      <div class="value net">Php {{ "%.2f"|format(net_balance) }}</div>
+    </div>
+  </div>
+
+  <div class="summary summary-payments">
+    <div class="summary-box">
+      <div class="label">Cash Payments</div>
+      <div class="value cash">Php {{ "%.2f"|format(total_cash) }}</div>
+      <div class="sub">{{ cash_count }} checkout(s)</div>
+    </div>
+    <div class="summary-box">
+      <div class="label">GCash Payments</div>
+      <div class="value gcash">Php {{ "%.2f"|format(total_gcash) }}</div>
+      <div class="sub">{{ gcash_count }} checkout(s)</div>
+    </div>
+  </div>
+
+  <h2>Daily Reports</h2>
+  {% if reports %}
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th class="amount">Revenue</th>
+        <th class="amount">Cash</th>
+        <th class="amount">GCash</th>
+        <th class="amount">Expenses</th>
+        <th class="amount">Net</th>
+        <th class="amount">Orders</th>
+        <th class="amount">Sessions</th>
+        <th>Prepared By</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in reports %}
+      <tr>
+        <td>{{ r.report_date }}</td>
+        <td class="amount">Php {{ "%.2f"|format(r.total_revenue) }}</td>
+        <td class="amount">Php {{ "%.2f"|format(r.cash_total) }}</td>
+        <td class="amount">Php {{ "%.2f"|format(r.gcash_total) }}</td>
+        <td class="amount">Php {{ "%.2f"|format(r.total_expenses) }}</td>
+        <td class="amount">Php {{ "%.2f"|format(r.net_balance) }}</td>
+        <td class="amount">{{ r.total_orders }}</td>
+        <td class="amount">{{ r.total_sessions }}</td>
+        <td>{{ r.generated_by }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No daily reports generated yet.</p>
+  {% endif %}
+
+  {% if soft_entries %}
+  <h2>Soft Balancing (AM / PM)</h2>
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Period</th>
+        <th class="amount">Revenue</th>
+        <th class="amount">Expenses</th>
+        <th class="amount">Net</th>
+        <th>Prepared By</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in soft_entries %}
+      <tr>
+        <td>{{ e.balance_date }}</td>
+        <td>{{ e.period }}</td>
+        <td class="amount">Php {{ "%.2f"|format(e.total_revenue) }}</td>
+        <td class="amount">Php {{ "%.2f"|format(e.total_expenses) }}</td>
+        <td class="amount">Php {{ "%.2f"|format(e.net_balance) }}</td>
+        <td>{{ e.generated_by }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <div class="footer">
+    This report is for audit and business review. IdeaHub POS System.
+  </div>
+</body>
+</html>

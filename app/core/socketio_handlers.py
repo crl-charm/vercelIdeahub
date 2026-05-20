@@ -68,3 +68,19 @@ def emit_receivables_update(event_type, receivable_data):
         'event': event_type,
         'data': receivable_data
     })
+
+
+def emit_inventory_low_stock(payload: dict) -> None:
+    socketio.emit("inventory_low_stock", payload)
+
+
+def emit_receivable_marked_paid(receivable_id: int) -> None:
+    socketio.emit("receivable_marked_paid", {"receivable_id": receivable_id})
+
+
+def emit_debt_due_reminder(payload: dict) -> None:
+    socketio.emit("debt_due_reminder", payload)
+
+
+def emit_daily_sales_closed(payload: dict) -> None:
+    socketio.emit("daily_sales_closed", payload)

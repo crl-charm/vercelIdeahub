@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from app.utils.payment import normalize_payment_method, payment_method_label
+
 
 def serialize_session(session):
     return {
@@ -65,9 +67,15 @@ def serialize_transaction(transaction):
         if session and session.time_in and session.time_out
         else None
     )
+    payment_method = normalize_payment_method(
+        getattr(transaction, "payment_method", None)
+        or (getattr(session, "payment_method", None) if session else None)
+    )
     return {
         "transaction_id": transaction.id,
         "customer_name": session.customer_name if session else "N/A",
+        "payment_method": payment_method,
+        "payment_label": payment_method_label(payment_method),
         "space_type": session.space_type.name if session and session.space_type else "N/A",
         "time_in": (session.time_in + timedelta(hours=8)).strftime("%B %d, %Y %I:%M %p")
         if session and session.time_in

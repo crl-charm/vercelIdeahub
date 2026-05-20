@@ -155,6 +155,24 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(231, 197, 91, 0.2);
 }
 
+/* M4: Checkout Records Filters - responsive layout */
+.checkout-filters {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.checkout-filters > input,
+.checkout-filters > select {
+  flex: 0 1 auto;
+  min-width: 120px;
+}
+
+.checkout-filters > button {
+  flex-shrink: 0;
+}
+
 #floatingAddBtn {
   position: fixed;
   bottom: 26px;
@@ -254,48 +272,286 @@ body {
 }
 
 @media (max-width: 767.98px) {
-  .navbar {
-    height: auto;
-    padding-top: 8px;
-    padding-bottom: 8px;
+  .mobile-top-bar {
+    min-height: 56px;
   }
 
-  .navbar-collapse {
-    background: #fff;
-    padding: 8px 0;
-    border-top: 1px solid #e5e7eb;
+  .mobile-menu-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
   }
 
   .content {
     margin-left: 0;
-    margin-top: 128px;
+    margin-top: 56px;
     padding: 12px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 
-  .top-nav-link {
-    width: 100%;
-    display: block;
-    padding: 10px 12px !important;
+  #floatingAddBtn {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px) + 12px);
   }
 
-  .mobile-quick-nav {
+  .mobile-bottom-nav {
     position: fixed;
-    top: 64px;
     left: 0;
     right: 0;
-    z-index: 999;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    padding: 8px;
+    bottom: 0;
+    z-index: 1040;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    min-height: 64px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
   }
 
-  .mobile-quick-nav .btn {
-    font-size: 12px;
-    min-height: 40px;
-    padding: 6px;
-    border-radius: 8px;
+  .mobile-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 44px;
+    padding: 8px 4px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .mobile-bottom-nav-item i {
+    font-size: 1.25rem;
+  }
+
+  .mobile-bottom-nav-item.active,
+  .mobile-bottom-nav-item:hover {
+    color: var(--brand-dark);
+  }
+
+  .mobile-bottom-nav-item.active {
+    background: var(--brand-soft);
+  }
+
+  .drawer-nav-btn {
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 500;
+    color: #374151;
+    min-height: 44px;
+  }
+
+  .drawer-nav-btn:hover {
+    background: var(--brand-soft);
+    color: #111827;
+  }
+
+  .drawer-nav-btn.active {
+    background: var(--brand);
+    color: #fff;
+  }
+
+  .dashboard-search-input {
+    max-width: none;
+    width: 100%;
+  }
+
+  /* M4: Checkout Records Mobile */
+  .checkout-filters {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .checkout-record-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    transition: all 0.2s ease;
+  }
+
+  .checkout-record-card:active {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .checkout-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+  }
+
+  .checkout-card-customer {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+
+  .checkout-card-space {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+  }
+
+  .checkout-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .checkout-card-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+  }
+
+  .checkout-card-label {
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .checkout-card-value {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .checkout-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .checkout-card-total {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--brand-dark);
+  }
+
+  /* Toast responsive width */
+  #ih-toast-container {
+    max-width: calc(100vw - 16px);
+  }
+
+  .ih-toast {
+    width: calc(100vw - 32px);
+    max-width: 330px;
+  }
+
+  .sessions-cards {
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-session-card .card-body {
+    padding: 14px 16px;
+  }
+
+  .mobile-session-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .mobile-session-meta .fw-semibold {
+    font-size: 0.9rem;
+  }
+
+  .mobile-session-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .mobile-session-actions .btn {
+    min-height: 44px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  /* M5: Daily Balance export buttons */
+  .daily-balance-export-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .daily-balance-export-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* M5: Login card responsive */
+  .login-card {
+    width: calc(100% - 32px);
+    max-width: 390px;
+    padding: 24px;
+  }
+
+  .login-wrapper {
+    padding: 16px;
+  }
+
+  .landing-card {
+    width: calc(100% - 32px);
+    max-width: 450px;
+  }
+}
+
+@media (min-width: 768px) {
+  .dashboard-search-input {
+    max-width: 280px;
+  }
+
+  .checkout-filters {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .checkout-filters > .d-flex {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .daily-balance-export-buttons {
+    display: flex;
+    gap: 0.75rem;
+    width: auto;
+  }
+
+  .daily-balance-export-buttons .btn {
+    width: auto;
+  }
+
+  .login-card {
+    width: 390px;
+    padding: 36px;
+  }
+
+  .login-wrapper {
+    padding: 24px;
+  }
+
+  .landing-card {
+    width: 450px;
   }
 }

@@ -26,7 +26,7 @@ def create_app():
     static_folder = os.path.join(os.path.dirname(__file__), '..', 'static')
     app = Flask(__name__, static_folder=static_folder, static_url_path='/static')
 
-    # Fix 1: config.py is outside the app folder, so import it properly
+    # Import config from organized config module
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
     from config import Config
     app.config.from_object(Config)
@@ -34,6 +34,18 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     socketio.init_app(app)
+    
+    # CSRF exemptions (documented):
+    # - POST /api/login (auth_routes @csrf.exempt)
+    # - /admin/menu/api/* (multipart menu uploads; see custom_protect below)
+    original_protect = csrf.protect
+
+    def custom_protect(*args, **kwargs):
+        if request.path.startswith("/admin/menu/api/"):
+            return None
+        return original_protect(*args, **kwargs)
+
+    csrf.protect = custom_protect
     csrf.init_app(app)
     limiter.init_app(app)
 

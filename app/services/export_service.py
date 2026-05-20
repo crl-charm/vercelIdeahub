@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from io import BytesIO
+
 from flask import render_template
 
 from app.services.base_service import BaseService
@@ -15,5 +17,15 @@ class ExportService(BaseService):
 
             return HTML(string=html).write_pdf()
         except Exception:
-            # Fallback keeps exports functional in environments without WeasyPrint runtime deps.
-            return html.encode("utf-8")
+            pass
+        try:
+            from xhtml2pdf import pisa
+
+            buffer = BytesIO()
+            pisa.CreatePDF(html, dest=buffer, encoding="utf-8")
+            pdf = buffer.getvalue()
+            if pdf.startswith(b"%PDF"):
+                return pdf
+        except Exception:
+            pass
+        raise RuntimeError("PDF export is unavailable on this server.")

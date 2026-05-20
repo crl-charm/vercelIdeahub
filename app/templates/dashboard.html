@@ -6,7 +6,7 @@
 
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-2 mb-3 dashboard-header-row">
 
         <div>
             <h3 class="mb-0">Active Customer Sessions</h3>
@@ -16,8 +16,7 @@
         <input 
             type="text" 
             id="searchInput" 
-            class="form-control"
-            style="max-width: 280px;"
+            class="form-control dashboard-search-input"
             placeholder="Search customer..."
             oninput="loadSessions()"
         >
@@ -25,7 +24,7 @@
     </div>
 
     <div class="row mb-3" id="space-availability-cards">
-      <div class="col-md-6 mb-2">
+      <div class="col-12 col-md-6 mb-2">
         <div class="card shadow-sm">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
@@ -38,7 +37,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-6 mb-2">
+      <div class="col-12 col-md-6 mb-2">
         <div class="card shadow-sm">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
@@ -53,7 +52,11 @@
       </div>
     </div>
 
-    <div class="card shadow-sm">
+    <div id="sessions-cards" class="sessions-cards d-md-none" aria-live="polite">
+      <p class="text-center text-muted py-4 mb-0">Loading...</p>
+    </div>
+
+    <div class="card shadow-sm d-none d-md-block">
       <div class="table-responsive">
         <table class="table table-hover mb-0">
           <thead style="background:#f7f3c7;">
@@ -90,9 +93,20 @@
 
       <div class="modal-body" id="receipt-body"></div>
 
-      <div class="modal-footer d-flex justify-content-between">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button class="btn btn-success" id="confirmCheckoutBtn">Checkout</button>
+      <div class="modal-footer flex-column align-items-stretch gap-2">
+        <div id="payment-method-section" class="w-100" style="display:none;">
+          <label class="form-label fw-semibold mb-2">Payment Method</label>
+          <div class="btn-group w-100" role="group" aria-label="Payment method">
+            <input type="radio" class="btn-check" name="paymentMethod" id="paymentCash" value="cash" checked>
+            <label class="btn btn-outline-success" for="paymentCash">💵 Cash</label>
+            <input type="radio" class="btn-check" name="paymentMethod" id="paymentGcash" value="gcash">
+            <label class="btn btn-outline-primary" for="paymentGcash">📱 GCash</label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between w-100">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-success" id="confirmCheckoutBtn">Checkout</button>
+        </div>
       </div>
 
     </div>
@@ -147,6 +161,10 @@
 {% block scripts %}
 
 <script>
+
+document.getElementById("receiptModal").addEventListener("hidden.bs.modal", function () {
+  document.getElementById("payment-method-section").style.display = "none";
+});
 
 let currentFilter = "all";
 
@@ -336,18 +354,54 @@ function viewOrder(sessionId) {
 
                 <hr>
                 <h5>Total: ₱${data.total_bill.toFixed(2)}</h5>
+                <p class="text-muted small mb-0" id="selected-payment-hint">Select payment method below before checkout.</p>
             `;
+
+            document.getElementById("payment-method-section").style.display = "block";
+            document.getElementById("paymentCash").checked = true;
+            document.getElementById("paymentGcash").checked = false;
+
+            function updatePaymentHint() {
+                const selected = document.querySelector('input[name="paymentMethod"]:checked');
+                const hint = document.getElementById("selected-payment-hint");
+                if (!hint || !selected) return;
+                hint.textContent = selected.value === "gcash"
+                    ? "Payment selected: GCash"
+                    : "Payment selected: Cash";
+            }
+
+            document.getElementById("paymentCash").onchange = updatePaymentHint;
+            document.getElementById("paymentGcash").onchange = updatePaymentHint;
+            updatePaymentHint();
 
             let modal = new bootstrap.Modal(document.getElementById('receiptModal'));
             modal.show();
 
-            document.getElementById("confirmCheckoutBtn").onclick = function () {
+            document.getElementById("confirmCheckoutBtn").onclick = async function () {
+                const selected = document.querySelector('input[name="paymentMethod"]:checked');
+                const paymentMethod = selected ? selected.value : "cash";
+                const paymentLabel = paymentMethod === "gcash" ? "GCash" : "Cash";
 
-                if (!confirm("Are you sure you want to checkout this customer?")) return;
+                const confirmed = await showConfirmDialog({
+                    title: "Confirm Checkout",
+                    message: `Complete checkout for this customer using ${paymentLabel}?`,
+                    confirmText: `Pay with ${paymentLabel}`,
+                    confirmClass: paymentMethod === "gcash" ? "btn-primary" : "btn-success",
+                    iconType: paymentMethod,
+                    icon: paymentMethod === "gcash" ? "📱" : "💵"
+                });
+                if (!confirmed) return;
 
-                csrfFetch(`/api/checkout/${sessionId}`, {
-                    method: "POST"
-                })
+                const checkoutData = new FormData();
+                checkoutData.append("payment_method", paymentMethod);
+
+                csrfFetch(
+                    `/api/checkout/${sessionId}?payment_method=${encodeURIComponent(paymentMethod)}`,
+                    {
+                        method: "POST",
+                        body: checkoutData
+                    }
+                )
                 .then(res => res.json())
                 .then(data => {
                     if (data.error) {
@@ -355,7 +409,8 @@ function viewOrder(sessionId) {
                         return;
                     }
                     bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
-                    showToast("Customer checked out successfully.", "success");
+                    document.getElementById("payment-method-section").style.display = "none";
+                    showToast(`Customer checked out via ${data.payment_label || paymentLabel}.`, "success");
                     loadSessions();
                 })
                 .catch(err => {
@@ -375,6 +430,86 @@ function viewOrder(sessionId) {
 }
 
 
+function escapeHtml(text) {
+    if (text === null || text === undefined) return "";
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function buildSessionTableRow(session) {
+    const purpose = session.space_type === "Boardroom" ? (session.purpose || "N/A") : "—";
+    return `
+        <tr>
+            <td>${escapeHtml(session.customer_name)}</td>
+            <td class="d-none d-md-table-cell">${escapeHtml(session.school || "N/A")}</td>
+            <td class="d-none d-md-table-cell">${escapeHtml(session.course || "N/A")}</td>
+            <td class="d-none d-md-table-cell">${escapeHtml(purpose)}</td>
+            <td>${escapeHtml(session.space_type)}</td>
+            <td>${escapeHtml(session.time_in)}</td>
+            <td class="d-none d-md-table-cell">${formatTime(session.seconds_used)}</td>
+            <td class="d-none d-md-table-cell">₱${session.current_bill.toFixed(2)}</td>
+            <td class="text-end">
+                <button class="btn btn-primary btn-sm py-2 me-1"
+                    onclick="goToOrder(${session.session_id})">
+                    Add Order
+                </button>
+                <button class="btn btn-warning btn-sm py-2"
+                    onclick="viewOrder(${session.session_id})">
+                    View Order
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+function buildSessionMobileCard(session) {
+    const schoolLine = [session.school, session.course].filter(Boolean).join(" · ");
+    const purposeLine = session.space_type === "Boardroom" && session.purpose
+        ? `<div class="mobile-session-purpose text-muted small mb-2">Purpose: ${escapeHtml(session.purpose)}</div>`
+        : "";
+    return `
+        <article class="mobile-session-card card shadow-sm mb-2">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <div class="min-w-0">
+                        <div class="mobile-session-name">${escapeHtml(session.customer_name)}</div>
+                        ${schoolLine ? `<div class="text-muted small text-truncate">${escapeHtml(schoolLine)}</div>` : ""}
+                    </div>
+                    <span class="badge text-bg-secondary flex-shrink-0">${escapeHtml(session.space_type)}</span>
+                </div>
+                ${purposeLine}
+                <div class="mobile-session-meta row g-2 small mb-3">
+                    <div class="col-4">
+                        <span class="text-muted d-block">Time in</span>
+                        <span class="fw-semibold">${escapeHtml(session.time_in)}</span>
+                    </div>
+                    <div class="col-4">
+                        <span class="text-muted d-block">Duration</span>
+                        <span class="fw-semibold">${formatTime(session.seconds_used)}</span>
+                    </div>
+                    <div class="col-4">
+                        <span class="text-muted d-block">Bill</span>
+                        <span class="fw-semibold">₱${session.current_bill.toFixed(2)}</span>
+                    </div>
+                </div>
+                <div class="mobile-session-actions">
+                    <button type="button" class="btn btn-primary"
+                        onclick="goToOrder(${session.session_id})">
+                        Add Order
+                    </button>
+                    <button type="button" class="btn btn-warning"
+                        onclick="viewOrder(${session.session_id})">
+                        View Order
+                    </button>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
 // LOAD SESSIONS
 function loadSessions() {
 
@@ -386,12 +521,16 @@ function loadSessions() {
             return;
         }
 
-        let container = document.getElementById("sessions-container");
-        let search = document.getElementById("searchInput").value.toLowerCase();
+        const tableContainer = document.getElementById("sessions-container");
+        const cardsContainer = document.getElementById("sessions-cards");
+        const search = document.getElementById("searchInput").value.toLowerCase();
 
-        container.innerHTML = "";
+        tableContainer.innerHTML = "";
+        if (cardsContainer) cardsContainer.innerHTML = "";
 
         let visibleCount = 0;
+        let tableHtml = "";
+        let cardsHtml = "";
 
         data.forEach(session => {
 
@@ -400,40 +539,33 @@ function loadSessions() {
             if (!session.customer_name.toLowerCase().includes(search)) return;
 
             visibleCount++;
-
-            container.innerHTML += `
-                <tr>
-                    <td>${session.customer_name}</td>
-                    <td class="d-none d-md-table-cell">${session.school || "N/A"}</td>
-                    <td class="d-none d-md-table-cell">${session.course || "N/A"}</td>
-                    <td class="d-none d-md-table-cell">${session.space_type === "Boardroom" ? (session.purpose || "N/A") : "—"}</td>
-                    <td>${session.space_type}</td>
-                    <td>${session.time_in}</td>
-                    <td class="d-none d-md-table-cell">${formatTime(session.seconds_used)}</td>
-                    <td class="d-none d-md-table-cell">₱${session.current_bill.toFixed(2)}</td>
-                    <td class="text-end">
-                        <button class="btn btn-primary btn-sm py-2 me-1"
-                            onclick="goToOrder(${session.session_id})">
-                            Add Order
-                        </button>
-                        <button class="btn btn-warning btn-sm py-2"
-                            onclick="viewOrder(${session.session_id})">
-                            View Order
-                        </button>
-                    </td>
-                </tr>
-            `;
+            tableHtml += buildSessionTableRow(session);
+            cardsHtml += buildSessionMobileCard(session);
         });
 
         document.getElementById("session-count").innerText = `${visibleCount} customer(s)`;
+
         if (visibleCount === 0) {
-            container.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-4">There is no customer at the moment.</td></tr>`;
+            const emptyMsg = "There is no customer at the moment.";
+            tableContainer.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-4">${emptyMsg}</td></tr>`;
+            if (cardsContainer) {
+                cardsContainer.innerHTML = `<p class="text-center text-muted py-4 mb-0">${emptyMsg}</p>`;
+            }
+            return;
         }
 
+        tableContainer.innerHTML = tableHtml;
+        if (cardsContainer) cardsContainer.innerHTML = cardsHtml;
+
     })
-    .catch(err => {
-        let container = document.getElementById("sessions-container");
-        container.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-4">Failed to load sessions. Please refresh the page.</td></tr>`;
+    .catch(() => {
+        const errMsg = "Failed to load sessions. Please refresh the page.";
+        document.getElementById("sessions-container").innerHTML =
+            `<tr><td colspan="9" class="text-center text-danger py-4">${errMsg}</td></tr>`;
+        const cardsContainer = document.getElementById("sessions-cards");
+        if (cardsContainer) {
+            cardsContainer.innerHTML = `<p class="text-center text-danger py-4 mb-0">${errMsg}</p>`;
+        }
     });
 }
 
