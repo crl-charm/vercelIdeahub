@@ -5,57 +5,47 @@
 {% block content %}
 
 <div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Space Reservations</h1>
+  <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h3 class="mb-0">Space Reservations</h3>
+      <small id="reservations-count" class="text-muted">0 records</small>
+    </div>
     <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addResModal">
       + New Reservation
     </button>
   </div>
 
-  <div class="card">
+  <!-- Desktop Table View -->
+  <div class="card d-none d-md-block">
     <div class="card-header">
-      <h5>All Reservations</h5>
+      <h5 class="mb-0">All Reservations</h5>
     </div>
     <div class="card-body">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Contact</th>
-            <th>Space</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Duration</th>
-            <th>People</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="reservations-body">
-          {% for res in reservations %}
-          <tr>
-            <td>{{ res.customer_name }}</td>
-            <td>{{ res.customer_contact or "-" }}</td>
-            <td>{{ res.space }}</td>
-            <td>{{ res.reserved_date }}</td>
-            <td>{{ res.reserved_time }}</td>
-            <td>{{ res.duration_minutes }} min</td>
-            <td>{{ res.number_of_people }}</td>
-            <td><span class="badge bg-info">{{ res.status }}</span></td>
-            <td>
-              <select class="form-select form-select-sm" onchange="updateStatus({{ res.id }}, this.value)">
-                <option value="">Change status...</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Contact</th>
+              <th>Space</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Duration</th>
+              <th>People</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="reservations-body">
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="d-md-none" id="reservations-card-container">
+    <p class="text-center text-muted py-4">Loading...</p>
   </div>
 </div>
 
@@ -132,12 +122,40 @@ function loadSpaces() {
   });
 }
 
+function getStatusBadge(status) {
+  const colors = {
+    'pending': 'warning',
+    'confirmed': 'success',
+    'completed': 'info',
+    'cancelled': 'danger'
+  };
+  const color = colors[status] || 'secondary';
+  return `<span class="badge bg-${color}">${status}</span>`;
+}
+
 function loadReservations() {
   fetch('/admin/reservations/api/reservations').then(r => r.json()).then(data => {
     if (data.success) {
+      // Desktop table
       const tbody = document.getElementById('reservations-body');
       tbody.innerHTML = '';
+
+      // Mobile cards
+      const cardContainer = document.getElementById('reservations-card-container');
+      document.getElementById('reservations-count').innerText = `${data.data.length} record(s)`;
+
+      if (!data.data.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">No reservations found.</td></tr>';
+        cardContainer.innerHTML = '<p class="text-center text-muted py-4">No reservations found.</p>';
+        return;
+      }
+
+      let cardHtml = '<div class="d-flex flex-column gap-2">';
+
       data.data.forEach(res => {
+        const statusBadge = getStatusBadge(res.status);
+
+        // Desktop row
         tbody.innerHTML += `
           <tr>
             <td>${res.customer_name}</td>
@@ -147,7 +165,7 @@ function loadReservations() {
             <td>${res.reserved_time}</td>
             <td>${res.duration_minutes} min</td>
             <td>${res.number_of_people}</td>
-            <td><span class="badge bg-info">${res.status}</span></td>
+            <td>${statusBadge}</td>
             <td>
               <select class="form-select form-select-sm" onchange="updateStatus(${res.id}, this.value)">
                 <option value="">Change...</option>
@@ -159,7 +177,54 @@ function loadReservations() {
             </td>
           </tr>
         `;
+
+        // Mobile card
+        cardHtml += `
+          <div class="record-card">
+            <div class="record-card-header">
+              <div>
+                <div class="record-card-title">${res.customer_name}</div>
+                <div class="record-card-subtitle">${res.space}</div>
+              </div>
+              ${statusBadge}
+            </div>
+            <div class="record-card-body">
+              <div class="record-card-row">
+                <span class="record-card-label">Date:</span>
+                <span class="record-card-value">${res.reserved_date}</span>
+              </div>
+              <div class="record-card-row">
+                <span class="record-card-label">Time:</span>
+                <span class="record-card-value">${res.reserved_time}</span>
+              </div>
+              <div class="record-card-row">
+                <span class="record-card-label">Duration:</span>
+                <span class="record-card-value">${res.duration_minutes} min</span>
+              </div>
+              <div class="record-card-row">
+                <span class="record-card-label">People:</span>
+                <span class="record-card-value">${res.number_of_people}</span>
+              </div>
+              <div class="record-card-row">
+                <span class="record-card-label">Contact:</span>
+                <span class="record-card-value">${res.customer_contact || '-'}</span>
+              </div>
+            </div>
+            <div class="record-card-footer">
+              <select class="form-select form-select-sm" onchange="updateStatus(${res.id}, this.value)">
+                <option value="">Change status...</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+        `;
       });
+
+      cardHtml += '</div>';
+      cardContainer.innerHTML = cardHtml;
     }
   });
 }

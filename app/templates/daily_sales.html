@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
     <div>
       <h3 class="mb-0">Sales Analytics</h3>
       <small class="text-muted">Today, comparisons, and period summaries</small>
@@ -17,26 +17,27 @@
     </div>
   </div>
 
-  <div class="row mb-3">
-    <div class="col-12 col-md-3 mb-3">
+  <!-- Summary Cards -->
+  <div class="row g-2 mb-3">
+    <div class="col-12 col-sm-6 col-md-3 mb-3">
       <div class="card shadow-sm p-3 text-center">
         <small class="text-muted">Transactions</small>
         <h4 id="sales-transactions" class="mb-0">0</h4>
       </div>
     </div>
-    <div class="col-12 col-md-3 mb-3">
+    <div class="col-12 col-sm-6 col-md-3 mb-3">
       <div class="card shadow-sm p-3 text-center">
         <small class="text-muted">Total Revenue</small>
         <h4 id="sales-total" class="mb-0">₱0.00</h4>
       </div>
     </div>
-    <div class="col-12 col-md-3 mb-3">
+    <div class="col-12 col-sm-6 col-md-3 mb-3">
       <div class="card shadow-sm p-3 text-center">
         <small class="text-muted">Space Revenue</small>
         <h4 id="sales-space" class="mb-0">₱0.00</h4>
       </div>
     </div>
-    <div class="col-12 col-md-3 mb-3">
+    <div class="col-12 col-sm-6 col-md-3 mb-3">
       <div class="card shadow-sm p-3 text-center">
         <small class="text-muted">Food Revenue</small>
         <h4 id="sales-food" class="mb-0">₱0.00</h4>
@@ -44,11 +45,18 @@
     </div>
   </div>
 
-  <div class="card shadow-sm">
+  <!-- Desktop Table View -->
+  <div class="card shadow-sm d-none d-md-block">
     <div class="card-body">
       <h5 class="mb-3">Comparison Snapshot</h5>
       <div id="compare-output" class="table-responsive"></div>
     </div>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="d-md-none">
+    <h5 class="mb-3">Comparison Snapshot</h5>
+    <div id="compare-card-output"></div>
   </div>
 </div>
 {% endblock %}
@@ -92,6 +100,7 @@ function loadCompare() {
       ["Last 30 Days", data.last_30_days]
     ];
 
+    // Desktop table view
     document.getElementById("compare-output").innerHTML = `
       <table class="table table-striped mb-0">
         <thead>
@@ -116,6 +125,39 @@ function loadCompare() {
         </tbody>
       </table>
     `;
+
+    // Mobile card view
+    let cardHtml = '<div class="d-flex flex-column gap-2">';
+    rows.forEach(([label, s]) => {
+      cardHtml += `
+        <div class="record-card">
+          <div class="record-card-header">
+            <div>
+              <div class="record-card-title">${label}</div>
+            </div>
+          </div>
+          <div class="record-card-body">
+            <div class="record-card-row">
+              <span class="record-card-label">Transactions:</span>
+              <span class="record-card-value">${s.transactions}</span>
+            </div>
+            <div class="record-card-row">
+              <span class="record-card-label">Space:</span>
+              <span class="record-card-value">${peso(s.space_revenue)}</span>
+            </div>
+            <div class="record-card-row">
+              <span class="record-card-label">Food:</span>
+              <span class="record-card-value">${peso(s.food_revenue)}</span>
+            </div>
+          </div>
+          <div class="record-card-footer">
+            <span class="record-card-total">${peso(s.total_revenue)}</span>
+          </div>
+        </div>
+      `;
+    });
+    cardHtml += '</div>';
+    document.getElementById("compare-card-output").innerHTML = cardHtml;
   })
   .catch(() => {
     showToast("Failed to load sales comparison. Please try again.", "error");

@@ -5,76 +5,65 @@
 {% block content %}
 
 <div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Receivables / Debt Tracker</h1>
+  <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h3 class="mb-0">Receivables / Debt Tracker</h3>
+      <small id="receivables-count" class="text-muted">0 records</small>
+    </div>
     <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addReceivableModal">
       + New Receivable
     </button>
   </div>
 
-  <div class="row mb-4">
-    <div class="col-md-3">
+  <div class="row mb-4 g-2">
+    <div class="col-12 col-sm-6 col-md-3">
       <div class="card bg-danger text-white">
-        <div class="card-body">
-          <h5 class="card-title">Total Unpaid</h5>
-          <p class="card-text display-6">₱<span id="total-unpaid">0.00</span></p>
+        <div class="card-body py-3">
+          <small>Total Unpaid</small>
+          <div class="h5 mb-0">₱<span id="total-unpaid">0.00</span></div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-12 col-sm-6 col-md-3">
       <div class="card bg-warning text-dark">
-        <div class="card-body">
-          <h5 class="card-title">Unpaid Count</h5>
-          <p class="card-text display-6" id="unpaid-count">0</p>
+        <div class="card-body py-3">
+          <small>Unpaid Count</small>
+          <div class="h5 mb-0" id="unpaid-count">0</div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="card">
+  <!-- Desktop Table View -->
+  <div class="card d-none d-md-block">
     <div class="card-header">
-      <h5>All Receivables</h5>
+      <h5 class="mb-0">All Receivables</h5>
     </div>
     <div class="card-body">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Contact</th>
-            <th>Items</th>
-            <th>Amount Owed</th>
-            <th>Partial Paid</th>
-            <th>Due Date</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="receivables-table-body">
-          {% for rec in receivables %}
-          <tr>
-            <td>{{ rec.customer_name }}</td>
-            <td>{{ rec.customer_contact or "-" }}</td>
-            <td>{{ rec.items }}</td>
-            <td>₱{{ "%.2f"|format(rec.amount_owed) }}</td>
-            <td>₱{{ "%.2f"|format(rec.partial_paid) }}</td>
-            <td>{{ rec.due_date }}</td>
-            <td>
-              {% if rec.paid %}
-              <span class="badge bg-success">Paid</span>
-              {% else %}
-              <span class="badge bg-danger">Unpaid</span>
-              {% endif %}
-            </td>
-            <td>
-              {% if not rec.paid %}
-              <button class="btn btn-sm btn-success" onclick="markPaid({{ rec.id }})">Mark Paid</button>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Contact</th>
+              <th>Items</th>
+              <th>Amount Owed</th>
+              <th>Partial Paid</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="receivables-table-body">
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="d-md-none" id="receivables-card-container">
+    <p class="text-center text-muted py-4">Loading...</p>
   </div>
 </div>
 
@@ -131,7 +120,6 @@
 </style>
 
 <script>
-// Socket.IO for real-time updates
 const socket = io();
 
 socket.on('receivables_update', function(data) {
@@ -146,14 +134,6 @@ socket.on('receivables_update', function(data) {
   }
 });
 
-socket.on('connect', function() {
-  console.log('Connected to server for real-time updates');
-});
-
-socket.on('disconnect', function() {
-  console.log('Disconnected from server');
-});
-
 document.addEventListener('DOMContentLoaded', function() {
   loadReceivables();
 });
@@ -161,18 +141,39 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadReceivables() {
   fetch('/admin/receivables/api/receivables').then(r => r.json()).then(data => {
     if (data.success) {
-      const tbody = document.getElementById('receivables-table-body');
-      tbody.innerHTML = '';
+      const today = new Date().toISOString().split('T')[0];
       let totalUnpaid = 0;
       let unpaidCount = 0;
-      const today = new Date().toISOString().split('T')[0];
+
+      // Desktop table
+      const tbody = document.getElementById('receivables-table-body');
+      tbody.innerHTML = '';
+
+      // Mobile cards
+      const cardContainer = document.getElementById('receivables-card-container');
+      document.getElementById('receivables-count').innerText = `${data.data.length} record(s)`;
+
+      if (!data.data.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">No receivables found.</td></tr>';
+        cardContainer.innerHTML = '<p class="text-center text-muted py-4">No receivables found.</p>';
+        document.getElementById('total-unpaid').textContent = '0.00';
+        document.getElementById('unpaid-count').textContent = '0';
+        return;
+      }
+
+      let cardHtml = '<div class="d-flex flex-column gap-2">';
+
       data.data.forEach(rec => {
         if (!rec.paid && rec.due_date <= today) {
           totalUnpaid += rec.amount_owed - rec.partial_paid;
           unpaidCount++;
         }
+
         const isDueToday = rec.due_date === today && !rec.paid;
         const rowClass = isDueToday ? 'due-today' : '';
+        const statusBadge = rec.paid ? '<span class="badge bg-success">Paid</span>' : '<span class="badge bg-danger">Unpaid</span>';
+
+        // Desktop row
         tbody.innerHTML += `
           <tr class="${rowClass}">
             <td>${rec.customer_name}</td>
@@ -181,11 +182,48 @@ function loadReceivables() {
             <td>₱${rec.amount_owed.toFixed(2)}</td>
             <td>₱${rec.partial_paid.toFixed(2)}</td>
             <td>${rec.due_date}</td>
-            <td>${rec.paid ? '<span class="badge bg-success">Paid</span>' : '<span class="badge bg-danger">Unpaid</span>'}</td>
+            <td>${statusBadge}</td>
             <td>${!rec.paid ? `<button class="btn btn-sm btn-success" onclick="markPaid(${rec.id})">Mark Paid</button>` : ''}</td>
           </tr>
         `;
+
+        // Mobile card
+        cardHtml += `
+          <div class="record-card ${isDueToday ? 'border-warning' : ''}">
+            <div class="record-card-header">
+              <div>
+                <div class="record-card-title">${rec.customer_name}</div>
+                <div class="record-card-subtitle">${rec.customer_contact || 'No contact'}</div>
+              </div>
+              ${statusBadge}
+            </div>
+            <div class="record-card-body">
+              <div class="record-card-row">
+                <span class="record-card-label">Items:</span>
+                <span class="record-card-value">${rec.items}</span>
+              </div>
+              <div class="record-card-row">
+                <span class="record-card-label">Amount Owed:</span>
+                <span class="record-card-value">₱${rec.amount_owed.toFixed(2)}</span>
+              </div>
+              <div class="record-card-row">
+                <span class="record-card-label">Partial Paid:</span>
+                <span class="record-card-value">₱${rec.partial_paid.toFixed(2)}</span>
+              </div>
+              <div class="record-card-row">
+                <span class="record-card-label">Due Date:</span>
+                <span class="record-card-value">${rec.due_date}</span>
+              </div>
+            </div>
+            <div class="record-card-footer">
+              ${!rec.paid ? `<button class="btn btn-sm btn-success" onclick="markPaid(${rec.id})">Mark Paid</button>` : ''}
+            </div>
+          </div>
+        `;
       });
+
+      cardHtml += '</div>';
+      cardContainer.innerHTML = cardHtml;
       document.getElementById('total-unpaid').textContent = totalUnpaid.toFixed(2);
       document.getElementById('unpaid-count').textContent = unpaidCount;
     }

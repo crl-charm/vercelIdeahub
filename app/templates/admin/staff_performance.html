@@ -5,43 +5,44 @@
 {% block content %}
 
 <div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Staff Performance Leaderboard</h1>
+  <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h3 class="mb-0">Staff Performance Leaderboard</h3>
+      <small id="performance-count" class="text-muted">0 records</small>
+    </div>
     <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addLogModal">
       + Log Performance
     </button>
   </div>
 
-  <div class="card">
+  <!-- Desktop Table View -->
+  <div class="card d-none d-md-block">
     <div class="card-header">
-      <h5>Leaderboard</h5>
+      <h5 class="mb-0">Leaderboard</h5>
     </div>
     <div class="card-body">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Staff</th>
-            <th>Shift Date</th>
-            <th>Customers Served</th>
-            <th>Score</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboard-body">
-          {% for log in logs %}
-          <tr>
-            <td></td>
-            <td>{{ log.username }}</td>
-            <td>{{ log.shift_date }}</td>
-            <td>{{ log.customers_served }}</td>
-            <td><strong>{{ "%.2f"|format(log.score) }}</strong></td>
-            <td>{{ log.admin_note or "-" }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Staff</th>
+              <th>Shift Date</th>
+              <th>Customers Served</th>
+              <th>Score</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="d-md-none" id="leaderboard-card-container">
+    <p class="text-center text-muted py-4">Loading...</p>
   </div>
 </div>
 
@@ -105,9 +106,24 @@ function loadStaff() {
 function loadLogs() {
   fetch('/admin/staff-performance/api/logs').then(r => r.json()).then(data => {
     if (data.success) {
+      // Desktop table
       const tbody = document.getElementById('leaderboard-body');
       tbody.innerHTML = '';
+
+      // Mobile cards
+      const cardContainer = document.getElementById('leaderboard-card-container');
+      document.getElementById('performance-count').innerText = `${data.data.length} record(s)`;
+
+      if (!data.data.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No performance logs found.</td></tr>';
+        cardContainer.innerHTML = '<p class="text-center text-muted py-4">No performance logs found.</p>';
+        return;
+      }
+
+      let cardHtml = '<div class="d-flex flex-column gap-2">';
+
       data.data.forEach((log, idx) => {
+        // Desktop row
         tbody.innerHTML += `
           <tr>
             <td>${idx + 1}</td>
@@ -118,7 +134,35 @@ function loadLogs() {
             <td>${log.admin_note || '-'}</td>
           </tr>
         `;
+
+        // Mobile card
+        cardHtml += `
+          <div class="record-card">
+            <div class="record-card-header">
+              <div>
+                <div class="record-card-title">#${idx + 1} ${log.username}</div>
+                <div class="record-card-subtitle">${log.shift_date}</div>
+              </div>
+            </div>
+            <div class="record-card-body">
+              <div class="record-card-row">
+                <span class="record-card-label">Customers Served:</span>
+                <span class="record-card-value">${log.customers_served}</span>
+              </div>
+              <div class="record-card-row">
+                <span class="record-card-label">Notes:</span>
+                <span class="record-card-value">${log.admin_note || '-'}</span>
+              </div>
+            </div>
+            <div class="record-card-footer">
+              <span class="record-card-total">Score: ${log.score.toFixed(2)}</span>
+            </div>
+          </div>
+        `;
       });
+
+      cardHtml += '</div>';
+      cardContainer.innerHTML = cardHtml;
     }
   });
 }

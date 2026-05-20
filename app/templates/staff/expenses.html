@@ -6,37 +6,39 @@
 
 <div class="container-fluid mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Expenses Log</h1>
+    <div>
+      <h3 class="mb-0">Expenses Log</h3>
+      <small id="expense-count" class="text-muted">0 records</small>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <h5>All Expenses</h5>
+  <!-- Desktop Table View -->
+  <div class="d-none d-md-block">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">All Expenses</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Logged By</th>
+            </tr>
+          </thead>
+          <tbody id="expenses-table-body">
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="card-body">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Description</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>Logged By</th>
-          </tr>
-        </thead>
-        <tbody id="expenses-table-body">
-          {% for exp in expenses %}
-          <tr>
-            <td>{{ exp.category }}</td>
-            <td>{{ exp.description }}</td>
-            <td>₱{{ "%.2f"|format(exp.amount) }}</td>
-            <td>{{ exp.expense_date }}</td>
-            <td>{{ exp.logged_by_user.username if exp.logged_by_user else "Unknown" }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="d-md-none" id="expenses-card-container">
+    <p class="text-center text-muted py-4">Loading...</p>
   </div>
 </div>
 
@@ -61,9 +63,21 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadExpenses() {
   fetch('/expenses-view/api/expenses').then(r => r.json()).then(data => {
     if (data.success) {
+      const today = new Date().toISOString().split('T')[0];
+      const expensesByDate = {};
+      
+      // Group by date
+      data.data.forEach(exp => {
+        const date = exp.expense_date;
+        if (!expensesByDate[date]) {
+          expensesByDate[date] = [];
+        }
+        expensesByDate[date].push(exp);
+      });
+
+      // Desktop table
       const tbody = document.getElementById('expenses-table-body');
       tbody.innerHTML = '';
-      const today = new Date().toISOString().split('T')[0];
       data.data.forEach(exp => {
         const isToday = exp.expense_date === today;
         const rowClass = isToday ? 'today-expense' : '';
@@ -77,6 +91,65 @@ function loadExpenses() {
           </tr>
         `;
       });
+
+      // Mobile cards
+      const cardContainer = document.getElementById('expenses-card-container');
+      document.getElementById('expense-count').innerText = `${data.data.length} record(s)`;
+
+      if (!data.data.length) {
+        cardContainer.innerHTML = `<p class="text-center text-muted py-4">No expenses recorded.</p>`;
+        return;
+      }
+
+      let html = '';
+      const sortedDates = Object.keys(expensesByDate).sort((a, b) => b.localeCompare(a));
+
+      for (const date of sortedDates) {
+        const expenses = expensesByDate[date];
+        const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { 
+          weekday: 'short', 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+
+        html += `
+          <div class="mb-3">
+            <h6 class="text-muted fw-semibold mb-2 border-bottom pb-1">${dateLabel}</h6>
+            <div class="d-flex flex-column gap-2">
+              ${expenses.map(exp => {
+                const isToday = exp.expense_date === today;
+                const highlightClass = isToday ? 'border-warning' : '';
+                return `
+                  <div class="record-card ${highlightClass}">
+                    <div class="record-card-header">
+                      <div>
+                        <div class="record-card-title">${exp.category}</div>
+                        <div class="record-card-subtitle">${exp.description}</div>
+                      </div>
+                    </div>
+                    <div class="record-card-body">
+                      <div class="record-card-row">
+                        <span class="record-card-label">Logged By:</span>
+                        <span class="record-card-value">${exp.logged_by_username || 'Unknown'}</span>
+                      </div>
+                      <div class="record-card-row">
+                        <span class="record-card-label">Date:</span>
+                        <span class="record-card-value">${exp.expense_date}</span>
+                      </div>
+                    </div>
+                    <div class="record-card-footer">
+                      <span class="record-card-total">₱${exp.amount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      cardContainer.innerHTML = html;
     }
   });
 }

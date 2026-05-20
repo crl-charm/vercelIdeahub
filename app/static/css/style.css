@@ -299,3 +299,204 @@ body {
     border-radius: 8px;
   }
 }
+
+/* Checkout & Records Card Styles */
+.checkout-record-card,
+.record-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.checkout-record-card:hover,
+.record-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--brand);
+}
+
+.checkout-card-header,
+.record-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.checkout-card-customer,
+.record-card-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.checkout-card-space,
+.record-card-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.checkout-card-body,
+.record-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.checkout-card-row,
+.record-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.checkout-card-label,
+.record-card-label {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.checkout-card-value,
+.record-card-value {
+  color: var(--text);
+  font-weight: 600;
+  text-align: right;
+}
+
+.checkout-card-footer,
+.record-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.checkout-card-total,
+.record-card-total {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.record-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.record-card-actions .btn {
+  font-size: 11px;
+  padding: 6px 10px;
+  min-height: auto;
+}
+
+/* Daily Balance Mobile Card Styles */
+.daily-report-card,
+.soft-balance-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.daily-report-card:hover,
+.soft-balance-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--brand);
+}
+
+.card-header-mobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #f9fafc;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-header-mobile strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.card-header-mobile small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card-header-mobile .badge {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.card-body-mobile {
+  padding: 14px;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.notes-section {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+}
+
+.daily-balance-export-buttons .btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 576px) {
+  .daily-balance-export-buttons {
+    width: 100% !important;
+  }
+  
+  .daily-balance-export-buttons .btn-sm {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .daily-balance-export-buttons .btn-sm .bi {
+    margin-right: 4px;
+  }
+  
+  .card-header-mobile {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .card-header-mobile small {
+    display: block;
+    width: 100%;
+  }
+}

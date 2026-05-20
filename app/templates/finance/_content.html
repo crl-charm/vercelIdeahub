@@ -1,19 +1,132 @@
 <div class="container-fluid">
-  <h2 class="mb-3">Finance</h2>
-  <div class="row g-3 mb-3">
-    <div class="col-md-3"><div class="card card-body">Total Budget: {{ total_budget }}</div></div>
-    <div class="col-md-3"><div class="card card-body">Allocated: {{ allocated }}</div></div>
-    <div class="col-md-3"><div class="card card-body">Spent: {{ spent }}</div></div>
-    <div class="col-md-3"><div class="card card-body">Remaining: {{ remaining }}</div></div>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0">Finance</h3>
+      <small class="text-muted">Budget Overview & Transactions</small>
+    </div>
   </div>
-  <div class="card card-body">
-    <h5>Recent Transactions</h5>
-    <ul class="mb-0">
-      {% for txn in transactions %}
-      <li>{{ txn.created_at }} - {{ txn.type }} - {{ txn.amount }} - {{ txn.description or "-" }}</li>
-      {% else %}
-      <li>No transactions yet.</li>
-      {% endfor %}
-    </ul>
+
+  <!-- Budget Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-3">
+      <div class="card card-body">
+        <small class="text-muted">Total Budget</small>
+        <h5 class="mb-0">{{ total_budget }}</h5>
+      </div>
+    </div>
+    <div class="col-12 col-md-3">
+      <div class="card card-body">
+        <small class="text-muted">Allocated</small>
+        <h5 class="mb-0">{{ allocated }}</h5>
+      </div>
+    </div>
+    <div class="col-12 col-md-3">
+      <div class="card card-body">
+        <small class="text-muted">Spent</small>
+        <h5 class="mb-0">{{ spent }}</h5>
+      </div>
+    </div>
+    <div class="col-12 col-md-3">
+      <div class="card card-body">
+        <small class="text-muted">Remaining</small>
+        <h5 class="mb-0">{{ remaining }}</h5>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop Table View -->
+  <div class="card d-none d-md-block">
+    <div class="card-header">
+      <h5 class="mb-0">Recent Transactions</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody id="txn-table-body">
+            {% for txn in transactions %}
+            <tr>
+              <td>{{ txn.created_at }}</td>
+              <td>{{ txn.type }}</td>
+              <td>{{ txn.amount }}</td>
+              <td>{{ txn.description or "-" }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-3">No transactions yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="d-md-none">
+    <h5 class="mb-3">Recent Transactions</h5>
+    <div id="txn-card-container">
+      <p class="text-center text-muted py-4">Loading...</p>
+    </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadTransactionsForMobile();
+});
+
+function loadTransactionsForMobile() {
+  const container = document.getElementById('txn-card-container');
+  if (!container) return;
+
+  // Get transactions from the page
+  const transactions = [
+    {% for txn in transactions %}
+    {
+      created_at: "{{ txn.created_at }}",
+      type: "{{ txn.type }}",
+      amount: "{{ txn.amount }}",
+      description: "{{ txn.description or '-' }}"
+    }{{ "," if not loop.last }}
+    {% endfor %}
+  ];
+
+  if (!transactions.length || !transactions[0].created_at) {
+    container.innerHTML = `<p class="text-center text-muted py-4">No transactions yet.</p>`;
+    return;
+  }
+
+  let html = '<div class="d-flex flex-column gap-2">';
+  transactions.forEach(txn => {
+    html += `
+      <div class="record-card">
+        <div class="record-card-header">
+          <div>
+            <div class="record-card-title">${txn.type}</div>
+            <div class="record-card-subtitle">${txn.created_at}</div>
+          </div>
+        </div>
+        <div class="record-card-body">
+          <div class="record-card-row">
+            <span class="record-card-label">Description:</span>
+            <span class="record-card-value">${txn.description}</span>
+          </div>
+        </div>
+        <div class="record-card-footer">
+          <span class="record-card-total">${txn.amount}</span>
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+</script>
