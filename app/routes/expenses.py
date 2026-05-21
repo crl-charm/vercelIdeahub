@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, request, render_template, session
 
+from app import csrf
 from app.repositories.expense_repository import ExpenseRepository
 from app.services.expense_service import ExpenseService
 from app.utils.auth import admin_required, login_required
@@ -30,6 +31,7 @@ def api_list_expenses() -> tuple:
 
 @expenses_bp.route("/api/expenses", methods=["POST"])
 @login_required
+@csrf.exempt
 def api_create_expense() -> tuple:
     data = request.get_json()
     result = _service.create(

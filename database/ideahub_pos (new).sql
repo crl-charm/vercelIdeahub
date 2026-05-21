@@ -875,10 +875,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `full_name`, `username`, `password`, `role`, `job_role`, `created_at`, `failed_login_attempts`, `locked_until`, `last_login`, `password_changed_at`) VALUES
-(2, 'Admin', 'admin', '$2b$12$Rk8S8nplZcMI2JCikbSV/OhKjkE5sIm7WbR1Bn6GHqCGZ.1i5VE32', 'admin', 'admin', '2026-04-28 11:41:20', 0, NULL, '2026-05-20 06:08:34', '2026-05-15 17:34:35'),
-(11, 'paula', 'paula', '$2b$12$omKDX3YRs4Qk9JFwL1.IH.Pt26T7ZBCD9UBgFNlHFt.m6eu8k4ada', 'staff', 'cook', '2026-05-18 05:57:28', 0, NULL, '2026-05-20 05:31:24', '2026-05-19 14:49:10'),
-(12, 'AJ kurt', 'Kurt', '$2b$12$m91zkWIpfjXoXAmEZUK1GuPLbgK4DRghMvHdETgpze4VDCUfGUExa', 'staff', 'server', '2026-05-20 05:23:52', 0, NULL, NULL, '2026-05-20 05:23:52'),
-(13, 'Rybell', 'Rybil', '$2b$12$uNekTgyFHvKaxdb.x0v.Y.NticT8na3TT0ohwJlfYyHLdAyTuq6hW', 'staff', 'cashier', '2026-05-20 05:24:20', 0, NULL, NULL, '2026-05-20 05:24:20');
+(2, 'Admin', 'admin', '$2b$12$sTJs4QnOLrXWAsUHZpBKneAl2YuHctY1B94xsDuNCnu4UegQARnPi', 'admin', 'admin', '2026-04-28 11:41:20', 0, NULL, '2026-05-20 06:08:34', '2026-05-15 17:34:35'),
+(11, 'paula', 'paula', '$2b$12$ZDrloXicfsu/oeEuC3eOLOI/nezN2CPS1rvOveGukGbp1oN1A6WZm', 'staff', 'cook', '2026-05-18 05:57:28', 0, NULL, '2026-05-20 05:31:24', '2026-05-19 14:49:10'),
+(12, 'AJ kurt', 'Kurt', '$2b$12$mKaJgU6vQ3ADQjIZ9/SfJ.LUyPKQMZkX7VRonl.UqOaeOwp4jCYYa', 'staff', 'server', '2026-05-20 05:23:52', 0, NULL, NULL, '2026-05-20 05:23:52'),
+(13, 'Rybell', 'Rybil', '$2b$12$wG5sxhnAUIURdsEFuKwGfO0BvmaE754BKdYFQkIytkzjgkDadAdh6', 'staff', 'cashier', '2026-05-20 05:24:20', 0, NULL, NULL, '2026-05-20 05:24:20');
 
 --
 -- Indexes for dumped tables

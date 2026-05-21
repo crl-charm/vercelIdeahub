@@ -14,7 +14,6 @@ from .receivable import Receivable
 from .expense import Expense
 from .staff_performance import StaffPerformanceLog
 from .daily_sales_report import DailySalesReport
-from .reservation import Reservation
 from .soft_balance import SoftBalanceEntry
 from .base_model import BaseModel
 from .management import Department, UserRole
@@ -41,7 +40,6 @@ __all__ = [
     'Expense',
     'StaffPerformanceLog',  # Note: NOT 'StaffPerformance'
     'DailySalesReport',
-    'Reservation',
     'SoftBalanceEntry',
     'BaseModel',
     'Department',

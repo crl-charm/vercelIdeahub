@@ -5,6 +5,7 @@ from flask import Blueprint, Response, jsonify, render_template, request
 from app.controllers.base_controller import BaseController
 from app.services.finance_oop_service import FinanceService
 from app.utils.auth import admin_required
+from app import csrf
 
 
 class FinanceController(BaseController):
@@ -49,6 +50,7 @@ class FinanceController(BaseController):
 
         @self.blueprint.post("/api/finance/transaction")
         @admin_required
+        @csrf.exempt
         def finance_add_transaction():
             payload = request.get_json(silent=True) or {}
             result = self._service.add_transaction(

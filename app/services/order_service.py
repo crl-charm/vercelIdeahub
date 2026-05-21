@@ -10,10 +10,32 @@ from app.models import MenuItem
 from app.repositories.order_repository import OrderRepository
 
 
+def _normalize_item_status(status: str | None) -> str:
+    if status in {None, "preparin"}:
+        return "preparing"
+    return status or "preparing"
+
+
+def _item_is_ready(status: str | None) -> bool:
+    return _normalize_item_status(status) == "done"
+
+
 @dataclass(frozen=True)
 class OrderService:
     repo: OrderRepository
     notifier: Notifier
+
+    def _order_has_preparing_items(self, order) -> bool:
+        return any(not _item_is_ready(item.status) for item in order.items)
+
+    def _session_preparing_item_count(self, session_id: int) -> int:
+        orders = self.repo.list_orders_for_session(session_id, include_done=False)
+        return sum(
+            1
+            for order in orders
+            for item in order.items
+            if not _item_is_ready(item.status)
+        )
 
     def list_menu(self) -> list[dict[str, Any]]:
         items = self.repo.list_menu_items()
@@ -80,6 +102,10 @@ class OrderService:
         if new_status == "serving":
             if order.status not in {"preparin", "preparing"}:
                 return {"error": "Order must be in preparing before serving"}, 400
+            if self._order_has_preparing_items(order):
+                return {
+                    "error": "All items must be marked Done before this order can be served"
+                }, 400
         elif new_status == "done":
             if order.status != "serving":
                 return {"error": "Order must be in serving before done"}, 400
@@ -103,6 +129,8 @@ class OrderService:
                 "time_in": (sess.time_in + timedelta(hours=8)).strftime("%B %d, %Y %I:%M %p") if sess and sess.time_in else None,
                 "orders": [],
                 "food_total": 0.0,
+                "preparing_count": 0,
+                "can_serve": False,
             }
 
         orders = self.repo.list_orders_for_session(session_id, include_done=include_done)
@@ -127,6 +155,10 @@ class OrderService:
                     }
                 )
 
+        preparing_count = sum(
+            1 for row in order_list if not _item_is_ready(row.get("item_status"))
+        )
+
         return {
             "session_id": session_id,
             "customer_name": sess.customer_name,
@@ -134,6 +166,8 @@ class OrderService:
             "time_in": (sess.time_in + timedelta(hours=8)).strftime("%B %d, %Y %I:%M %p") if sess.time_in else None,
             "orders": order_list,
             "food_total": float(food_total),
+            "preparing_count": preparing_count,
+            "can_serve": len(order_list) > 0 and preparing_count == 0,
         }
 
     def pending_count(self) -> dict[str, int]:
@@ -177,6 +211,16 @@ class OrderService:
             return {"error": "Session not found"}, 404
         if sess.status != "active":
             return {"error": "Session is not active"}, 400
+
+        preparing_count = self._session_preparing_item_count(session_id)
+        if preparing_count > 0:
+            return {
+                "error": (
+                    f"Cannot mark as served: {preparing_count} item(s) still preparing. "
+                    "Mark every item as Done first."
+                )
+            }, 400
+
         self.repo.mark_session_served(session_id)
         self.notifier.order_status_changed({"session_id": session_id, "status": "done"})
         return {"message": "Session marked as served", "session_id": session_id}
@@ -229,7 +273,10 @@ class OrderService:
         item = self.repo.get_order_item(item_id)
         if not item:
             return {"error": "Item not found"}, 404
-        item.status = "done" if item.status in {"preparing", "preparin", None} else "preparing"
+        if _item_is_ready(item.status):
+            item.status = "preparing"
+        else:
+            item.status = "done"
         self.repo.commit()
         self.notifier.order_status_changed(
             {"order_id": item.order_id, "item_id": item.id, "status": item.status}

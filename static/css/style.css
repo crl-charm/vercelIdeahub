@@ -104,7 +104,7 @@ body {
   margin-bottom: 0;
 }
 
-.table > :not(caption) > * > * {
+.table> :not(caption)>*>* {
   padding: 0.9rem 0.85rem;
   vertical-align: middle;
 }
@@ -163,13 +163,13 @@ body {
   flex-wrap: wrap;
 }
 
-.checkout-filters > input,
-.checkout-filters > select {
+.checkout-filters>input,
+.checkout-filters>select {
   flex: 0 1 auto;
   min-width: 120px;
 }
 
-.checkout-filters > button {
+.checkout-filters>button {
   flex-shrink: 0;
 }
 
@@ -218,6 +218,19 @@ body {
 .logo-icon {
   font-size: 40px;
   color: var(--brand);
+}
+
+.site-logo {
+  height: 38px;
+  width: auto;
+  display: inline-block;
+}
+
+.login-logo {
+  height: 88px;
+  width: auto;
+  display: inline-block;
+  border-radius: 12px;
 }
 
 .brand-title {
@@ -527,7 +540,7 @@ body {
     flex-wrap: wrap;
   }
 
-  .checkout-filters > .d-flex {
+  .checkout-filters>.d-flex {
     display: flex;
     gap: 0.5rem;
   }

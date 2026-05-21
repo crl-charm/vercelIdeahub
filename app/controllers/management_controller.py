@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, render_template, request
 from app.controllers.base_controller import BaseController
 from app.services.management_oop_service import ManagementService
 from app.utils.auth import admin_required
+from app import csrf
 
 
 class ManagementController(BaseController):
@@ -48,6 +49,7 @@ class ManagementController(BaseController):
 
         @self.blueprint.post("/api/management/users/<int:user_id>/role")
         @admin_required
+        @csrf.exempt
         def management_update_role(user_id: int):
             payload = request.get_json(silent=True) or {}
             updated = self._service.update_role(user_id, str(payload.get("role", "")))

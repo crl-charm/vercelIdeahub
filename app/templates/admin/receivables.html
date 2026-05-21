@@ -105,6 +105,41 @@
   </div>
 </div>
 
+<!-- Mark Paid Confirmation Modal -->
+<div class="modal fade" id="markPaidModal" tabindex="-1" aria-labelledby="markPaidModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content mark-paid-modal">
+      <div class="modal-body text-center p-4 p-md-5">
+        <div class="mark-paid-icon mb-3">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <h5 class="mb-2 fw-bold" id="markPaidModalLabel">Mark as paid?</h5>
+        <p class="text-muted mb-4 small">This will close the debt and update your receivables totals.</p>
+        <div class="mark-paid-summary text-start mb-4">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Customer</span>
+            <strong id="markPaidCustomer">—</strong>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Amount owed</span>
+            <strong id="markPaidAmount" class="text-danger">—</strong>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Due date</span>
+            <strong id="markPaidDueDate">—</strong>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success px-4" id="confirmMarkPaidBtn">
+            <i class="bi bi-check2 me-1"></i> Confirm Paid
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -117,10 +152,43 @@
     background-color: #ffcccc !important;
     font-weight: 600;
   }
+
+  .mark-paid-modal {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+    overflow: hidden;
+  }
+
+  .mark-paid-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mark-paid-icon i {
+    font-size: 32px;
+    color: #2e7d32;
+  }
+
+  .mark-paid-summary {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
 </style>
 
 <script>
 const socket = io();
+let receivablesCache = [];
+let pendingMarkPaidId = null;
+let markPaidModalInstance = null;
 
 socket.on('receivables_update', function(data) {
   console.log('Receivables update:', data);
@@ -136,11 +204,17 @@ socket.on('receivables_update', function(data) {
 
 document.addEventListener('DOMContentLoaded', function() {
   loadReceivables();
+  const markPaidEl = document.getElementById('markPaidModal');
+  if (markPaidEl) {
+    markPaidModalInstance = new bootstrap.Modal(markPaidEl);
+    document.getElementById('confirmMarkPaidBtn').addEventListener('click', confirmMarkPaid);
+  }
 });
 
 function loadReceivables() {
   fetch('/admin/receivables/api/receivables').then(r => r.json()).then(data => {
     if (data.success) {
+      receivablesCache = data.data;
       const today = new Date().toISOString().split('T')[0];
       let totalUnpaid = 0;
       let unpaidCount = 0;
@@ -183,7 +257,7 @@ function loadReceivables() {
             <td>₱${rec.partial_paid.toFixed(2)}</td>
             <td>${rec.due_date}</td>
             <td>${statusBadge}</td>
-            <td>${!rec.paid ? `<button class="btn btn-sm btn-success" onclick="markPaid(${rec.id})">Mark Paid</button>` : ''}</td>
+            <td>${!rec.paid ? `<button class="btn btn-sm btn-success" onclick="openMarkPaidModal(${rec.id})">Mark Paid</button>` : ''}</td>
           </tr>
         `;
 
@@ -216,7 +290,7 @@ function loadReceivables() {
               </div>
             </div>
             <div class="record-card-footer">
-              ${!rec.paid ? `<button class="btn btn-sm btn-success" onclick="markPaid(${rec.id})">Mark Paid</button>` : ''}
+              ${!rec.paid ? `<button class="btn btn-sm btn-success" onclick="openMarkPaidModal(${rec.id})">Mark Paid</button>` : ''}
             </div>
           </div>
         `;
@@ -239,7 +313,7 @@ function createReceivable() {
     due_date: document.getElementById('dueDate').value,
   };
 
-  fetch('/admin/receivables/api/receivables', {
+  csrfFetch('/admin/receivables/api/receivables', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -259,18 +333,46 @@ function createReceivable() {
   });
 }
 
-function markPaid(recId) {
-  if (!confirm('Mark this receivable as paid?')) return;
-  fetch(`/admin/receivables/api/receivables/${recId}/mark-paid`, {
+function openMarkPaidModal(recId) {
+  const rec = receivablesCache.find(r => r.id === recId);
+  if (!rec) return;
+
+  pendingMarkPaidId = recId;
+  document.getElementById('markPaidCustomer').textContent = rec.customer_name || '—';
+  document.getElementById('markPaidAmount').textContent = '₱' + (rec.amount_owed - rec.partial_paid).toFixed(2);
+  document.getElementById('markPaidDueDate').textContent = rec.due_date || '—';
+
+  if (markPaidModalInstance) {
+    markPaidModalInstance.show();
+  }
+}
+
+function confirmMarkPaid() {
+  if (!pendingMarkPaidId) return;
+
+  const btn = document.getElementById('confirmMarkPaidBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
+
+  csrfFetch(`/admin/receivables/api/receivables/${pendingMarkPaidId}/mark-paid`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' }
   }).then(r => r.json()).then(data => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Confirm Paid';
+
     if (data.success) {
+      if (markPaidModalInstance) markPaidModalInstance.hide();
+      pendingMarkPaidId = null;
       showToast('Marked as paid', 'success');
       loadReceivables();
     } else {
-      showToast('Error marking as paid', 'error');
+      showToast(data.error || 'Error marking as paid', 'error');
     }
+  }).catch(function() {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Confirm Paid';
+    showToast('Error marking as paid', 'error');
   });
 }
 </script>

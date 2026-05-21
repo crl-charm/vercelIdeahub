@@ -42,6 +42,22 @@ class BookingRepository:
         ).all()
         return rows[0] if rows else None
 
+    def find_conflict_excluding(
+        self,
+        booking_id: int,
+        selected_date: date,
+        start_time: time,
+        end_time: time,
+    ) -> Optional[BoardroomBooking]:
+        rows = BoardroomBooking.query.filter(
+            BoardroomBooking.id != booking_id,
+            BoardroomBooking.date == selected_date,
+            BoardroomBooking.status.in_(["booked", "active"]),
+            BoardroomBooking.start_time < end_time,
+            BoardroomBooking.end_time > start_time,
+        ).all()
+        return rows[0] if rows else None
+
     def get_boardroom_space(self) -> Optional[SpaceType]:
         return SpaceType.query.filter_by(name="Boardroom").first()
 

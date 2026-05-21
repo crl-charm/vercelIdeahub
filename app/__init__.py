@@ -74,7 +74,6 @@ def create_app():
     from app.routes.expenses import expenses_bp
     from app.routes.staff_performance import staff_performance_bp
     from app.routes.analytics import analytics_bp
-    from app.routes.reservations import reservations_bp
     from app.routes.receipts import receipts_bp
     from app.routes.menu import menu_bp
     from app.routes.qr_order import qr_bp, order_bp as qr_order_bp
@@ -99,7 +98,6 @@ def create_app():
     app.register_blueprint(expenses_bp)
     app.register_blueprint(staff_performance_bp)
     app.register_blueprint(analytics_bp)
-    app.register_blueprint(reservations_bp)
     app.register_blueprint(receipts_bp)
     app.register_blueprint(menu_bp)
     app.register_blueprint(qr_bp)

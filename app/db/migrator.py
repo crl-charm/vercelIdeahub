@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 from app.models.idea import Idea, IdeaVote
 from app.models.finance import FinanceBudget, FinanceTransaction
 from app.models.management import Department
@@ -20,9 +20,19 @@ class SchemaMigrator:
         _ = (Idea, IdeaVote, FinanceBudget, FinanceTransaction, Department, SoftBalanceEntry, SpacePriceHistory)
         try:
             db.create_all()
+            # Phase 3: Drop the obsolete reservations table if it exists
+            db.session.execute(text("DROP TABLE IF EXISTS reservations"))
+            db.session.commit()
         except Exception as e:
             print(f"⚠ Database migration skipped (database unavailable): {e}")
             return
+
+        try:
+            inspector = inspect(db.engine)
+        except Exception as e:
+            print(f"⚠ Database migration inspector failed: {e}")
+            return
+
         checks = [
             (
                 "orders",
@@ -91,31 +101,33 @@ class SchemaMigrator:
                 "ALTER TABLE staff_performance_logs ADD COLUMN customers_served INT NOT NULL DEFAULT 0",
             ),
         ]
+
+        # Cache existing columns to minimize database queries
+        table_columns = {}
+
         for table_name, column_name, ddl in checks:
-            has_col = db.session.execute(
-                text(
-                    """
-                SELECT COLUMN_NAME
-                FROM information_schema.COLUMNS
-                WHERE TABLE_SCHEMA = DATABASE()
-                AND TABLE_NAME = :table_name
-                AND COLUMN_NAME = :column_name
-            """
-                ),
-                {"table_name": table_name, "column_name": column_name},
-            ).fetchall()
-            if has_col:
-                continue
             try:
+                if table_name not in table_columns:
+                    if inspector.has_table(table_name):
+                        table_columns[table_name] = {col['name'] for col in inspector.get_columns(table_name)}
+                    else:
+                        table_columns[table_name] = set()
+
+                if column_name in table_columns[table_name]:
+                    continue
+
                 db.session.execute(text(ddl))
                 db.session.commit()
-            except Exception:
+                # Update cache
+                table_columns[table_name].add(column_name)
+            except Exception as e:
                 db.session.rollback()
+                print(f"⚠ Column {column_name} on {table_name} skipped/failed: {e}")
 
-        self._ensure_indexes(db)
+        self._ensure_indexes(db, inspector)
 
-    def _ensure_indexes(self, db) -> None:
-        """Create performance indexes idempotently (MySQL)."""
+    def _ensure_indexes(self, db, inspector) -> None:
+        """Create performance indexes idempotently (MySQL/SQLite)."""
         indexes = [
             (
                 "transactions",
@@ -148,26 +160,25 @@ class SchemaMigrator:
                 "CREATE INDEX idx_bookings_status_end ON boardroom_bookings (status, expected_end_at)",
             ),
         ]
+
+        table_indexes = {}
+
         for table_name, index_name, ddl in indexes:
-            exists = db.session.execute(
-                text(
-                    """
-                SELECT INDEX_NAME
-                FROM information_schema.STATISTICS
-                WHERE TABLE_SCHEMA = DATABASE()
-                AND TABLE_NAME = :table_name
-                AND INDEX_NAME = :index_name
-                LIMIT 1
-            """
-                ),
-                {"table_name": table_name, "index_name": index_name},
-            ).fetchone()
-            if exists:
-                continue
             try:
+                if table_name not in table_indexes:
+                    if inspector.has_table(table_name):
+                        table_indexes[table_name] = {idx['name'] for idx in inspector.get_indexes(table_name)}
+                    else:
+                        table_indexes[table_name] = set()
+
+                if index_name in table_indexes[table_name]:
+                    continue
+
                 db.session.execute(text(ddl))
                 db.session.commit()
-                print(f"✓ Created index {index_name} on {table_name}")
+                # Update cache
+                table_indexes[table_name].add(index_name)
+                print(f"[OK] Created index {index_name} on {table_name}")
             except Exception as exc:
                 db.session.rollback()
                 print(f"⚠ Index {index_name} skipped: {exc}")

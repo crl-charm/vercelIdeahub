@@ -49,9 +49,6 @@ def run() -> int:
         ("GET", "/admin/menu"),
         ("GET", "/admin/menu/api/items/all"),
         ("POST", "/admin/menu/api/items"),
-        ("GET", "/admin/reservations"),
-        ("GET", "/admin/reservations/api/reservations"),
-        ("POST", "/admin/reservations/api/reservations"),
         ("GET", "/admin/staff-performance"),
         ("GET", "/admin/staff-performance/api/logs"),
         ("POST", "/admin/staff-performance/api/logs"),
@@ -97,9 +94,7 @@ def run() -> int:
                     if path == "/admin/inventory/api/items":
                         payload = {"ingredient_name": "chicken test", "stock_qty": 10, "low_stock_threshold": 2, "unit": "kg"}
                     if path == "/admin/menu/api/items":
-                        payload = {"name": "Smoke Menu", "category": "Test", "price": 1}
-                    if path == "/admin/reservations/api/reservations":
-                        payload = {"customer_name": "Smoke", "customer_contact": "0912", "space_type_id": 1, "reserved_date": "2026-05-08", "reserved_time": "10:00", "duration_minutes": 60, "number_of_people": 1}
+                        payload = {"name": "Smoke Menu", "category": "Main Dish", "price": 1}
                     if path == "/admin/staff-performance/api/logs":
                         payload = {"user_id": admin.id, "shift_date": "2026-05-08", "orders_handled": 1, "avg_order_minutes": 1, "sessions_managed": 1, "upsell_count": 0, "admin_note": "smoke"}
                     if "/role" in path:

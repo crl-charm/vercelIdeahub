@@ -22,13 +22,13 @@ def test_model_imports():
             MenuItem, Order, OrderItem, Transaction, BoardroomBooking,
             LoungeBooking, StaffAttendance, InventoryItem, InventoryLog,
             Receivable, Expense, StaffPerformanceLog, DailySalesReport,
-            Reservation, SoftBalanceEntry, BaseModel, Department, UserRole,
+            SoftBalanceEntry, BaseModel, Department, UserRole,
             Idea, IdeaVote, FinanceBudget, FinanceTransaction
         )
-        print("✓ All models imported successfully")
+        print("[OK] All models imported successfully")
         return True
     except ImportError as e:
-        print(f"✗ Model import failed: {e}")
+        print(f"[FAIL] Model import failed: {e}")
         traceback.print_exc()
         return False
 
@@ -45,7 +45,6 @@ def test_repository_imports():
         'app.repositories.order_repository',
         'app.repositories.qr_repository',
         'app.repositories.receivable_repository',
-        'app.repositories.reservation_repository',
         'app.repositories.sales_repository',
         'app.repositories.session_repository',
         'app.repositories.staff_repository',
@@ -55,9 +54,9 @@ def test_repository_imports():
     for repo_path in repositories:
         try:
             __import__(repo_path)
-            print(f"  ✓ {repo_path}")
+            print(f"  [OK] {repo_path}")
         except ImportError as e:
-            print(f"  ✗ {repo_path}: {e}")
+            print(f"  [FAIL] {repo_path}: {e}")
             traceback.print_exc()
             all_passed = False
     
@@ -77,7 +76,6 @@ def test_service_imports():
         'app.services.menu_service',
         'app.services.order_service',
         'app.services.receivable_service',
-        'app.services.reservation_service',
         'app.services.sales_service',
         'app.services.session_service',
         'app.services.staff_performance_service',
@@ -87,9 +85,9 @@ def test_service_imports():
     for service_path in services:
         try:
             __import__(service_path)
-            print(f"  ✓ {service_path}")
+            print(f"  [OK] {service_path}")
         except ImportError as e:
-            print(f"  ✗ {service_path}: {e}")
+            print(f"  [FAIL] {service_path}: {e}")
             traceback.print_exc()
             all_passed = False
     
@@ -101,10 +99,10 @@ def test_route_imports():
     try:
         from app import create_app
         app = create_app()
-        print("✓ App created successfully (all routes imported)")
+        print("[OK] App created successfully (all routes imported)")
         return True
     except ImportError as e:
-        print(f"✗ Route import failed: {e}")
+        print(f"[FAIL] Route import failed: {e}")
         traceback.print_exc()
         return False
 
@@ -126,16 +124,16 @@ def main():
     print("=" * 60)
     
     for test_name, passed in results.items():
-        status = "✓ PASSED" if passed else "✗ FAILED"
+        status = "[PASS]" if passed else "[FAIL]"
         print(f"{test_name:.<40} {status}")
     
     all_passed = all(results.values())
     
     if all_passed:
-        print("\n✓ All imports validated successfully - Safe for deployment")
+        print("\n[OK] All imports validated successfully - Safe for deployment")
         return 0
     else:
-        print("\n✗ Import validation failed - Do NOT deploy to production")
+        print("\n[FAIL] Import validation failed - Do NOT deploy to production")
         return 1
 
 if __name__ == '__main__':

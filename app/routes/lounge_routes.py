@@ -56,6 +56,23 @@ def cancel_lounge_booking(booking_id):
 
 
 # ----------------------------------
+# UPDATE BOOKED START TIME (LATE ARRIVAL)
+# ----------------------------------
+@lounge_bp.route("/api/lounge-bookings/<int:booking_id>", methods=["PATCH"])
+@login_required
+def update_lounge_booking(booking_id):
+    data = request.get_json(silent=True) or {}
+    resp = _service.update_booking_start(
+        booking_id=booking_id,
+        start_time_str=(data.get("start_time") or "").strip(),
+    )
+    if isinstance(resp, tuple):
+        payload, status = resp
+        return jsonify(payload), status
+    return jsonify(resp)
+
+
+# ----------------------------------
 # START BOARDROOM SESSION FROM BOOKING
 # ----------------------------------
 @lounge_bp.route("/api/lounge-bookings/<int:booking_id>/start", methods=["POST"])

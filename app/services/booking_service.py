@@ -84,12 +84,63 @@ class BookingService:
             rows.append(row)
         return rows
 
+    def update_booking_start(self, booking_id: int, start_time_str: str):
+        booking = self.repo.get_booking(booking_id)
+        if not booking:
+            return {"error": "Booking not found"}, 404
+        if booking.status != "booked":
+            return {"error": "Only booked boardroom slots can be edited."}, 400
+        if not start_time_str:
+            return {"error": "Start time is required."}, 400
+
+        try:
+            new_start = datetime.strptime(start_time_str, "%H:%M").time()
+        except ValueError:
+            return {"error": "Invalid start time format. Use HH:MM."}, 400
+
+        end_time = booking.end_time
+        if new_start >= end_time:
+            return {"error": "Start time must be before the booked end time."}, 400
+
+        day_start = datetime.strptime("07:00", "%H:%M").time()
+        day_end = datetime.strptime("22:00", "%H:%M").time()
+        if new_start < day_start or new_start > day_end:
+            return {"error": "Start time must be within 7:00 AM to 10:00 PM."}, 400
+
+        now = self.clock.now()
+        if booking.date < now.date():
+            return {"error": "Cannot edit a booking in the past."}, 400
+
+        if booking.date == now.date():
+            new_start_dt = datetime.combine(booking.date, new_start)
+            if new_start_dt > now + timedelta(minutes=15):
+                return {
+                    "error": "Start time cannot be more than 15 minutes in the future for today's booking."
+                }, 400
+
+        conflict = self.repo.find_conflict_excluding(
+            booking.id, booking.date, new_start, end_time
+        )
+        if conflict:
+            return {
+                "error": f"Slot conflicts with existing booking ({conflict.start_time.strftime('%H:%M')}–{conflict.end_time.strftime('%H:%M')})"
+            }, 400
+
+        booking.start_time = new_start
+        booking.expected_end_at = datetime.combine(booking.date, end_time)
+        self.repo.save()
+        self.notifier.booking_updated({"booking_id": booking.id, "status": "updated"})
+        return {
+            "message": "Booking start time updated.",
+            "data": serialize_booking(booking),
+        }
+
     def start_booking(self, booking_id: int):
         booking = self.repo.get_booking(booking_id)
         if not booking:
             return {"error": "Booking not found"}, 404
         if booking.status != "booked":
-            return {"error": "Only booked reservations can be started."}, 400
+            return {"error": "Only booked boardroom slots can be started."}, 400
         now = self.clock.now()
         if booking.date != now.date():
             return {"error": "Booking can only be started on its scheduled date."}, 400

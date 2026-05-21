@@ -7,4 +7,5 @@ class SpaceType(db.Model):
     name = db.Column(db.String(100), nullable=False, unique=True)
     rate_per_minute = db.Column(db.Numeric(10,4))
     description = db.Column(db.String(255), nullable=True)
-    capacity = db.Column(db.Integer, nullable=True)  # None = unlimited
+    capacity = db.Column(db.Integer, nullable=True)  # None = unlimited
+    qr_token = db.Column(db.String(50), nullable=True, unique=True)

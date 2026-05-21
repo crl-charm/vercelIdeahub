@@ -50,7 +50,7 @@ Staff use the steps below; you review **Checkout Records** and **Daily Balance**
 | Log money spent today | **Expenses** |
 | Customer owes money | **Receivables** → mark **Paid** when settled |
 
-**Admin only:** Daily Balance · Analytics · Admin Panel · Reservations
+**Admin only:** Daily Balance · Analytics · Admin Panel
 
 ---
 

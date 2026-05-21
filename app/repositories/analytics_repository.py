@@ -31,22 +31,23 @@ class AnalyticsRepository:
         ]
 
     def top_menu_items(self, limit: int = 10) -> list[dict[str, Any]]:
+        from app.models import OrderItem
         result = (
             db.session.query(
                 MenuItem.name,
-                func.count(MenuItem.id).label("count"),
-                func.sum(MenuItem.price).label("total"),
+                func.sum(OrderItem.quantity).label("count"),
+                func.sum(OrderItem.quantity * OrderItem.price).label("total"),
             )
-            .join(MenuItem)
-            .group_by(MenuItem.id)
-            .order_by(func.count(MenuItem.id).desc())
+            .join(OrderItem, MenuItem.id == OrderItem.menu_item_id)
+            .group_by(MenuItem.id, MenuItem.name)
+            .order_by(func.sum(OrderItem.quantity).desc())
             .limit(limit)
             .all()
         )
         return [
             {
                 "name": row.name,
-                "count": int(row.count),
+                "count": int(row.count or 0),
                 "total": float(row.total or 0),
             }
             for row in result

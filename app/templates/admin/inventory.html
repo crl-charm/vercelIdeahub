@@ -619,7 +619,7 @@ function editItem(itemId) {
 }
 
 function updateStock() {
-  fetch(`/admin/inventory/api/items/${currentItemId}/stock`, {
+  csrfFetch(`/admin/inventory/api/items/${currentItemId}/stock`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

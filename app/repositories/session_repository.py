@@ -101,3 +101,6 @@ class SessionRepository:
     def list_space_types_for_availability(self) -> list[SpaceType]:
         return SpaceType.query.filter(SpaceType.name.in_(["Regular Lounge", "Premium Lounge"])).all()
 
+    def get_all_spaces(self) -> list[SpaceType]:
+        return SpaceType.query.all()
+

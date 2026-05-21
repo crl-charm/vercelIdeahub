@@ -14,9 +14,10 @@ try:
         print("App context entered")
         from app import db
 
-        # Try to describe the users table
-        result = db.session.execute(db.text("DESCRIBE users"))
-        columns = [row[0] for row in result.fetchall()]
+        # Try to describe the users table dialect-agnostically
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        columns = [col['name'] for col in inspector.get_columns('users')]
         print(f"User table columns: {columns}")
 
         # Check for admin user

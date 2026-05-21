@@ -166,16 +166,23 @@ def api_get_categories() -> tuple:
 @login_required
 @csrf.exempt
 def api_create_item() -> tuple:
-    category = request.form.get("category", "").strip()
+    if request.is_json:
+        data = request.get_json() or {}
+        category = str(data.get("category", "")).strip()
+        name = str(data.get("name", "")).strip()
+        price = str(data.get("price", "")).strip()
+        description = str(data.get("description", "")).strip() or None
+    else:
+        category = request.form.get("category", "").strip()
+        name = request.form.get("name", "").strip()
+        price = request.form.get("price", "").strip()
+        description = request.form.get("description", "").strip() or None
     
     # Validate category
     if category not in VALID_CATEGORIES:
         return jsonify({"success": False, "error": f"Category must be one of: {', '.join(VALID_CATEGORIES)}"}), 400
     
     # Validate required fields
-    name = request.form.get("name", "").strip()
-    price = request.form.get("price", "").strip()
-    
     if not name:
         return jsonify({"success": False, "error": "Item name is required"}), 400
     
@@ -201,7 +208,7 @@ def api_create_item() -> tuple:
         name=name,
         price=price,
         category=category,
-        description=request.form.get("description", "").strip() or None,
+        description=description,
         image_url=image_url,
     )
     if result.get("success"):

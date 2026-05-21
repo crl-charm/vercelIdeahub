@@ -9,13 +9,21 @@
       <h3 class="mb-0">Student Orders</h3>
       <small id="orders-subtitle" class="text-muted"></small>
     </div>
-    <div class="d-flex gap-2">
-      <button id="served-btn" class="btn btn-success btn-sm" onclick="markServed()">
-        <i class="bi bi-check2-circle me-1"></i> SERVED
+    <div class="d-flex gap-2 align-items-start flex-wrap">
+      <button id="served-btn" class="btn btn-success btn-sm" onclick="markServed()" disabled
+              title="Mark every item as Ready first">
+        <i class="bi bi-check2-circle me-1"></i> Served to customer
       </button>
       <a class="btn btn-secondary btn-sm" href="/orders">Back</a>
     </div>
   </div>
+
+  <div id="orders-flow-hint" class="alert alert-info py-2 small mb-3" style="display:none;">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>Step 1:</strong> Tap <strong>Mark ready</strong> on each item when the kitchen finishes preparing it.
+    <strong>Step 2:</strong> When <em>all</em> items show <span class="badge bg-success">Ready</span>, tap <strong>Served to customer</strong>.
+  </div>
+  <div id="orders-preparing-alert" class="alert alert-warning py-2 small mb-3" style="display:none;"></div>
 
   <div class="card shadow-sm">
     <div class="table-responsive">
@@ -58,22 +66,31 @@ function loadOrders() {
 
       const container = document.getElementById("orders-view-container");
 
+      const flowHint = document.getElementById("orders-flow-hint");
+      const prepAlert = document.getElementById("orders-preparing-alert");
+      const servedBtn = document.getElementById("served-btn");
+
       if (!data.orders || !data.orders.length) {
         container.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No orders found.</td></tr>`;
         document.getElementById("orders-food-total").innerText = "0.00";
+        flowHint.style.display = "none";
+        prepAlert.style.display = "none";
+        servedBtn.disabled = true;
+        servedBtn.title = "No items to serve";
         return;
       }
 
+      flowHint.style.display = "block";
+
       container.innerHTML = data.orders.map(item => {
-        // Use per-item status; fall back gracefully for older rows
         const rawStatus = item.item_status || "preparing";
         const isPreparing = (rawStatus === "preparing" || rawStatus === "preparin");
-        const statusLabel = isPreparing ? "Preparing" : "Done";
-        const btnLabel   = isPreparing ? "Preparing" : "Done";
-        const btnClass   = isPreparing ? "btn-warning" : "btn-success";
+        const statusLabel = isPreparing ? "Preparing" : "Ready";
+        const btnLabel = isPreparing ? "Mark ready" : "Undo";
+        const btnClass = isPreparing ? "btn-warning" : "btn-outline-secondary";
 
         return `
-          <tr>
+          <tr class="${isPreparing ? "" : "table-success"}">
             <td>${item.item_name}</td>
             <td>${item.quantity}</td>
             <td class="d-none d-md-table-cell">₱${item.price.toFixed(2)}</td>
@@ -84,8 +101,9 @@ function loadOrders() {
             </td>
             <td>
               <button class="btn btn-sm py-2 ${btnClass}"
-                      onclick="toggleItemStatus(${item.id})">
-                ${btnLabel}
+                      onclick="toggleItemStatus(${item.id})"
+                      ${isPreparing ? "" : 'title="Kitchen marked ready — tap to set back to preparing"'}>
+                ${isPreparing ? '<i class="bi bi-check-lg me-1"></i>' : ''}${btnLabel}
               </button>
             </td>
             <td class="d-none d-md-table-cell">₱${item.total.toFixed(2)}</td>
@@ -94,6 +112,23 @@ function loadOrders() {
       }).join("");
 
       document.getElementById("orders-food-total").innerText = data.food_total.toFixed(2);
+
+      const preparingCount = data.preparing_count ?? data.orders.filter(o => {
+        const s = o.item_status || "preparing";
+        return s === "preparing" || s === "preparin";
+      }).length;
+      const canServe = data.can_serve === true || (preparingCount === 0 && data.orders.length > 0);
+
+      if (canServe) {
+        prepAlert.style.display = "none";
+        servedBtn.disabled = false;
+        servedBtn.title = "All items are ready — hand order to customer";
+      } else {
+        prepAlert.style.display = "block";
+        prepAlert.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i><strong>${preparingCount} item(s) still preparing.</strong> Mark each as <strong>Mark ready</strong> before tapping Served.`;
+        servedBtn.disabled = true;
+        servedBtn.title = `${preparingCount} item(s) still preparing`;
+      }
     })
     .catch(() => {
       showToast("Failed to load orders. Please try again.", "error");
@@ -111,6 +146,11 @@ function toggleItemStatus(itemId) {
     if (data.error) {
       showToast(data.error, "error");
       return;
+    }
+    if (data.status === "done") {
+      showToast("Item marked ready.", "success");
+    } else {
+      showToast("Item set back to preparing.", "info");
     }
     loadOrders();
   })
@@ -137,7 +177,7 @@ function markServed() {
       btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> SERVED';
       return;
     }
-    showToast("Order marked as served!", "success");
+    showToast("All items served to customer!", "success");
     setTimeout(() => { window.location.href = "/orders"; }, 800);
   })
   .catch(() => {

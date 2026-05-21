@@ -14,6 +14,47 @@
     .slot-available { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
     .slot-booked { background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; }
     .slot-active { background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; }
+    .staff-guide {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border: 1px solid #f0d78c;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .staff-guide-step {
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 13px; color: #5c4a12; margin-bottom: 8px;
+    }
+    .staff-guide-step:last-child { margin-bottom: 0; }
+    .staff-guide-num {
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: #c9a43a; color: #fff; font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .late-hint-badge {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      background: #fff3cd; color: #856404; border: 1px solid #ffc107;
+      border-radius: 6px; padding: 2px 8px; margin-top: 4px;
+    }
+    .edit-time-summary {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .edit-time-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px dashed #e5e7eb;
+      font-size: 14px;
+    }
+    .edit-time-row:last-child { border-bottom: none; }
+    .edit-time-label { color: #6b7280; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .edit-time-value { font-weight: 600; color: #1f2937; }
+    .edit-time-value.new { color: #15803d; }
+    .edit-actions-stack .btn { min-width: 140px; }
+    @media (max-width: 575.98px) {
+      .edit-actions-stack { flex-direction: column; width: 100%; }
+      .edit-actions-stack .btn { width: 100%; }
+    }
   </style>
   <div class="boardroom-shell">
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -26,6 +67,24 @@
       <button class="btn btn-warning fw-bold text-white" data-bs-toggle="modal" data-bs-target="#bookingModal">
         <i class="bi bi-calendar-plus me-1"></i> New Booking
       </button>
+    </div>
+  </div>
+
+  <div class="staff-guide mb-3">
+    <div class="fw-semibold mb-2" style="color:#7a5f10;">
+      <i class="bi bi-info-circle me-1"></i> Quick guide for staff
+    </div>
+    <div class="staff-guide-step">
+      <span class="staff-guide-num">1</span>
+      <span><strong>Book ahead</strong> — customer reserved a time slot (e.g. 5:00 PM – 8:00 PM).</span>
+    </div>
+    <div class="staff-guide-step">
+      <span class="staff-guide-num">2</span>
+      <span><strong>Customer arrives late?</strong> — tap <strong>Arrived late?</strong>, set when they actually came (or tap <strong>Use current time</strong>), then <strong>Check in now</strong>.</span>
+    </div>
+    <div class="staff-guide-step">
+      <span class="staff-guide-num">3</span>
+      <span><strong>Need more time later?</strong> — after check-in, use <strong>Extend</strong>. End time does not change in step 2.</span>
     </div>
   </div>
 
@@ -115,14 +174,81 @@
   </div>
 </div>
 
+<div class="modal fade" id="editBookingModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-clock-history me-2 text-warning"></i>Customer arrived late?
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="mb-3 text-muted small">
+          Change <strong>when they actually arrived</strong>. Their <strong>leave-by time stays the same</strong>.
+        </p>
+        <p class="h6 mb-3" id="edit-customer-name">—</p>
+
+        <div class="edit-time-summary mb-3">
+          <div class="edit-time-row">
+            <span class="edit-time-label">Originally booked</span>
+            <span class="edit-time-value" id="edit-preview-original">—</span>
+          </div>
+          <div class="edit-time-row">
+            <span class="edit-time-label">After this change</span>
+            <span class="edit-time-value new" id="edit-preview-new">—</span>
+          </div>
+          <div class="edit-time-row">
+            <span class="edit-time-label">Must leave by</span>
+            <span class="edit-time-value" id="edit-preview-end">—</span>
+          </div>
+        </div>
+
+        <div id="edit-late-tip" class="alert alert-warning py-2 small mb-3" style="display:none;">
+          <i class="bi bi-lightbulb me-1"></i>
+          Tip: tap <strong>Use current time</strong> if they just walked in.
+        </div>
+
+        <label class="form-label fw-semibold mb-1">When did they actually arrive?</label>
+        <div class="d-flex gap-1 flex-wrap mb-2">
+          <select id="e-start-hour" class="form-select" style="max-width:88px;" onchange="updateEditPreview()"></select>
+          <select id="e-start-min" class="form-select" style="max-width:88px;" onchange="updateEditPreview()"></select>
+          <select id="e-start-period" class="form-select" style="max-width:88px;" onchange="updateEditPreview()">
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
+          <button type="button" class="btn btn-outline-primary btn-sm ms-auto" onclick="setStartToNow(true)">
+            <i class="bi bi-arrow-clockwise me-1"></i>Use current time
+          </button>
+        </div>
+        <p class="text-muted small mb-0">
+          Need to stay longer? After check-in, use <strong>Extend</strong> on the booking list.
+        </p>
+      </div>
+      <div class="modal-footer flex-column align-items-stretch border-0 pt-0">
+        <div class="d-flex flex-wrap gap-2 justify-content-end edit-actions-stack w-100">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-outline-warning" onclick="submitEditBooking(false)">
+            Save time only
+          </button>
+          <button type="button" class="btn btn-primary fw-semibold" onclick="confirmSaveAndStart()">
+            <i class="bi bi-box-arrow-in-right me-1"></i>Check in now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="extendModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-sm">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Extend Boardroom Time</h5>
+        <h5 class="modal-title"><i class="bi bi-hourglass-split me-2"></i>Stay longer?</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <p class="small text-muted mb-3">Add extra time to the session. The customer can stay past their original end time.</p>
         <label class="form-label small text-muted mb-1">Hours</label>
         <select id="extend-hours" class="form-select mb-2">
           <option value="0">0</option>
@@ -143,7 +269,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" onclick="submitExtend()">Apply Extend</button>
+        <button class="btn btn-primary" onclick="submitExtend()">Add extra time</button>
       </div>
     </div>
   </div>
@@ -197,13 +323,27 @@ function to24Hour(hour, minute, period) {
   if (period === "PM" && h !== 12) h += 12;
   return `${String(h).padStart(2, "0")}:${minute}`;
 }
-function initTimeSelectors() {
-  const minuteOptions = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"))
-    .map(m => `<option value="${m}">${m}</option>`)
-    .join("");
-  const hourOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"))
+function buildHourOptions() {
+  return Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"))
     .map(h => `<option value="${h}">${h}</option>`)
     .join("");
+}
+function buildMinuteOptions() {
+  return Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"))
+    .map(m => `<option value="${m}">${m}</option>`)
+    .join("");
+}
+function setSelectorsFrom24Hour(hhmm, hourId, minId, periodId) {
+  const [hRaw, m] = hhmm.split(":").map(Number);
+  const period = hRaw >= 12 ? "PM" : "AM";
+  const h12 = (hRaw % 12) || 12;
+  document.getElementById(hourId).value = String(h12).padStart(2, "0");
+  document.getElementById(minId).value = String(m).padStart(2, "0");
+  document.getElementById(periodId).value = period;
+}
+function initTimeSelectors() {
+  const minuteOptions = buildMinuteOptions();
+  const hourOptions = buildHourOptions();
   document.getElementById("b-start-hour").innerHTML = hourOptions;
   document.getElementById("b-end-hour").innerHTML = hourOptions;
   document.getElementById("b-start-min").innerHTML = minuteOptions;
@@ -216,6 +356,10 @@ function initTimeSelectors() {
   document.getElementById("b-end-min").value = "00";
   document.getElementById("b-end-period").value = "AM";
 }
+function initEditTimeSelectors() {
+  document.getElementById("e-start-hour").innerHTML = buildHourOptions();
+  document.getElementById("e-start-min").innerHTML = buildMinuteOptions();
+}
 function badgeFor(status) {
   if (status === "active") return `<span class="badge text-bg-primary">Active</span>`;
   if (status === "completed") return `<span class="badge text-bg-success">Completed</span>`;
@@ -223,9 +367,51 @@ function badgeFor(status) {
   return `<span class="badge text-bg-warning text-dark">Booked</span>`;
 }
 
+let bookingsCache = [];
+let editBookingId = null;
+let editBookingEndTime = null;
+let editBookingOriginalStart = null;
+let extendBookingId = null;
+let pendingConfirmAction = null;
+
+function nowTime24() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+function isBookingLate(b) {
+  if (!b || b.status !== "booked" || !b.can_start) return false;
+  const nowMins = toMinutes(nowTime24());
+  return nowMins > toMinutes(b.start_time);
+}
+
+function setStartToNow(showMessage) {
+  setSelectorsFrom24Hour(nowTime24(), "e-start-hour", "e-start-min", "e-start-period");
+  updateEditPreview();
+  if (showMessage !== false) {
+    showToast("Start time set to right now.", "info");
+  }
+}
+
+function updateEditPreview() {
+  if (!editBookingEndTime) return;
+  const newStart = to24Hour(
+    document.getElementById("e-start-hour").value,
+    document.getElementById("e-start-min").value,
+    document.getElementById("e-start-period").value
+  );
+  const origLabel = editBookingOriginalStart
+    ? `${fmt12(editBookingOriginalStart)} – ${fmt12(editBookingEndTime)}`
+    : "—";
+  document.getElementById("edit-preview-original").textContent = origLabel;
+  document.getElementById("edit-preview-new").textContent = `${fmt12(newStart)} – ${fmt12(editBookingEndTime)}`;
+  document.getElementById("edit-preview-end").textContent = fmt12(editBookingEndTime);
+}
+
 document.getElementById("scheduleDate").value = todayStr();
 document.getElementById("b-date").value = todayStr();
 initTimeSelectors();
+initEditTimeSelectors();
 
 function loadSchedule() {
   const date = document.getElementById("scheduleDate").value || todayStr();
@@ -235,6 +421,7 @@ function loadSchedule() {
   fetch(`/api/lounge-bookings?date=${date}`, { credentials: "include" })
     .then(r => r.json())
     .then(bookings => {
+      bookingsCache = bookings;
       renderSchedule(bookings);
       renderList(bookings);
       document.getElementById("booking-count").textContent = `${bookings.length} booking(s)`;
@@ -289,25 +476,33 @@ function renderList(bookings) {
   }
 
   tbody.innerHTML = bookings.map(b => {
+    const late = isBookingLate(b);
     let actions = "";
+    if (b.status === "booked") {
+      actions += `<button class="btn btn-sm btn-outline-warning me-1" title="Customer came later than booked time" onclick="editBooking(${b.id})"><i class="bi bi-clock me-1"></i>Arrived late?</button>`;
+    }
     if (b.status === "booked" && b.can_start) {
-      actions += `<button class="btn btn-sm btn-primary me-1" onclick="startBooking(${b.id})">Start Session</button>`;
+      actions += `<button class="btn btn-sm btn-primary me-1" title="Put customer on Dashboard as active" onclick="startBooking(${b.id})"><i class="bi bi-box-arrow-in-right me-1"></i>Check in</button>`;
     }
     if (b.status === "active") {
-      actions += `<button class="btn btn-sm btn-outline-primary me-1" onclick="extendBooking(${b.id})">Extend</button>`;
+      actions += `<button class="btn btn-sm btn-outline-primary me-1" title="Add more time" onclick="extendBooking(${b.id})">Extend</button>`;
       actions += `<button class="btn btn-sm btn-outline-success me-1" onclick="goToOrder(${b.session_id})">Order</button>`;
-      actions += `<button class="btn btn-sm btn-outline-warning" onclick="goToCheckout(${b.session_id})">Checkout</button>`;
+      actions += `<button class="btn btn-sm btn-outline-warning me-1" onclick="goToCheckout(${b.session_id})">Checkout</button>`;
     }
     if (b.status === "booked") {
-      actions += `<button class="btn btn-sm btn-outline-danger" onclick="cancelBooking(${b.id})">Cancel</button>`;
+      actions += `<button class="btn btn-sm btn-outline-danger" title="Cancel this reservation" onclick="cancelBooking(${b.id})">Cancel</button>`;
     }
     if (!actions) actions = `<span class="text-muted">No action</span>`;
+
+    const timeCell = late
+      ? `${fmt12(b.start_time)} – ${fmt12(b.end_time)}<br><span class="late-hint-badge"><i class="bi bi-exclamation-circle me-1"></i>Waiting — was due ${fmt12(b.start_time)}</span>`
+      : `${fmt12(b.start_time)} – ${fmt12(b.end_time)}`;
 
     const purposeText = b.purpose || "N/A";
     return `
       <tr>
         <td>${b.customer_name}</td>
-        <td>${fmt12(b.start_time)} - ${fmt12(b.end_time)}</td>
+        <td>${timeCell}</td>
         <td class="d-none d-md-table-cell">${b.course || "N/A"}</td>
         <td class="d-none d-md-table-cell">${b.number_of_people}</td>
         <td>${badgeFor(b.status)}</td>
@@ -377,27 +572,124 @@ function submitBooking() {
 }
 
 function startBooking(id) {
-  csrfFetch(`/api/lounge-bookings/${id}/start`, {
+  return csrfFetch(`/api/lounge-bookings/${id}/start`, {
     method: "POST"
   })
   .then(r => r.json())
   .then(data => {
     if (data.error) {
       showToast(data.error, "error");
-      return;
+      return false;
     }
-    showToast("Session started and moved to active customers.", "success");
+    showToast("Customer checked in — see them on the Dashboard.", "success");
     loadSchedule();
+    return true;
   })
-  .catch(() => showToast("Failed to start session.", "error"));
+  .catch(() => {
+    showToast("Failed to start session.", "error");
+    return false;
+  });
 }
 
-let extendBookingId = null;
-let pendingConfirmAction = null;
+function editBooking(id) {
+  const b = bookingsCache.find(x => x.id === id);
+  if (!b || b.status !== "booked") return;
 
-function openConfirmModal(title, message, onConfirm) {
+  editBookingId = id;
+  editBookingEndTime = b.end_time;
+  editBookingOriginalStart = b.start_time;
+
+  document.getElementById("edit-customer-name").textContent = b.customer_name;
+
+  const late = isBookingLate(b);
+  document.getElementById("edit-late-tip").style.display = late ? "block" : "none";
+
+  if (late) {
+    setStartToNow(false);
+  } else {
+    setSelectorsFrom24Hour(b.start_time, "e-start-hour", "e-start-min", "e-start-period");
+    updateEditPreview();
+  }
+
+  const modal = new bootstrap.Modal(document.getElementById("editBookingModal"));
+  modal.show();
+}
+
+function submitEditBooking(startAfterSave) {
+  if (!editBookingId) return;
+
+  const startTime = to24Hour(
+    document.getElementById("e-start-hour").value,
+    document.getElementById("e-start-min").value,
+    document.getElementById("e-start-period").value
+  );
+
+  const startMins = toMinutes(startTime);
+  if (startMins < 7 * 60 || startMins > 22 * 60) {
+    showToast("Start time must be within 7:00 AM to 10:00 PM.", "error");
+    return Promise.resolve(false);
+  }
+
+  return csrfFetch(`/api/lounge-bookings/${editBookingId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ start_time: startTime })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) {
+      showToast(data.error, "error");
+      return false;
+    }
+    showToast(startAfterSave ? "Time saved." : "Arrival time updated.", "success");
+    const modal = bootstrap.Modal.getInstance(document.getElementById("editBookingModal"));
+    if (modal) modal.hide();
+
+    const id = editBookingId;
+    editBookingId = null;
+    editBookingEndTime = null;
+    editBookingOriginalStart = null;
+
+    return loadSchedulePromise().then(() => {
+      if (startAfterSave) return startBooking(id);
+      return true;
+    });
+  })
+  .catch(() => {
+    showToast("Failed to update booking.", "error");
+    return false;
+  });
+}
+
+function loadSchedulePromise() {
+  const date = document.getElementById("scheduleDate").value || todayStr();
+  return fetch(`/api/lounge-bookings?date=${date}`, { credentials: "include" })
+    .then(r => r.json())
+    .then(bookings => {
+      bookingsCache = bookings;
+      renderSchedule(bookings);
+      renderList(bookings);
+      document.getElementById("booking-count").textContent = `${bookings.length} booking(s)`;
+    });
+}
+
+function confirmSaveAndStart() {
+  const preview = document.getElementById("edit-preview-new").textContent || "";
+  openConfirmModal(
+    "Check in this customer?",
+    `They will appear on the Dashboard with this time slot: ${preview}. Continue?`,
+    () => submitEditBooking(true),
+    { confirmText: "Check in", confirmClass: "btn-primary" }
+  );
+}
+
+function openConfirmModal(title, message, onConfirm, options) {
+  options = options || {};
   document.getElementById("confirm-title").textContent = title;
   document.getElementById("confirm-message").textContent = message;
+  const okBtn = document.getElementById("confirm-ok-btn");
+  okBtn.textContent = options.confirmText || "Yes";
+  okBtn.className = "btn px-4 " + (options.confirmClass || "btn-danger");
   pendingConfirmAction = onConfirm;
   const modal = new bootstrap.Modal(document.getElementById("actionConfirmModal"));
   modal.show();
@@ -440,7 +732,7 @@ function submitExtend() {
       showToast(data.error, "error");
       return;
     }
-    showToast(`Booking extended to ${fmt12(data.end_time)}.`, "success");
+    showToast(`Extra time added — now ends at ${fmt12(data.end_time)}.`, "success");
     const modal = bootstrap.Modal.getInstance(document.getElementById("extendModal"));
     if (modal) modal.hide();
     extendBookingId = null;
@@ -451,8 +743,8 @@ function submitExtend() {
 
 function cancelBooking(id) {
   openConfirmModal(
-    "Cancel Booking",
-    "Are you sure you want to cancel this booking?",
+    "Cancel this booking?",
+    "The customer will not be checked in. You can create a new booking if they come back later.",
     () => {
       csrfFetch(`/api/lounge-bookings/${id}`, {
         method: "DELETE"

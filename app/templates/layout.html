@@ -181,7 +181,9 @@
 <!-- TOP NAVBAR -->
 <nav class="navbar navbar-expand-md mobile-top-bar navbar-light bg-white shadow-sm px-3 px-md-4">
 
-    <a class="navbar-brand fw-bold text-warning mb-0" href="/dashboard">IdeaHub</a>
+    <a class="navbar-brand mb-0" href="/dashboard">
+      <img src="{{ url_for('static', filename='css/images/logo.jpg') }}" alt="IdeaHub" class="site-logo" style="height: 40px;" />
+    </a>
 
     <div class="d-flex align-items-center gap-2 ms-auto d-md-none">
       <a class="nav-link p-1 position-relative" href="/orders" aria-label="Orders">
@@ -327,9 +329,6 @@
                 <i class="bi bi-menu-button-wide me-2"></i>Menu
             </button>
 
-            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/reservations'">
-                <i class="bi bi-calendar-plus me-2"></i>Reservations
-            </button>
         </div>
 
         <!-- FINANCE -->

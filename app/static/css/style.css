@@ -202,6 +202,20 @@ body {
   color: var(--brand);
 }
 
+/* Site logo (navbar) and login logo image */
+.site-logo {
+  height: 38px;
+  width: auto;
+  display: inline-block;
+}
+
+.login-logo {
+  height: 88px;
+  width: auto;
+  display: inline-block;
+  border-radius: 12px;
+}
+
 .brand-title {
   color: var(--brand-dark);
   font-weight: 700;
@@ -500,3 +514,6 @@ body {
     width: 100%;
   }
 }
+
+
+

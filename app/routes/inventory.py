@@ -7,7 +7,7 @@ from app.repositories.inventory_repository import InventoryRepository
 from app.services.inventory_service import InventoryService
 from app.utils.auth import admin_required, login_required
 from app.models.menu_item import MenuItem
-from app import db
+from app import db, csrf
 from app.core.socketio_handlers import emit_inventory_update
 
 inventory_bp = Blueprint("inventory", __name__, url_prefix="/admin/inventory")
@@ -31,6 +31,7 @@ def api_list_items() -> tuple:
 
 @inventory_bp.route("/api/items", methods=["POST"])
 @login_required
+@csrf.exempt
 def api_create_item() -> tuple:
     data = request.get_json()
     menu_item_id = data.get("menu_item_id")
@@ -59,6 +60,7 @@ def api_create_item() -> tuple:
 
 @inventory_bp.route("/api/items/<int:item_id>/stock", methods=["PATCH"])
 @login_required
+@csrf.exempt
 def api_update_stock(item_id: int) -> tuple:
     data = request.get_json()
     from flask import session
@@ -92,6 +94,7 @@ def api_low_stock() -> tuple:
 
 @inventory_bp.route("/api/items/<int:item_id>", methods=["DELETE"])
 @login_required
+@csrf.exempt
 def api_delete_item(item_id: int) -> tuple:
     result = _service.delete(item_id)
     if isinstance(result, tuple):
