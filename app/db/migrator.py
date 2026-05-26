@@ -6,6 +6,7 @@ from app.models.finance import FinanceBudget, FinanceTransaction
 from app.models.management import Department
 from app.models.soft_balance import SoftBalanceEntry
 from app.models.space_price_history import SpacePriceHistory
+from app.models.payable import Payable
 
 
 class SchemaMigrator:
@@ -17,7 +18,7 @@ class SchemaMigrator:
 
     def run(self) -> None:
         db = self._db
-        _ = (Idea, IdeaVote, FinanceBudget, FinanceTransaction, Department, SoftBalanceEntry, SpacePriceHistory)
+        _ = (Idea, IdeaVote, FinanceBudget, FinanceTransaction, Department, SoftBalanceEntry, SpacePriceHistory, Payable)
         try:
             db.create_all()
             # Phase 3: Drop the obsolete reservations table if it exists
@@ -99,6 +100,21 @@ class SchemaMigrator:
                 "staff_performance_logs",
                 "customers_served",
                 "ALTER TABLE staff_performance_logs ADD COLUMN customers_served INT NOT NULL DEFAULT 0",
+            ),
+            (
+                "receivables",
+                "approved_by_staff",
+                "ALTER TABLE receivables ADD COLUMN approved_by_staff VARCHAR(100) NULL",
+            ),
+            (
+                "receivables",
+                "paid_at",
+                "ALTER TABLE receivables ADD COLUMN paid_at DATETIME NULL",
+            ),
+            (
+                "receivables",
+                "incurred_date",
+                "ALTER TABLE receivables ADD COLUMN incurred_date DATE NULL",
             ),
         ]
 

@@ -35,6 +35,8 @@ class ReceivableRepository:
         due_date: date,
         created_by: int,
         session_id: Optional[int],
+        approved_by_staff: Optional[str] = None,
+        incurred_date: Optional[date] = None,
     ) -> Receivable:
         receivable = Receivable(
             customer_name=customer_name,
@@ -44,6 +46,8 @@ class ReceivableRepository:
             due_date=due_date,
             created_by=created_by,
             session_id=session_id,
+            approved_by_staff=approved_by_staff,
+            incurred_date=incurred_date or date.today(),
         )
         db.session.add(receivable)
         db.session.flush()
@@ -54,6 +58,8 @@ class ReceivableRepository:
         if not receivable:
             return False
         receivable.paid = True
+        from datetime import datetime
+        receivable.paid_at = datetime.utcnow()
         return True
 
     def mark_partial_paid(self, receivable_id: int, amount: float) -> bool:

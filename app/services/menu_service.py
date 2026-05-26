@@ -63,6 +63,34 @@ class MenuService:
         self.repo.save()
         return {"success": True, "data": {"id": item.id}}
 
+    def create_variants(
+        self,
+        base_name: str,
+        variant_labels: list[str],
+        variant_prices: list[float],
+        category: str,
+        description: Optional[str] = None,
+        image_url: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """
+        Bulk-create variants like:
+        base_name="Latte", labels=["Hot","Iced"] => "Hot Latte", "Iced Latte".
+        """
+        created_ids: list[int] = []
+        for label, price in zip(variant_labels, variant_prices):
+            # Prefix-only naming convention: "Hot Latte", "Iced Latte", etc.
+            item_name = f"{label} {base_name}".strip()
+            item = self.repo.create(item_name, price, category)
+            if description is not None:
+                item.description = description
+            if image_url is not None:
+                item.image_url = image_url
+            created_ids.append(item.id)
+
+        # Commit once for the whole variant batch.
+        self.repo.save()
+        return {"created_ids": created_ids}
+
     def update(
         self, item_id: int, name: Optional[str] = None, price: Optional[float] = None, 
         category: Optional[str] = None, description: Optional[str] = None, image_url: Optional[str] = None

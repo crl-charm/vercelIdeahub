@@ -38,6 +38,8 @@ def api_create_receivable() -> tuple:
         due_date=data.get("due_date"),
         created_by=session.get("user_id"),
         session_id=data.get("session_id"),
+        approved_by_staff=data.get("approved_by_staff"),
+        incurred_date=data.get("incurred_date"),
     )
     if result.get("success"):
         emit_receivables_update('create', result.get("data", {}))

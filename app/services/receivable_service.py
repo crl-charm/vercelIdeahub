@@ -22,8 +22,10 @@ class ReceivableService:
                 "amount_owed": float(r.amount_owed),
                 "partial_paid": float(r.partial_paid),
                 "due_date": r.due_date.strftime("%Y-%m-%d"),
+                "incurred_date": (r.incurred_date or r.created_at.date()).strftime("%Y-%m-%d") if (r.incurred_date or r.created_at) else "",
                 "paid": r.paid,
                 "created_by": r.created_by_user.username if r.created_by_user else "Unknown",
+                "approved_by_staff": r.approved_by_staff or "",
             }
             for r in receivables
         ]
@@ -50,10 +52,13 @@ class ReceivableService:
         due_date: str,
         created_by: int,
         session_id: Optional[int],
+        approved_by_staff: Optional[str] = None,
+        incurred_date: Optional[str] = None,
     ) -> dict[str, Any]:
         due = date.fromisoformat(due_date)
+        incurred = date.fromisoformat(incurred_date) if incurred_date else None
         receivable = self.repo.create(
-            customer_name, customer_contact, items_description, amount_owed, due, created_by, session_id
+            customer_name, customer_contact, items_description, amount_owed, due, created_by, session_id, approved_by_staff, incurred
         )
         self.repo.save()
         return {"success": True, "data": {"id": receivable.id}}

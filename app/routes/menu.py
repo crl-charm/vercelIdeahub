@@ -216,6 +216,83 @@ def api_create_item() -> tuple:
     return jsonify(result), 201
 
 
+@menu_bp.route("/api/items/variants", methods=["POST"])
+@login_required
+@csrf.exempt
+def api_create_item_variants() -> tuple:
+    """
+    Create multiple Beverage variants (e.g., Coffee Hot/Cold) from one base name.
+    - base_name: "Latte"
+    - variant_labels: "Hot,Iced"
+    - variant_prices: "80,95"
+    Creates items named: "Hot Latte", "Iced Latte"
+    """
+    category = "Beverages"
+
+    # We expect multipart/form-data from the admin modal, but also accept JSON.
+    if request.is_json:
+        data = request.get_json() or {}
+        base_name = str(data.get("base_name", "")).strip()
+        variant_labels_raw = str(data.get("variant_labels", "")).strip()
+        variant_prices_raw = str(data.get("variant_prices", "")).strip()
+        description = str(data.get("description", "")).strip() or None
+    else:
+        base_name = request.form.get("base_name", "").strip()
+        variant_labels_raw = request.form.get("variant_labels", "").strip()
+        variant_prices_raw = request.form.get("variant_prices", "").strip()
+        description = request.form.get("description", "").strip() or None
+
+    # Validate category
+    if category not in VALID_CATEGORIES:
+        return jsonify({"success": False, "error": "Invalid category configuration"}), 500
+
+    if not base_name:
+        return jsonify({"success": False, "error": "base_name is required"}), 400
+    if not variant_labels_raw:
+        return jsonify({"success": False, "error": "variant_labels is required"}), 400
+    if not variant_prices_raw:
+        return jsonify({"success": False, "error": "variant_prices is required"}), 400
+
+    labels = [s.strip() for s in variant_labels_raw.split(",") if s.strip()]
+    prices_str_arr = [s.strip() for s in variant_prices_raw.split(",") if s.strip()]
+
+    if not labels:
+        return jsonify({"success": False, "error": "variant_labels must not be empty"}), 400
+    if len(labels) != len(prices_str_arr):
+        return jsonify(
+            {"success": False, "error": "Labels count must match prices count"}
+        ), 400
+
+    prices: list[float] = []
+    for p in prices_str_arr:
+        try:
+            val = float(p)
+        except ValueError:
+            return jsonify({"success": False, "error": "Prices must be valid numbers"}), 400
+        if val < 0:
+            return jsonify({"success": False, "error": "Prices must be >= 0"}), 400
+        prices.append(val)
+
+    image_url = None
+    if "image" in request.files and request.files["image"].filename:
+        image_url, error = validate_and_save_image(request.files["image"])
+        if error:
+            return jsonify({"success": False, "error": error}), 400
+
+    result = _service.create_variants(
+        base_name=base_name,
+        variant_labels=labels,
+        variant_prices=prices,
+        category=category,
+        description=description,
+        image_url=image_url,
+    )
+
+    created_ids = result.get("created_ids") or []
+    emit_menu_update("create", {"count": len(created_ids)})
+    return jsonify({"success": True, "data": result}), 201
+
+
 @menu_bp.route("/api/items/<int:item_id>", methods=["PATCH"])
 @login_required
 @csrf.exempt

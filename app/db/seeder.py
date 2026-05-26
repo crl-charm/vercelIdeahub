@@ -58,71 +58,8 @@ class DatabaseSeeder:
             db.session.query(MenuItem).filter_by(category=old_cat).update({"category": new_cat})
         db.session.commit()
 
-        existing_names = {name for (name,) in db.session.query(MenuItem.name).all()}
-        seed_items = [
-            ("Tapsilog", Decimal("95.00"), "Main Dish"),
-            ("Longsilog", Decimal("95.00"), "Main Dish"),
-            ("Hotsilog", Decimal("90.00"), "Main Dish"),
-            ("Tocilog", Decimal("90.00"), "Main Dish"),
-            ("Chicksilog", Decimal("105.00"), "Main Dish"),
-            ("Spamsilog", Decimal("95.00"), "Main Dish"),
-            ("Cornsilog", Decimal("85.00"), "Main Dish"),
-            ("Bangsilog", Decimal("120.00"), "Main Dish"),
-            ("Sisig Silog", Decimal("115.00"), "Main Dish"),
-            ("Adobo", Decimal("60.00"), "Main Dish"),
-            ("Fried Chicken", Decimal("110.00"), "Main Dish"),
-            ("Grilled Liempo", Decimal("130.00"), "Main Dish"),
-            ("Kare-Kare", Decimal("120.00"), "Main Dish"),
-            ("Bulalo", Decimal("140.00"), "Main Dish"),
-            ("Beef Caldereta", Decimal("125.00"), "Main Dish"),
-            ("Burger", Decimal("50.00"), "Main Dish"),
-            ("Chicken Sandwich", Decimal("85.00"), "Main Dish"),
-            ("Sisig Bowl", Decimal("140.00"), "Main Dish"),
-            ("Chicken Alfredo Bowl", Decimal("130.00"), "Main Dish"),
-            ("Pesto Chicken Bowl", Decimal("120.00"), "Main Dish"),
-            ("Pancit Canton", Decimal("75.00"), "Snack"),
-            ("Pancit Bihon", Decimal("75.00"), "Snack"),
-            ("Pancit Malabon", Decimal("95.00"), "Snack"),
-            ("Fries", Decimal("35.00"), "Snack"),
-            ("Garlic Fries", Decimal("55.00"), "Snack"),
-            ("Onion Rings", Decimal("60.00"), "Snack"),
-            ("Chicken Nuggets", Decimal("80.00"), "Snack"),
-            ("Siomai", Decimal("70.00"), "Snack"),
-            ("Kikiam", Decimal("65.00"), "Snack"),
-            ("Lumpia Shanghai", Decimal("80.00"), "Snack"),
-            ("Chicharon Bulaklak", Decimal("85.00"), "Snack"),
-            ("Isaw", Decimal("90.00"), "Snack"),
-            ("Takoyaki", Decimal("95.00"), "Snack"),
-            ("Halo-Halo", Decimal("90.00"), "Snack"),
-            ("Leche Flan", Decimal("80.00"), "Snack"),
-            ("Banana Cue", Decimal("50.00"), "Snack"),
-            ("Hot Americano", Decimal("60.00"), "Beverages"),
-            ("Hot Latte", Decimal("80.00"), "Beverages"),
-            ("Hot Mocha", Decimal("95.00"), "Beverages"),
-            ("Hot Chocolate", Decimal("100.00"), "Beverages"),
-            ("Iced Americano", Decimal("65.00"), "Beverages"),
-            ("Iced Latte", Decimal("95.00"), "Beverages"),
-            ("Iced Mocha", Decimal("110.00"), "Beverages"),
-            ("Iced Chocolate", Decimal("110.00"), "Beverages"),
-            ("Pineapple Juice", Decimal("60.00"), "Beverages"),
-            ("Calamansi Juice", Decimal("60.00"), "Beverages"),
-            ("Orange Juice", Decimal("65.00"), "Beverages"),
-            ("Mango Shake", Decimal("90.00"), "Beverages"),
-            ("Banana Milk", Decimal("75.00"), "Beverages"),
-            ("Coke", Decimal("35.00"), "Beverages"),
-            ("Royal", Decimal("35.00"), "Beverages"),
-            ("Sprite", Decimal("35.00"), "Beverages"),
-            ("Juice", Decimal("30.00"), "Beverages"),
-            ("Coffee", Decimal("40.00"), "Beverages"),
-        ]
-        to_add = []
-        for name, price, category in seed_items:
-            if name in existing_names:
-                continue
-            to_add.append(MenuItem(name=name, price=price, category=category))
-        if to_add:
-            db.session.add_all(to_add)
-        db.session.commit()
+        # Menu items are now managed through admin interface
+        # No hardcoded items seeded on startup
 
         if not User.query.filter_by(username="admin").first():
             admin = User(full_name="System Admin", username="admin", role="admin", job_role="admin")

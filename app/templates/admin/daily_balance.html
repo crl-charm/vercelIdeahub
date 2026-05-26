@@ -7,7 +7,7 @@
 <div class="container-fluid">
   <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-start gap-2 gap-md-3 mb-4">
     <h1 class="mb-0 mb-md-0" style="flex: 0 0 auto;">Daily Sales Balance</h1>
-    <div class="daily-balance-export-buttons d-flex flex-wrap gap-2" style="flex: 1 1 auto; justify-content: flex-start; flex-md-wrap: nowrap; justify-md-content: flex-end;">
+    <div class="daily-balance-export-buttons d-flex flex-wrap flex-md-nowrap gap-2 justify-content-start justify-content-md-end" style="flex: 1 1 auto;">
       <button class="btn btn-danger btn-sm" onclick="exportPDF()">
         <i class="bi bi-file-earmark-pdf"></i> <span class="d-none d-sm-inline">Export PDF</span>
       </button>
@@ -23,47 +23,121 @@
     </div>
   </div>
 
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card bg-success text-white">
-        <div class="card-body">
-          <h5 class="card-title">Total Revenue</h5>
-          <p class="card-text display-6">₱<span id="total-revenue">0.00</span></p>
+  <!-- Date Filter Section -->
+  <div class="card mb-4 border-0 shadow-sm" style="background-color: #f8fafc; border-radius: 12px;">
+    <div class="card-body p-3">
+      <div class="row align-items-center g-3">
+        <div class="col-12 col-md-auto">
+          <span class="fw-semibold text-secondary small"><i class="bi bi-funnel me-1"></i> Filter Reports & Summaries:</span>
+        </div>
+        <div class="col-12 col-sm-auto d-flex align-items-center gap-2">
+          <input type="date" id="filterStartDate" class="form-control form-control-sm" style="max-width: 160px;" onchange="renderFilteredReports()">
+          <span class="text-muted small">to</span>
+          <input type="date" id="filterEndDate" class="form-control form-control-sm" style="max-width: 160px;" onchange="renderFilteredReports()">
+        </div>
+        <div class="col-12 col-md-auto ms-md-auto d-flex flex-wrap gap-1">
+          <button class="btn btn-sm btn-outline-secondary" onclick="setDateFilterPreset('today')">Today</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="setDateFilterPreset('week')">This Week</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="setDateFilterPreset('month')">This Month</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="setDateFilterPreset('all')">Show All</button>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card bg-warning text-dark">
-        <div class="card-body">
-          <h5 class="card-title">Total Expenses</h5>
-          <p class="card-text display-6">₱<span id="total-expenses">0.00</span></p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card bg-primary text-white">
-        <div class="card-body">
-          <h5 class="card-title">Net Balance</h5>
-          <p class="card-text display-6">₱<span id="net-balance">0.00</span></p>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <!-- Receivables Highlight Card -->
+    <div class="col-12 col-md-4">
+      <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); border-left: 5px solid #d97706 !important;">
+        <div class="card-body d-flex flex-column justify-content-between p-4">
+          <div>
+            <span class="text-warning-emphasis fw-bold text-uppercase tracking-wider" style="font-size: 0.75rem; letter-spacing: 0.05em;">Collected Today</span>
+            <h5 class="card-title text-dark-emphasis mb-3">Receivables Collected</h5>
+          </div>
+          <div>
+            <div class="display-6 fw-bold text-dark mb-1">₱<span id="today-receivables-collected">0.00</span></div>
+            <div class="text-muted small">
+              <span class="badge bg-warning text-dark fw-semibold" id="today-receivables-count">0</span> debtor(s) paid today
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="col-md-3 col-lg-3">
-      <div class="card border-success">
-        <div class="card-body">
-          <h5 class="card-title text-success">Cash</h5>
-          <p class="card-text fs-4 mb-0">₱<span id="total-cash">0.00</span></p>
-          <small class="text-muted"><span id="cash-count">0</span> checkout(s)</small>
+    <!-- Cash on Hand Card -->
+    <div class="col-12 col-md-4">
+      <div class="card h-100 border-0 text-white shadow-sm" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+        <div class="card-body d-flex flex-column justify-content-between p-4">
+          <div>
+            <span class="text-emerald-100 fw-bold text-uppercase tracking-wider" style="font-size: 0.75rem; letter-spacing: 0.05em; opacity: 0.9;">Current Cash Flow</span>
+            <h5 class="card-title mb-3">Cash on Hand</h5>
+          </div>
+          <div>
+            <div class="display-6 fw-bold mb-1">₱<span id="today-cash-on-hand">0.00</span></div>
+            <div class="small" style="opacity: 0.9;">Total checked out today</div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-md-3 col-lg-3">
-      <div class="card border-primary">
-        <div class="card-body">
-          <h5 class="card-title text-primary">GCash</h5>
-          <p class="card-text fs-4 mb-0">₱<span id="total-gcash">0.00</span></p>
-          <small class="text-muted"><span id="gcash-count">0</span> checkout(s)</small>
+
+    <!-- Expected Cash on Hand Card -->
+    <div class="col-12 col-md-4">
+      <div class="card h-100 border-2 border-primary shadow-sm bg-white" style="border-style: dashed !important;">
+        <div class="card-body d-flex flex-column justify-content-between p-4">
+          <div>
+            <span class="text-primary fw-bold text-uppercase tracking-wider" style="font-size: 0.75rem; letter-spacing: 0.05em;">Projected Cash Flow</span>
+            <h5 class="card-title text-primary mb-3">Expected Cash on Hand</h5>
+          </div>
+          <div>
+            <div class="display-6 fw-bold text-primary mb-1">₱<span id="today-expected-cash">0.00</span></div>
+            <div class="text-muted small">Cash on hand + active session balances</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h5 class="mb-3 text-muted">Summary of All Reports</h5>
+  <div class="row g-2 mb-4">
+    <div class="col-6 col-md-2 col-lg-2">
+      <div class="card bg-light border-0 shadow-sm">
+        <div class="card-body p-3">
+          <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Total Revenue</small>
+          <div class="fs-5 fw-bold text-dark mt-1">₱<span id="total-revenue">0.00</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2 col-lg-2">
+      <div class="card bg-light border-0 shadow-sm">
+        <div class="card-body p-3">
+          <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Total Expenses</small>
+          <div class="fs-5 fw-bold text-danger mt-1">₱<span id="total-expenses">0.00</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2 col-lg-2">
+      <div class="card bg-light border-0 shadow-sm">
+        <div class="card-body p-3">
+          <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Net Balance</small>
+          <div class="fs-5 fw-bold text-success mt-1">₱<span id="net-balance">0.00</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-lg-3">
+      <div class="card bg-light border-0 shadow-sm">
+        <div class="card-body p-3">
+          <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Total Cash (Checked Out)</small>
+          <div class="fs-6 fw-semibold text-dark mt-1">₱<span id="total-cash">0.00</span></div>
+          <small class="text-muted" style="font-size: 0.75rem;"><span id="cash-count">0</span> checkouts</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-3 col-lg-3">
+      <div class="card bg-light border-0 shadow-sm">
+        <div class="card-body p-3">
+          <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Total GCash (Checked Out)</small>
+          <div class="fs-6 fw-semibold text-dark mt-1">₱<span id="total-gcash">0.00</span></div>
+          <small class="text-muted" style="font-size: 0.75rem;"><span id="gcash-count">0</span> checkouts</small>
         </div>
       </div>
     </div>
@@ -96,6 +170,8 @@
             <tr>
               <td>{{ report.report_date }}</td>
               <td>₱{{ "%.2f"|format(report.total_revenue) }}</td>
+              <td>₱{{ "%.2f"|format(report.cash_total or 0.0) }}</td>
+              <td>₱{{ "%.2f"|format(report.gcash_total or 0.0) }}</td>
               <td>₱{{ "%.2f"|format(report.total_expenses) }}</td>
               <td>₱{{ "%.2f"|format(report.net_balance) }}</td>
               <td>{{ report.total_orders }}</td>
@@ -128,8 +204,6 @@
               <th>Date</th>
               <th>Period</th>
               <th>Revenue</th>
-              <th>Cash</th>
-              <th>GCash</th>
               <th>Expenses</th>
               <th>Net</th>
               <th>Generated By</th>
@@ -199,168 +273,283 @@
 
 {% block scripts %}
 <script>
+let reportsCache = [];
+let softBalancesCache = [];
+
 document.addEventListener('DOMContentLoaded', function() {
+  // Set default filter date range to today's local date
+  const todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('filterStartDate').value = todayStr;
+  document.getElementById('filterEndDate').value = todayStr;
+
   loadReports();
+  
+  // Poll today's live stats every 15 seconds
+  window.createSmartPoller(async function() {
+    try {
+      const r = await fetch('/admin/daily-balance/api/today-stats');
+      if (!r.ok) return;
+      const res = await r.json();
+      if (res.success) {
+        const stats = res.data;
+        document.getElementById('today-receivables-collected').textContent = stats.receivables_collected_today.toFixed(2);
+        document.getElementById('today-receivables-count').textContent = stats.receivables_paid_today;
+        document.getElementById('today-cash-on-hand').textContent = stats.cash_on_hand.toFixed(2);
+        document.getElementById('today-expected-cash').textContent = stats.expected_cash_on_hand.toFixed(2);
+      }
+    } catch (_) {}
+  }, 15000);
 });
+
+function setDateFilterPreset(preset) {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  if (preset === 'today') {
+    document.getElementById('filterStartDate').value = todayStr;
+    document.getElementById('filterEndDate').value = todayStr;
+  } else if (preset === 'week') {
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+    document.getElementById('filterStartDate').value = monday.toISOString().split('T')[0];
+    document.getElementById('filterEndDate').value = new Date().toISOString().split('T')[0];
+  } else if (preset === 'month') {
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('filterStartDate').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('filterEndDate').value = new Date().toISOString().split('T')[0];
+  } else if (preset === 'all') {
+    document.getElementById('filterStartDate').value = '';
+    document.getElementById('filterEndDate').value = '';
+  }
+  renderFilteredReports();
+}
 
 function loadReports() {
   fetch('/admin/daily-balance/api/reports').then(r => r.json()).then(data => {
     if (data.success) {
-      const tbody = document.getElementById('reports-table-body');
-      const mobileCards = document.getElementById('reports-mobile-cards');
-      tbody.innerHTML = '';
-      mobileCards.innerHTML = '';
-      let sumRevenue = 0, sumExpenses = 0, sumNet = 0, sumCash = 0, sumGcash = 0, cashCount = 0, gcashCount = 0;
-      data.data.forEach(report => {
-        sumRevenue += report.total_revenue;
-        sumExpenses += report.total_expenses;
-        sumNet += report.net_balance;
-        sumCash += report.cash_total || 0;
-        sumGcash += report.gcash_total || 0;
-        cashCount += report.cash_count || 0;
-        gcashCount += report.gcash_count || 0;
-        
-        // Desktop table row
-        tbody.innerHTML += `
-          <tr>
-            <td>${report.report_date}</td>
-            <td>₱${report.total_revenue.toFixed(2)}</td>
-            <td>₱${(report.cash_total || 0).toFixed(2)}</td>
-            <td>₱${(report.gcash_total || 0).toFixed(2)}</td>
-            <td>₱${report.total_expenses.toFixed(2)}</td>
-            <td>₱${report.net_balance.toFixed(2)}</td>
-            <td>${report.total_orders}</td>
-            <td>${report.total_sessions}</td>
-            <td>${report.generated_by}</td>
-            <td>${report.notes || '-'}</td>
-          </tr>
-        `;
-        
-        // Mobile card layout
-        mobileCards.innerHTML += `
-          <div class="daily-report-card mb-3">
-            <div class="card-header-mobile">
-              <strong>${report.report_date}</strong>
-              <small class="text-muted">${report.generated_by}</small>
-            </div>
-            <div class="card-body-mobile">
-              <div class="row g-2">
-                <div class="col-6">
-                  <div class="metric-item">
-                    <span class="metric-label">Revenue</span>
-                    <span class="metric-value">₱${report.total_revenue.toFixed(2)}</span>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="metric-item">
-                    <span class="metric-label">Expenses</span>
-                    <span class="metric-value">₱${report.total_expenses.toFixed(2)}</span>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="metric-item">
-                    <span class="metric-label">Cash</span>
-                    <span class="metric-value">₱${(report.cash_total || 0).toFixed(2)}</span>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="metric-item">
-                    <span class="metric-label">GCash</span>
-                    <span class="metric-value">₱${(report.gcash_total || 0).toFixed(2)}</span>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="metric-item">
-                    <span class="metric-label">Net</span>
-                    <span class="metric-value text-success">₱${report.net_balance.toFixed(2)}</span>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="metric-item">
-                    <span class="metric-label">Orders</span>
-                    <span class="metric-value">${report.total_orders}</span>
-                  </div>
-                </div>
-              </div>
-              ${report.notes ? `<div class="notes-section mt-2"><small class="text-muted">Note: ${report.notes}</small></div>` : ''}
-            </div>
-          </div>
-        `;
-      });
-      document.getElementById('total-revenue').textContent = sumRevenue.toFixed(2);
-      document.getElementById('total-expenses').textContent = sumExpenses.toFixed(2);
-      document.getElementById('net-balance').textContent = sumNet.toFixed(2);
-      document.getElementById('total-cash').textContent = sumCash.toFixed(2);
-      document.getElementById('total-gcash').textContent = sumGcash.toFixed(2);
-      document.getElementById('cash-count').textContent = cashCount;
-      document.getElementById('gcash-count').textContent = gcashCount;
+      reportsCache = data.data;
+      renderFilteredReports();
     }
   });
+
+  // Load today's live stats immediately
+  fetch('/admin/daily-balance/api/today-stats').then(r => r.json()).then(res => {
+    if (res.success) {
+      const stats = res.data;
+      document.getElementById('today-receivables-collected').textContent = stats.receivables_collected_today.toFixed(2);
+      document.getElementById('today-receivables-count').textContent = stats.receivables_paid_today;
+      document.getElementById('today-cash-on-hand').textContent = stats.cash_on_hand.toFixed(2);
+      document.getElementById('today-expected-cash').textContent = stats.expected_cash_on_hand.toFixed(2);
+    }
+  });
+
   loadSoftBalances();
+}
+
+function renderFilteredReports() {
+  const startDateVal = document.getElementById('filterStartDate').value;
+  const endDateVal = document.getElementById('filterEndDate').value;
+  
+  const startDate = startDateVal ? new Date(startDateVal) : null;
+  const endDate = endDateVal ? new Date(endDateVal) : null;
+  if (startDate) startDate.setHours(0,0,0,0);
+  if (endDate) endDate.setHours(23,59,59,999);
+
+  // Filter reports
+  const filteredReports = reportsCache.filter(report => {
+    const reportDate = new Date(report.report_date);
+    if (startDate && reportDate < startDate) return false;
+    if (endDate && reportDate > endDate) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('reports-table-body');
+  const mobileCards = document.getElementById('reports-mobile-cards');
+  tbody.innerHTML = '';
+  mobileCards.innerHTML = '';
+
+  let sumRevenue = 0, sumExpenses = 0, sumNet = 0, sumCash = 0, sumGcash = 0, cashCount = 0, gcashCount = 0;
+
+  filteredReports.forEach(report => {
+    sumRevenue += report.total_revenue;
+    sumExpenses += report.total_expenses;
+    sumNet += report.net_balance;
+    sumCash += report.cash_total || 0;
+    sumGcash += report.gcash_total || 0;
+    cashCount += report.cash_count || 0;
+    gcashCount += report.gcash_count || 0;
+    
+    // Desktop table row
+    tbody.innerHTML += `
+      <tr>
+        <td>${report.report_date}</td>
+        <td>₱${report.total_revenue.toFixed(2)}</td>
+        <td>₱${(report.cash_total || 0).toFixed(2)}</td>
+        <td>₱${(report.gcash_total || 0).toFixed(2)}</td>
+        <td>₱${report.total_expenses.toFixed(2)}</td>
+        <td>₱${report.net_balance.toFixed(2)}</td>
+        <td>${report.total_orders}</td>
+        <td>${report.total_sessions}</td>
+        <td>${report.generated_by}</td>
+        <td>${report.notes || '-'}</td>
+      </tr>
+    `;
+    
+    // Mobile card layout
+    mobileCards.innerHTML += `
+      <div class="daily-report-card mb-3">
+        <div class="card-header-mobile">
+          <strong>${report.report_date}</strong>
+          <small class="text-muted">${report.generated_by}</small>
+        </div>
+        <div class="card-body-mobile">
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">Revenue</span>
+                <span class="metric-value">₱${report.total_revenue.toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">Expenses</span>
+                <span class="metric-value">₱${report.total_expenses.toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">Cash</span>
+                <span class="metric-value">₱${(report.cash_total || 0).toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">GCash</span>
+                <span class="metric-value">₱${(report.gcash_total || 0).toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">Net</span>
+                <span class="metric-value text-success">₱${report.net_balance.toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">Orders</span>
+                <span class="metric-value">${report.total_orders}</span>
+              </div>
+            </div>
+          </div>
+          ${report.notes ? `<div class="notes-section mt-2"><small class="text-muted">Note: ${report.notes}</small></div>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  if (filteredReports.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-3">No reports found for this range.</td></tr>';
+    mobileCards.innerHTML = '<p class="text-center text-muted py-4">No reports found for this range.</p>';
+  }
+
+  document.getElementById('total-revenue').textContent = sumRevenue.toFixed(2);
+  document.getElementById('total-expenses').textContent = sumExpenses.toFixed(2);
+  document.getElementById('net-balance').textContent = sumNet.toFixed(2);
+  document.getElementById('total-cash').textContent = sumCash.toFixed(2);
+  document.getElementById('total-gcash').textContent = sumGcash.toFixed(2);
+  document.getElementById('cash-count').textContent = cashCount;
+  document.getElementById('gcash-count').textContent = gcashCount;
+
+  renderFilteredSoftBalances(startDate, endDate);
 }
 
 function loadSoftBalances() {
   fetch('/admin/daily-balance/api/soft-balances').then(r => r.json()).then(data => {
-    if (!data.success) return;
-    const tbody = document.getElementById('soft-balance-body');
-    const mobileCards = document.getElementById('soft-balance-mobile-cards');
-    tbody.innerHTML = '';
-    mobileCards.innerHTML = '';
-    data.data.forEach(row => {
-      // Desktop table row
-      tbody.innerHTML += `
-      <tr>
-        <td>${row.balance_date}</td>
-        <td>${row.period}</td>
-        <td>₱${row.total_revenue.toFixed(2)}</td>
-        <td>₱${row.total_expenses.toFixed(2)}</td>
-        <td>₱${row.net_balance.toFixed(2)}</td>
-        <td>${row.generated_by}</td>
-        <td>${row.generated_at}</td>
-        <td>${row.notes || '-'}</td>
-      </tr>`;
-      
-      // Mobile card layout
-      mobileCards.innerHTML += `
-        <div class="soft-balance-card mb-3">
-          <div class="card-header-mobile">
-            <strong>${row.balance_date}</strong>
-            <span class="badge bg-secondary">${row.period}</span>
-            <small class="text-muted">${row.generated_by}</small>
-          </div>
-          <div class="card-body-mobile">
-            <div class="row g-2">
-              <div class="col-6">
-                <div class="metric-item">
-                  <span class="metric-label">Revenue</span>
-                  <span class="metric-value">₱${row.total_revenue.toFixed(2)}</span>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="metric-item">
-                  <span class="metric-label">Expenses</span>
-                  <span class="metric-value">₱${row.total_expenses.toFixed(2)}</span>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="metric-item">
-                  <span class="metric-label">Net</span>
-                  <span class="metric-value text-success">₱${row.net_balance.toFixed(2)}</span>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="metric-item">
-                  <span class="metric-label">Time</span>
-                  <span class="metric-value" style="font-size: 0.875rem;">${row.generated_at}</span>
-                </div>
+    if (data.success) {
+      softBalancesCache = data.data;
+      // Trigger soft balances filter rendering
+      const startDateVal = document.getElementById('filterStartDate').value;
+      const endDateVal = document.getElementById('filterEndDate').value;
+      const startDate = startDateVal ? new Date(startDateVal) : null;
+      const endDate = endDateVal ? new Date(endDateVal) : null;
+      if (startDate) startDate.setHours(0,0,0,0);
+      if (endDate) endDate.setHours(23,59,59,999);
+      renderFilteredSoftBalances(startDate, endDate);
+    }
+  });
+}
+
+function renderFilteredSoftBalances(startDate, endDate) {
+  const filteredSoft = softBalancesCache.filter(row => {
+    const balanceDate = new Date(row.balance_date);
+    if (startDate && balanceDate < startDate) return false;
+    if (endDate && balanceDate > endDate) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('soft-balance-body');
+  const mobileCards = document.getElementById('soft-balance-mobile-cards');
+  tbody.innerHTML = '';
+  mobileCards.innerHTML = '';
+
+  filteredSoft.forEach(row => {
+    tbody.innerHTML += `
+    <tr>
+      <td>${row.balance_date}</td>
+      <td>${row.period}</td>
+      <td>₱${row.total_revenue.toFixed(2)}</td>
+      <td>₱${row.total_expenses.toFixed(2)}</td>
+      <td>₱${row.net_balance.toFixed(2)}</td>
+      <td>${row.generated_by}</td>
+      <td>${row.generated_at}</td>
+      <td>${row.notes || '-'}</td>
+    </tr>`;
+    
+    mobileCards.innerHTML += `
+      <div class="soft-balance-card mb-3">
+        <div class="card-header-mobile">
+          <strong>${row.balance_date}</strong>
+          <span class="badge bg-secondary">${row.period}</span>
+          <small class="text-muted">${row.generated_by}</small>
+        </div>
+        <div class="card-body-mobile">
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">Revenue</span>
+                <span class="metric-value">₱${row.total_revenue.toFixed(2)}</span>
               </div>
             </div>
-            ${row.notes ? `<div class="notes-section mt-2"><small class="text-muted">Note: ${row.notes}</small></div>` : ''}
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">Expenses</span>
+                <span class="metric-value">₱${row.total_expenses.toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">Net</span>
+                <span class="metric-value text-success">₱${row.net_balance.toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="metric-item">
+                <span class="metric-label">Time</span>
+                <span class="metric-value" style="font-size: 0.875rem;">${row.generated_at}</span>
+              </div>
+            </div>
           </div>
+          ${row.notes ? `<div class="notes-section mt-2"><small class="text-muted">Note: ${row.notes}</small></div>` : ''}
         </div>
-      `;
-    });
+      </div>
+    `;
   });
+
+  if (filteredSoft.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">No soft balances found for this range.</td></tr>';
+    mobileCards.innerHTML = '<p class="text-center text-muted py-4">No soft balances found for this range.</p>';
+  }
 }
 
 function generateReport() {
@@ -397,15 +586,21 @@ function generateReport() {
 }
 
 function exportPDF() {
-  window.location.href = '/admin/daily-balance/api/reports/export-pdf';
+  const start = document.getElementById('filterStartDate').value;
+  const end = document.getElementById('filterEndDate').value;
+  window.location.href = `/admin/daily-balance/api/reports/export-pdf?start_date=${start}&end_date=${end}`;
 }
 
 function exportCSV() {
-  window.location.href = '/admin/daily-balance/api/reports/export-csv';
+  const start = document.getElementById('filterStartDate').value;
+  const end = document.getElementById('filterEndDate').value;
+  window.location.href = `/admin/daily-balance/api/reports/export-csv?start_date=${start}&end_date=${end}`;
 }
 
 function exportExcel() {
-  window.location.href = '/admin/daily-balance/api/reports/export-excel';
+  const start = document.getElementById('filterStartDate').value;
+  const end = document.getElementById('filterEndDate').value;
+  window.location.href = `/admin/daily-balance/api/reports/export-excel?start_date=${start}&end_date=${end}`;
 }
 </script>
 {% endblock %}

@@ -3,6 +3,8 @@ from app.models import User, StaffAttendance
 from app import db, limiter, csrf
 from datetime import datetime
 import logging
+from app.core.socketio_handlers import emit_staff_status_change
+
 
 bp = Blueprint("auth", __name__)
 
@@ -67,11 +69,19 @@ def login_api():
             session["role"] = user.role
             session["job_role"] = user.job_role
 
+            # Close stale open sessions for this user
+            open_sessions = StaffAttendance.query.filter_by(user_id=user.id, time_out=None).all()
+            for obs in open_sessions:
+                obs.time_out = datetime.utcnow()
+
             # Log attendance
             attendance = StaffAttendance(user_id=user.id, time_in=datetime.utcnow())
             db.session.add(attendance)
             db.session.commit()
             session["attendance_id"] = attendance.id
+
+            # Emit real-time status update
+            emit_staff_status_change(user.id, "online")
 
             security_logger.info(f"Successful login: {username} from {request.remote_addr}")
             return jsonify({
@@ -92,12 +102,23 @@ def login_api():
 def logout():
     """Secure logout with session cleanup"""
     try:
+        user_id = session.get("user_id")
         attendance_id = session.get("attendance_id")
         if attendance_id:
             attendance = StaffAttendance.query.get(attendance_id)
             if attendance and attendance.time_out is None:
                 attendance.time_out = datetime.utcnow()
                 db.session.commit()
+
+        # Close all stale open sessions for this user
+        if user_id:
+            open_sessions = StaffAttendance.query.filter_by(user_id=user_id, time_out=None).all()
+            for obs in open_sessions:
+                obs.time_out = datetime.utcnow()
+            db.session.commit()
+
+            # Emit real-time status update
+            emit_staff_status_change(user_id, "offline")
 
         username = session.get("username", "unknown")
         security_logger.info(f"Logout: {username} from {request.remote_addr}")

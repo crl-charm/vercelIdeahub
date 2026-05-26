@@ -878,8 +878,8 @@ function openCustomerRecords() {
   });
 }
 
-function openStaffAttendance() {
-  fetch("/api/admin/staff-attendance", { credentials: "include" })
+function loadStaffAttendanceData() {
+  return fetch("/api/admin/staff-attendance", { credentials: "include" })
   .then(res => res.json())
   .then(data => {
     const body = document.getElementById("staff-attendance-body");
@@ -894,7 +894,12 @@ function openStaffAttendance() {
         </tr>
       `).join("");
     }
+  });
+}
 
+function openStaffAttendance() {
+  loadStaffAttendanceData()
+  .then(() => {
     new bootstrap.Modal(document.getElementById("staffAttendanceModal")).show();
   })
   .catch(() => {
@@ -1256,6 +1261,20 @@ window.createSmartPoller(loadUsers, 30000);
 window.createSmartPoller(loadStaffAnalytics, 60000);
 window.createSmartPoller(loadCapacity, 60000);
 window.createSmartPoller(loadSpacePrices, 120000);
+
+// CONNECT SOCKET.IO FOR REAL-TIME STAFF UPDATES
+const socket = io();
+socket.on('staff_status_change', function(data) {
+  console.log("Staff status change received:", data);
+  loadUsers();
+  loadStaffAnalytics();
+  
+  // Reload the attendance records in-place if the modal is currently open!
+  const modalEl = document.getElementById("staffAttendanceModal");
+  if (modalEl && modalEl.classList.contains("show")) {
+    loadStaffAttendanceData();
+  }
+});
 
 </script>
 {% endblock %}

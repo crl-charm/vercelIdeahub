@@ -51,7 +51,13 @@ def api_generate_report() -> tuple:
 @sales_bp.route("/api/reports/export-csv", methods=["GET"])
 @admin_required
 def api_export_csv() -> Any:
+    start_date_str = request.args.get("start_date")
+    end_date_str = request.args.get("end_date")
     reports = _service.list_reports()
+    if start_date_str and start_date_str.strip():
+        reports = [r for r in reports if r["report_date"] >= start_date_str]
+    if end_date_str and end_date_str.strip():
+        reports = [r for r in reports if r["report_date"] <= end_date_str]
     return _export.export_csv(reports)
 
 
@@ -59,8 +65,16 @@ def api_export_csv() -> Any:
 @admin_required
 def api_export_pdf() -> Any:
     try:
+        start_date_str = request.args.get("start_date")
+        end_date_str = request.args.get("end_date")
         reports = _service.list_reports()
         soft_entries = _service.list_soft_balances()
+        if start_date_str and start_date_str.strip():
+            reports = [r for r in reports if r["report_date"] >= start_date_str]
+            soft_entries = [s for s in soft_entries if s["balance_date"] >= start_date_str]
+        if end_date_str and end_date_str.strip():
+            reports = [r for r in reports if r["report_date"] <= end_date_str]
+            soft_entries = [s for s in soft_entries if s["balance_date"] <= end_date_str]
         return _export.export_pdf(reports, soft_entries)
     except Exception as e:
         return api_error(f"Failed to export PDF: {str(e)}", status=500)
@@ -70,7 +84,13 @@ def api_export_pdf() -> Any:
 @admin_required
 def api_export_excel() -> Any:
     try:
+        start_date_str = request.args.get("start_date")
+        end_date_str = request.args.get("end_date")
         reports = _service.list_reports()
+        if start_date_str and start_date_str.strip():
+            reports = [r for r in reports if r["report_date"] >= start_date_str]
+        if end_date_str and end_date_str.strip():
+            reports = [r for r in reports if r["report_date"] <= end_date_str]
         return _export.export_excel(reports)
     except Exception as e:
         return api_error(f"Failed to export Excel: {str(e)}", status=500)
@@ -97,3 +117,56 @@ def api_create_soft_balance() -> tuple:
         notes=data.get("notes"),
     )
     return api_ok(result.get("data"), status=201)
+
+
+@sales_bp.route("/api/today-stats", methods=["GET"])
+@admin_required
+def api_today_stats() -> tuple:
+    from app.models import Transaction, CustomerSession, Receivable, Order, OrderItem
+    from datetime import datetime, date
+    from sqlalchemy import func
+    from decimal import Decimal
+
+    today = date.today()
+
+    # 1. Cash on Hand
+    transactions_today = Transaction.query.filter(func.date(Transaction.created_at) == today).all()
+    cash_on_hand = sum(tx.total_bill for tx in transactions_today)
+
+    # 2. Expected Cash on Hand (Cash on Hand + Sum of pending balances of active sessions)
+    pending_balance_sum = Decimal("0.00")
+    active_sessions = CustomerSession.query.filter_by(status="active").all()
+    now = datetime.utcnow()
+    for sess in active_sessions:
+        minutes_used = (now - sess.time_in).total_seconds() / 60
+        rate = sess.space_type.rate_per_minute if sess.space_type else Decimal("0.00")
+        time_bill = Decimal(str(max(minutes_used, 0.0))) * rate
+        
+        food_total = (
+            db.session.query(func.coalesce(func.sum(OrderItem.quantity * OrderItem.price), 0))
+            .select_from(OrderItem)
+            .join(Order, OrderItem.order_id == Order.id)
+            .filter(Order.customer_session_id == sess.id)
+            .scalar()
+        ) or Decimal("0.00")
+        
+        pending_balance_sum += time_bill + Decimal(str(food_total))
+
+    expected_cash_on_hand = cash_on_hand + pending_balance_sum
+
+    # 3. Today's Paid Receivables
+    receivables_paid_today = Receivable.query.filter(
+        Receivable.paid == True,
+        func.date(Receivable.paid_at) == today
+    ).all()
+    
+    debtors_count = len(receivables_paid_today)
+    total_collected = sum(r.amount_owed - r.partial_paid for r in receivables_paid_today)
+
+    return api_ok({
+        "cash_on_hand": float(cash_on_hand),
+        "expected_cash_on_hand": float(expected_cash_on_hand),
+        "receivables_paid_today": debtors_count,
+        "receivables_collected_today": float(total_collected)
+    })
+

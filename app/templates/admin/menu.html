@@ -382,6 +382,15 @@
     <button class="btn-add-menu" data-bs-toggle="modal" data-bs-target="#addItemModal">
       + Add Menu Item
     </button>
+    <button
+      id="btnAddVariants"
+      class="btn-add-menu"
+      style="display: none;"
+      data-bs-toggle="modal"
+      data-bs-target="#variantModal"
+    >
+      + Add Beverage Variants
+    </button>
   </div>
 
   <!-- Menu Grid -->
@@ -436,6 +445,68 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn-add-menu" onclick="createItem()">Create Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Beverage Variants Modal -->
+<div class="modal fade" id="variantModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">☕ Add Beverage Variants</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="variantForm" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Base name *</label>
+            <input
+              type="text"
+              id="variantBaseName"
+              class="form-control"
+              placeholder="e.g., Latte"
+              required
+            >
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Variant labels *</label>
+            <input
+              type="text"
+              id="variantLabels"
+              class="form-control"
+              placeholder="e.g., Hot,Iced"
+              required
+            >
+            <div class="form-text text-muted">Comma-separated. Each label becomes a variant prefix.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Variant prices (₱) *</label>
+            <input
+              type="text"
+              id="variantPrices"
+              class="form-control"
+              placeholder="e.g., 80,95"
+              required
+            >
+            <div class="form-text text-muted">Must match the number of labels.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea id="variantDescription" class="form-control" placeholder="Shared description for all variants" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Picture Upload</label>
+            <input type="file" id="variantImage" class="form-control" accept="image/*">
+            <img id="variantImagePreview" class="image-preview" alt="Preview">
+            <small class="form-text text-muted">Leave empty to create variants without a picture</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-add-menu" onclick="createBeverageVariants()">Create Variants</button>
         </div>
       </form>
     </div>
@@ -595,6 +666,23 @@ function setupImagePreviews() {
       reader.readAsDataURL(e.target.files[0]);
     }
   });
+
+  const variantImageInput = document.getElementById('variantImage');
+  if (variantImageInput) {
+    variantImageInput.addEventListener('change', function(e) {
+      const preview = document.getElementById('variantImagePreview');
+      if (e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          preview.src = event.target.result;
+          preview.classList.add('show');
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      } else {
+        preview.classList.remove('show');
+      }
+    });
+  }
 }
 
 function parseMenuResponse(response) {
@@ -624,6 +712,10 @@ function loadItems() {
 
 function filterAndRender() {
   const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+  const variantsBtn = document.getElementById('btnAddVariants');
+  if (variantsBtn) {
+    variantsBtn.style.display = currentFilter === 'Beverages' ? 'inline-flex' : 'none';
+  }
   let filtered = currentFilter === 'All' ? allItems : allItems.filter(item => item.category === currentFilter);
   
   // Apply search filter
@@ -699,6 +791,50 @@ function createItem() {
       bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
       document.getElementById('addItemForm').reset();
       document.getElementById('imagePreview1').classList.remove('show');
+      loadItems();
+    })
+    .catch(err => showToast('✗ ' + err.message, 'error'));
+}
+
+function createBeverageVariants() {
+  const baseName = document.getElementById('variantBaseName').value.trim();
+  const labelsRaw = document.getElementById('variantLabels').value.trim();
+  const pricesRaw = document.getElementById('variantPrices').value.trim();
+  const description = document.getElementById('variantDescription').value.trim();
+
+  const labels = labelsRaw.split(',').map(s => s.trim()).filter(Boolean);
+  const pricesStrArr = pricesRaw.split(',').map(s => s.trim()).filter(Boolean);
+  const prices = pricesStrArr.map(p => Number(p));
+
+  if (!baseName) return showToast('Base name is required', 'error');
+  if (!labels.length) return showToast('Variant labels are required', 'error');
+  if (!pricesStrArr.length) return showToast('Variant prices are required', 'error');
+  if (labels.length !== prices.length) return showToast('Labels count must match prices count', 'error');
+  if (prices.some(p => Number.isNaN(p) || p < 0)) return showToast('Prices must be valid numbers >= 0', 'error');
+
+  const formData = new FormData();
+  formData.append('base_name', baseName);
+  formData.append('variant_labels', labels.join(','));
+  formData.append('variant_prices', prices.join(','));
+  formData.append('description', description);
+
+  const imageFile = document.getElementById('variantImage').files[0];
+  if (imageFile) {
+    formData.append('image', imageFile);
+  }
+
+  csrfFetch('/admin/menu/api/items/variants', {
+    method: 'POST',
+    body: formData,
+    headers: { 'Accept': 'application/json' }
+  })
+    .then(parseMenuResponse)
+    .then(() => {
+      showToast('✓ Beverage variants created!', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('variantModal')).hide();
+      document.getElementById('variantForm').reset();
+      const preview = document.getElementById('variantImagePreview');
+      if (preview) preview.classList.remove('show');
       loadItems();
     })
     .catch(err => showToast('✗ ' + err.message, 'error'));

@@ -84,3 +84,12 @@ def emit_debt_due_reminder(payload: dict) -> None:
 
 def emit_daily_sales_closed(payload: dict) -> None:
     socketio.emit("daily_sales_closed", payload)
+
+
+def emit_staff_status_change(user_id: int, status: str) -> None:
+    """Broadcast staff status updates (online/offline) to all connected clients"""
+    socketio.emit('staff_status_change', {
+        'user_id': user_id,
+        'status': status
+    })
+

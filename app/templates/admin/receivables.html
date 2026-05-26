@@ -10,7 +10,7 @@
       <h3 class="mb-0">Receivables / Debt Tracker</h3>
       <small id="receivables-count" class="text-muted">0 records</small>
     </div>
-    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addReceivableModal">
+    <button class="btn btn-warning text-dark" onclick="openNewReceivableModal()">
       + New Receivable
     </button>
   </div>
@@ -37,7 +37,7 @@
   <!-- Desktop Table View -->
   <div class="card d-none d-md-block">
     <div class="card-header">
-      <h5 class="mb-0">All Receivables</h5>
+      <h5 class="mb-0">All Grouped Debtors</h5>
     </div>
     <div class="card-body">
       <div class="table-responsive">
@@ -46,15 +46,14 @@
             <tr>
               <th>Customer</th>
               <th>Contact</th>
-              <th>Items</th>
-              <th>Amount Owed</th>
-              <th>Partial Paid</th>
-              <th>Due Date</th>
+              <th>Outstanding Balance</th>
+              <th>Soonest Due Date</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="receivables-table-body">
+            <tr><td colspan="6" class="text-center text-muted py-3">Loading receivables...</td></tr>
           </tbody>
         </table>
       </div>
@@ -72,7 +71,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Add Receivable</h5>
+        <h5 class="modal-title" id="addReceivableModalLabel">Add Receivable</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -93,13 +92,66 @@
           <input type="number" id="amountOwed" class="form-control" step="0.01" required>
         </div>
         <div class="mb-3">
+          <label class="form-label">Approved By Staff *</label>
+          <input type="text" id="approvedByStaff" class="form-control" placeholder="Enter staff name" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Date Taken / Incurred *</label>
+          <input type="date" id="incurredDate" class="form-control" required>
+        </div>
+        <div class="mb-3">
           <label class="form-label">Due Date *</label>
           <input type="date" id="dueDate" class="form-control" required>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-warning" onclick="createReceivable()">Create</button>
+        <button type="button" class="btn btn-warning text-dark" onclick="createReceivable()">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Order (Debt Summary) Modal -->
+<div class="modal fade" id="viewOrderModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Debt Summary: <span id="viewCustomerName">—</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-sm-6">
+            <small class="text-muted d-block">Contact Info</small>
+            <div id="viewCustomerContact" class="fw-semibold">—</div>
+          </div>
+          <div class="col-sm-6 text-sm-end">
+            <small class="text-muted d-block">Outstanding Balance</small>
+            <div id="viewOutstandingBalance" class="h5 mb-0 text-danger fw-bold">₱0.00</div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Items</th>
+                <th>Date Taken</th>
+                <th>Amount</th>
+                <th>Paid</th>
+                <th>Due Date</th>
+                <th>Approved By</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="view-order-table-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -108,7 +160,7 @@
 <!-- Mark Paid Confirmation Modal -->
 <div class="modal fade" id="markPaidModal" tabindex="-1" aria-labelledby="markPaidModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content mark-paid-modal">
+    <div class="modal-content mark-paid-modal border-0 shadow-lg">
       <div class="modal-body text-center p-4 p-md-5">
         <div class="mark-paid-icon mb-3">
           <i class="bi bi-check-circle-fill"></i>
@@ -149,8 +201,8 @@
   .due-today td:nth-child(3),
   .due-today td:nth-child(4),
   .due-today td:nth-child(5) {
-    background-color: #ffcccc !important;
-    font-weight: 600;
+    background-color: #ffebeb !important;
+    color: #b91c1c;
   }
 
   .mark-paid-modal {
@@ -189,6 +241,26 @@ const socket = io();
 let receivablesCache = [];
 let pendingMarkPaidId = null;
 let markPaidModalInstance = null;
+let viewOrderModalInstance = null;
+
+function getDueStatusText(dueDateStr, paid) {
+  if (paid) return "";
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const due = new Date(dueDateStr);
+  due.setHours(0,0,0,0);
+  
+  const diffTime = due - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays > 0) {
+    return ` <span class="text-muted small">(${diffDays} days left)</span>`;
+  } else if (diffDays === 0) {
+    return ` <span class="text-warning fw-semibold small">(due today)</span>`;
+  } else {
+    return ` <span class="text-danger fw-semibold small">(${Math.abs(diffDays)} days overdue)</span>`;
+  }
+}
 
 socket.on('receivables_update', function(data) {
   console.log('Receivables update:', data);
@@ -208,6 +280,16 @@ document.addEventListener('DOMContentLoaded', function() {
   if (markPaidEl) {
     markPaidModalInstance = new bootstrap.Modal(markPaidEl);
     document.getElementById('confirmMarkPaidBtn').addEventListener('click', confirmMarkPaid);
+    
+    // Add event listener to reopen View Order Modal if cancelled
+    markPaidEl.addEventListener('hidden.bs.modal', function () {
+      const reopenCustomer = this.getAttribute('data-reopen-customer');
+      this.removeAttribute('data-reopen-customer');
+      if (reopenCustomer && pendingMarkPaidId) {
+        pendingMarkPaidId = null;
+        openViewOrderModal(reopenCustomer);
+      }
+    });
   }
 });
 
@@ -215,102 +297,251 @@ function loadReceivables() {
   fetch('/admin/receivables/api/receivables').then(r => r.json()).then(data => {
     if (data.success) {
       receivablesCache = data.data;
-      const today = new Date().toISOString().split('T')[0];
-      let totalUnpaid = 0;
-      let unpaidCount = 0;
-
-      // Desktop table
-      const tbody = document.getElementById('receivables-table-body');
-      tbody.innerHTML = '';
-
-      // Mobile cards
-      const cardContainer = document.getElementById('receivables-card-container');
-      document.getElementById('receivables-count').innerText = `${data.data.length} record(s)`;
-
-      if (!data.data.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">No receivables found.</td></tr>';
-        cardContainer.innerHTML = '<p class="text-center text-muted py-4">No receivables found.</p>';
-        document.getElementById('total-unpaid').textContent = '0.00';
-        document.getElementById('unpaid-count').textContent = '0';
-        return;
-      }
-
-      let cardHtml = '<div class="d-flex flex-column gap-2">';
-
-      data.data.forEach(rec => {
-        if (!rec.paid && rec.due_date <= today) {
-          totalUnpaid += rec.amount_owed - rec.partial_paid;
-          unpaidCount++;
-        }
-
-        const isDueToday = rec.due_date === today && !rec.paid;
-        const rowClass = isDueToday ? 'due-today' : '';
-        const statusBadge = rec.paid ? '<span class="badge bg-success">Paid</span>' : '<span class="badge bg-danger">Unpaid</span>';
-
-        // Desktop row
-        tbody.innerHTML += `
-          <tr class="${rowClass}">
-            <td>${rec.customer_name}</td>
-            <td>${rec.customer_contact || '-'}</td>
-            <td>${rec.items}</td>
-            <td>₱${rec.amount_owed.toFixed(2)}</td>
-            <td>₱${rec.partial_paid.toFixed(2)}</td>
-            <td>${rec.due_date}</td>
-            <td>${statusBadge}</td>
-            <td>${!rec.paid ? `<button class="btn btn-sm btn-success" onclick="openMarkPaidModal(${rec.id})">Mark Paid</button>` : ''}</td>
-          </tr>
-        `;
-
-        // Mobile card
-        cardHtml += `
-          <div class="record-card ${isDueToday ? 'border-warning' : ''}">
-            <div class="record-card-header">
-              <div>
-                <div class="record-card-title">${rec.customer_name}</div>
-                <div class="record-card-subtitle">${rec.customer_contact || 'No contact'}</div>
-              </div>
-              ${statusBadge}
-            </div>
-            <div class="record-card-body">
-              <div class="record-card-row">
-                <span class="record-card-label">Items:</span>
-                <span class="record-card-value">${rec.items}</span>
-              </div>
-              <div class="record-card-row">
-                <span class="record-card-label">Amount Owed:</span>
-                <span class="record-card-value">₱${rec.amount_owed.toFixed(2)}</span>
-              </div>
-              <div class="record-card-row">
-                <span class="record-card-label">Partial Paid:</span>
-                <span class="record-card-value">₱${rec.partial_paid.toFixed(2)}</span>
-              </div>
-              <div class="record-card-row">
-                <span class="record-card-label">Due Date:</span>
-                <span class="record-card-value">${rec.due_date}</span>
-              </div>
-            </div>
-            <div class="record-card-footer">
-              ${!rec.paid ? `<button class="btn btn-sm btn-success" onclick="openMarkPaidModal(${rec.id})">Mark Paid</button>` : ''}
-            </div>
-          </div>
-        `;
-      });
-
-      cardHtml += '</div>';
-      cardContainer.innerHTML = cardHtml;
-      document.getElementById('total-unpaid').textContent = totalUnpaid.toFixed(2);
-      document.getElementById('unpaid-count').textContent = unpaidCount;
+      renderReceivablesList();
     }
   });
 }
 
+function renderReceivablesList() {
+  const today = new Date().toISOString().split('T')[0];
+  let totalUnpaid = 0;
+  let unpaidCount = 0;
+
+  // Group by customer_name
+  const groups = {};
+  receivablesCache.forEach(rec => {
+    // Total calculation: sum of all unpaid receivables
+    if (!rec.paid) {
+      totalUnpaid += (rec.amount_owed - rec.partial_paid);
+      unpaidCount++;
+    }
+
+    const name = rec.customer_name.trim();
+    if (!groups[name]) {
+      groups[name] = {
+        customer_name: name,
+        customer_contact: rec.customer_contact || '',
+        total_owed: 0,
+        total_partial_paid: 0,
+        outstanding_balance: 0,
+        soonest_due_date: null,
+        has_unpaid: false,
+        records: []
+      };
+    }
+    
+    groups[name].records.push(rec);
+    if (!rec.paid) {
+      groups[name].has_unpaid = true;
+      groups[name].outstanding_balance += (rec.amount_owed - rec.partial_paid);
+      if (!groups[name].soonest_due_date || rec.due_date < groups[name].soonest_due_date) {
+        groups[name].soonest_due_date = rec.due_date;
+      }
+    }
+    groups[name].total_owed += rec.amount_owed;
+    groups[name].total_partial_paid += rec.partial_paid;
+
+    if (!groups[name].customer_contact && rec.customer_contact) {
+      groups[name].customer_contact = rec.customer_contact;
+    }
+  });
+
+  const sortedGroups = Object.values(groups).sort((a, b) => {
+    if (a.has_unpaid && !b.has_unpaid) return -1;
+    if (!a.has_unpaid && b.has_unpaid) return 1;
+    if (a.soonest_due_date && b.soonest_due_date) {
+      return a.soonest_due_date.localeCompare(b.soonest_due_date);
+    }
+    return a.customer_name.localeCompare(b.customer_name);
+  });
+
+  document.getElementById('total-unpaid').textContent = totalUnpaid.toFixed(2);
+  document.getElementById('unpaid-count').textContent = unpaidCount;
+  document.getElementById('receivables-count').textContent = `${sortedGroups.length} debtor(s) found`;
+
+  // Desktop table
+  const tbody = document.getElementById('receivables-table-body');
+  tbody.innerHTML = '';
+
+  // Mobile container
+  const cardContainer = document.getElementById('receivables-card-container');
+  cardContainer.innerHTML = '';
+
+  if (!sortedGroups.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No receivables found.</td></tr>';
+    cardContainer.innerHTML = '<p class="text-center text-muted py-4">No receivables found.</p>';
+    return;
+  }
+
+  let cardHtml = '<div class="d-flex flex-column gap-2">';
+
+  sortedGroups.forEach(g => {
+    const isOverdue = g.has_unpaid && g.soonest_due_date && g.soonest_due_date < today;
+    const statusBadge = g.outstanding_balance > 0
+      ? (isOverdue ? '<span class="badge bg-danger">Overdue</span>' : '<span class="badge bg-warning text-dark">Unpaid</span>')
+      : '<span class="badge bg-success">Paid</span>';
+    
+    const rowClass = isOverdue ? 'due-today' : '';
+    const safeName = g.customer_name.replace(/'/g, "\\'");
+    const dueStatus = g.soonest_due_date ? getDueStatusText(g.soonest_due_date, !g.has_unpaid) : '';
+
+    // Desktop Row
+    tbody.innerHTML += `
+      <tr class="${rowClass}">
+        <td class="fw-semibold">${g.customer_name}</td>
+        <td>${g.customer_contact || '-'}</td>
+        <td class="${g.outstanding_balance > 0 ? 'text-danger' : 'text-success'} fw-semibold">₱${g.outstanding_balance.toFixed(2)}</td>
+        <td>${g.soonest_due_date || 'N/A'}${dueStatus}</td>
+        <td>${statusBadge}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-warning text-dark me-1" onclick="openAddOrderModal('${safeName}')">Add Order</button>
+          <button class="btn btn-sm btn-warning text-dark" onclick="openViewOrderModal('${safeName}')">View Order</button>
+        </td>
+      </tr>
+    `;
+
+    // Mobile Card
+    cardHtml += `
+      <div class="record-card ${isOverdue ? 'border-danger shadow-sm' : ''}" style="${isOverdue ? 'border-left: 4px solid #dc3545 !important;' : ''}">
+        <div class="record-card-header">
+          <div>
+            <div class="record-card-title fw-bold">${g.customer_name}</div>
+            <div class="record-card-subtitle text-muted">${g.customer_contact || 'No contact'}</div>
+          </div>
+          ${statusBadge}
+        </div>
+        <div class="record-card-body">
+          <div class="record-card-row">
+            <span class="record-card-label">Outstanding Balance:</span>
+            <span class="record-card-value fw-bold ${g.outstanding_balance > 0 ? 'text-danger' : 'text-success'}">₱${g.outstanding_balance.toFixed(2)}</span>
+          </div>
+          <div class="record-card-row">
+            <span class="record-card-label">Soonest Due:</span>
+            <span class="record-card-value">${g.soonest_due_date || 'N/A'}${dueStatus}</span>
+          </div>
+        </div>
+        <div class="record-card-footer d-flex gap-2">
+          <button class="btn btn-sm btn-outline-warning text-dark" onclick="openAddOrderModal('${safeName}')">Add Order</button>
+          <button class="btn btn-sm btn-warning text-dark" onclick="openViewOrderModal('${safeName}')">View Order</button>
+        </div>
+      </div>
+    `;
+  });
+
+  cardHtml += '</div>';
+  cardContainer.innerHTML = cardHtml;
+}
+
+function openNewReceivableModal() {
+  document.getElementById('addReceivableModalLabel').textContent = 'Add Receivable';
+  document.getElementById('customerName').value = '';
+  document.getElementById('customerName').readOnly = false;
+  document.getElementById('customerContact').value = '';
+  document.getElementById('customerContact').readOnly = false;
+  document.getElementById('itemsDesc').value = '';
+  document.getElementById('amountOwed').value = '';
+  document.getElementById('approvedByStaff').value = '';
+  document.getElementById('incurredDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('dueDate').value = '';
+
+  const addModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addReceivableModal'));
+  addModal.show();
+}
+
+function openAddOrderModal(customerName) {
+  const records = receivablesCache.filter(r => r.customer_name.trim() === customerName.trim());
+  const contact = records.length ? (records[0].customer_contact || '') : '';
+  
+  document.getElementById('addReceivableModalLabel').textContent = `Add Order for ${customerName}`;
+  document.getElementById('customerName').value = customerName;
+  document.getElementById('customerName').readOnly = true;
+  document.getElementById('customerContact').value = contact;
+  document.getElementById('customerContact').readOnly = contact !== '';
+  
+  document.getElementById('itemsDesc').value = '';
+  document.getElementById('amountOwed').value = '';
+  document.getElementById('approvedByStaff').value = '';
+  document.getElementById('incurredDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('dueDate').value = '';
+
+  const addModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addReceivableModal'));
+  addModal.show();
+}
+
+function openViewOrderModal(customerName) {
+  const records = receivablesCache.filter(r => r.customer_name.trim() === customerName.trim());
+  if (!records.length) return;
+
+  // If there's an open view order modal already, let's close it
+  const viewEl = document.getElementById('viewOrderModal');
+  const existingInst = bootstrap.Modal.getInstance(viewEl);
+  if (existingInst) {
+    existingInst.hide();
+  }
+
+  document.getElementById('viewCustomerName').textContent = customerName;
+  document.getElementById('viewCustomerContact').textContent = records[0].customer_contact || 'None';
+  
+  let unpaidTotal = 0;
+  records.forEach(r => {
+    if (!r.paid) {
+      unpaidTotal += (r.amount_owed - r.partial_paid);
+    }
+  });
+  document.getElementById('viewOutstandingBalance').textContent = '₱' + unpaidTotal.toFixed(2);
+
+  const tbody = document.getElementById('view-order-table-body');
+  tbody.innerHTML = '';
+
+  records.forEach(r => {
+    const statusBadge = r.paid 
+      ? '<span class="badge bg-success">Paid</span>' 
+      : '<span class="badge bg-danger">Unpaid</span>';
+    
+    const actionBtn = !r.paid 
+      ? `<button class="btn btn-sm btn-success py-1" onclick="openMarkPaidModal(${r.id})">Mark Paid</button>`
+      : '-';
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${r.items}</td>
+        <td>${r.incurred_date || '-'}</td>
+        <td>₱${r.amount_owed.toFixed(2)}</td>
+        <td>₱${r.partial_paid.toFixed(2)}</td>
+        <td>${r.due_date}${getDueStatusText(r.due_date, r.paid)}</td>
+        <td>${r.approved_by_staff || '-'}</td>
+        <td>${statusBadge}</td>
+        <td>${actionBtn}</td>
+      </tr>
+    `;
+  });
+
+  viewOrderModalInstance = new bootstrap.Modal(viewEl);
+  viewOrderModalInstance.show();
+}
+
 function createReceivable() {
+  const customerName = document.getElementById('customerName').value.trim();
+  const customerContact = document.getElementById('customerContact').value.trim();
+  const itemsDesc = document.getElementById('itemsDesc').value.trim();
+  const amountOwed = document.getElementById('amountOwed').value.trim();
+  const approvedByStaff = document.getElementById('approvedByStaff').value.trim();
+  const incurredDate = document.getElementById('incurredDate').value.trim();
+  const dueDate = document.getElementById('dueDate').value.trim();
+
+  if (!customerName || !itemsDesc || !amountOwed || !approvedByStaff || !incurredDate || !dueDate) {
+    showToast('Please fill in all required fields.', 'error');
+    return;
+  }
+
   const payload = {
-    customer_name: document.getElementById('customerName').value,
-    customer_contact: document.getElementById('customerContact').value,
-    items_description: document.getElementById('itemsDesc').value,
-    amount_owed: document.getElementById('amountOwed').value,
-    due_date: document.getElementById('dueDate').value,
+    customer_name: customerName,
+    customer_contact: customerContact,
+    items_description: itemsDesc,
+    amount_owed: parseFloat(amountOwed),
+    approved_by_staff: approvedByStaff,
+    incurred_date: incurredDate,
+    due_date: dueDate,
   };
 
   csrfFetch('/admin/receivables/api/receivables', {
@@ -319,17 +550,18 @@ function createReceivable() {
     body: JSON.stringify(payload)
   }).then(r => r.json()).then(data => {
     if (data.success) {
-      showToast('Receivable created', 'success');
-      bootstrap.Modal.getInstance(document.getElementById('addReceivableModal')).hide();
-      document.getElementById('customerName').value = '';
-      document.getElementById('customerContact').value = '';
-      document.getElementById('itemsDesc').value = '';
-      document.getElementById('amountOwed').value = '';
-      document.getElementById('dueDate').value = '';
+      showToast('Receivable logged successfully', 'success');
+      
+      const modalEl = document.getElementById('addReceivableModal');
+      const inst = bootstrap.Modal.getInstance(modalEl);
+      if (inst) inst.hide();
+      
       loadReceivables();
     } else {
-      showToast('Error creating receivable', 'error');
+      showToast(data.error || 'Error creating receivable', 'error');
     }
+  }).catch(() => {
+    showToast('Error creating receivable', 'error');
   });
 }
 
@@ -341,6 +573,17 @@ function openMarkPaidModal(recId) {
   document.getElementById('markPaidCustomer').textContent = rec.customer_name || '—';
   document.getElementById('markPaidAmount').textContent = '₱' + (rec.amount_owed - rec.partial_paid).toFixed(2);
   document.getElementById('markPaidDueDate').textContent = rec.due_date || '—';
+
+  // If viewOrderModal is open, let's hide it first
+  const viewEl = document.getElementById('viewOrderModal');
+  const viewModal = bootstrap.Modal.getInstance(viewEl);
+  if (viewModal) {
+    viewModal.hide();
+    // store that we came from viewOrderModal so we can reopen it if cancelled
+    document.getElementById('markPaidModal').setAttribute('data-reopen-customer', rec.customer_name);
+  } else {
+    document.getElementById('markPaidModal').removeAttribute('data-reopen-customer');
+  }
 
   if (markPaidModalInstance) {
     markPaidModalInstance.show();
@@ -362,10 +605,23 @@ function confirmMarkPaid() {
     btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Confirm Paid';
 
     if (data.success) {
+      const reopenCustomer = document.getElementById('markPaidModal').getAttribute('data-reopen-customer');
+      document.getElementById('markPaidModal').removeAttribute('data-reopen-customer');
+      
       if (markPaidModalInstance) markPaidModalInstance.hide();
       pendingMarkPaidId = null;
       showToast('Marked as paid', 'success');
-      loadReceivables();
+      
+      // reload receivables and then reopen the view modal if we came from it
+      fetch('/admin/receivables/api/receivables').then(r => r.json()).then(res => {
+        if (res.success) {
+          receivablesCache = res.data;
+          renderReceivablesList(); // update main table
+          if (reopenCustomer) {
+            openViewOrderModal(reopenCustomer);
+          }
+        }
+      });
     } else {
       showToast(data.error || 'Error marking as paid', 'error');
     }

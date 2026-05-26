@@ -266,11 +266,6 @@
             <i class="bi bi-receipt me-2"></i>Checkout Records
         </button>
 
-        {% if session.get("role") == "admin" %}
-        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/daily-sales'">
-            <i class="bi bi-bar-chart me-2"></i>Daily Sales
-        </button>
-        {% endif %}
 
         <button class="btn w-100 text-start mb-2 sidebar-btn nav-btn" onclick="window.location.href='/lounge-booking'">
             <i class="bi bi-calendar-check me-2"></i>Boardroom Booking
@@ -349,6 +344,10 @@
             <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/receivables'">
                 <i class="bi bi-people me-2"></i>Receivables
                 <span id="debt-badge" class="badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
+            </button>
+            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/payables'">
+                <i class="bi bi-card-checklist me-2"></i>Payables
+                <span class="payables-badge badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
             </button>
         </div>
 
@@ -788,6 +787,34 @@ window.csrfFetch = function(url, options) {
     window.createSmartPoller(poll, 60000);
   })();
 </script>
+
+{% if session.get("role") == "admin" %}
+<script>
+  /* Poll for payables due/overdue count and show count badge on sidebar/drawer link */
+  (function payablesDueNotifier() {
+    const badges = document.querySelectorAll(".payables-badge");
+    async function poll() {
+      try {
+        const res = await fetch("/admin/payables/api/due-count", { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success) return;
+        const count = data.count || 0;
+        badges.forEach(badge => {
+          if (!badge) return;
+          if (count > 0) {
+            badge.style.display = "inline-block";
+            badge.textContent = count;
+          } else {
+            badge.style.display = "none";
+          }
+        });
+      } catch (_) {}
+    }
+    window.createSmartPoller(poll, 60000);
+  })();
+</script>
+{% endif %}
 
 </body>
 

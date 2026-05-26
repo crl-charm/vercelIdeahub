@@ -1,7 +1,8 @@
 {# Shared mobile offcanvas navigation (mirrors desktop sidebar) #}
 <div class="sidebar-section-label">Navigation</div>
 {% if session.get("role") == "admin" %}
-<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" style="background-color: #fff3cd; border: 2px solid #ffc107; color: #856404; font-weight: 600;" data-href="/admin">
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn"
+  style="background-color: #fff3cd; border: 2px solid #ffc107; color: #856404; font-weight: 600;" data-href="/admin">
   <i class="bi bi-shield-lock me-2"></i>Admin Panel
 </button>
 {% endif %}
@@ -11,20 +12,17 @@
 <button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/checkout-records">
   <i class="bi bi-receipt me-2"></i>Checkout Records
 </button>
-{% if session.get("role") == "admin" %}
-<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/daily-sales">
-  <i class="bi bi-bar-chart me-2"></i>Daily Sales
-</button>
-{% endif %}
 <button type="button" class="btn w-100 text-start mb-2 drawer-nav-btn nav-btn" data-href="/lounge-booking">
   <i class="bi bi-calendar-check me-2"></i>Boardroom Booking
 </button>
 
 <div class="sidebar-section-label">Spaces</div>
-<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn space-btn" data-href="/dashboard?space=Regular%20Lounge">
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn space-btn"
+  data-href="/dashboard?space=Regular%20Lounge">
   <i class="bi bi-person me-2"></i>Regular
 </button>
-<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn space-btn" data-href="/dashboard?space=Premium%20Lounge">
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn space-btn"
+  data-href="/dashboard?space=Premium%20Lounge">
   <i class="bi bi-star me-2"></i>Premium
 </button>
 <button type="button" class="btn w-100 text-start mb-2 drawer-nav-btn space-btn" data-href="/dashboard?space=Boardroom">
@@ -52,6 +50,10 @@
 <div class="sidebar-section-label">Finance</div>
 <button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/daily-balance">
   <i class="bi bi-cash-stack me-2"></i>Daily Balance
+</button>
+<button type="button" class="btn w-100 text-start mb-2 drawer-nav-btn nav-btn" data-href="/admin/payables">
+  <i class="bi bi-card-checklist me-2"></i>Payables
+  <span class="payables-badge badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
 </button>
 <button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/staff-performance">
   <i class="bi bi-trophy me-2"></i>Performance
