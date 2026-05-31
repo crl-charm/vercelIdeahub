@@ -62,19 +62,31 @@ class SalesRepository:
         if not dates:
             return {}
         is_gcash = Transaction.payment_method == "gcash"
+        is_bdo = Transaction.payment_method == "bdo"
+        is_bpi = Transaction.payment_method == "bpi"
         rows = (
             Transaction.query.with_entities(
                 func.date(Transaction.created_at).label("tx_date"),
                 func.coalesce(
-                    func.sum(case((is_gcash, 0), else_=Transaction.total_bill)),
+                    func.sum(case((is_gcash | is_bdo | is_bpi, 0), else_=Transaction.total_bill)),
                     0,
                 ).label("cash_total"),
                 func.coalesce(
                     func.sum(case((is_gcash, Transaction.total_bill), else_=0)),
                     0,
                 ).label("gcash_total"),
-                func.coalesce(func.sum(case((is_gcash, 0), else_=1)), 0).label("cash_count"),
+                func.coalesce(
+                    func.sum(case((is_bdo, Transaction.total_bill), else_=0)),
+                    0,
+                ).label("bdo_total"),
+                func.coalesce(
+                    func.sum(case((is_bpi, Transaction.total_bill), else_=0)),
+                    0,
+                ).label("bpi_total"),
+                func.coalesce(func.sum(case((is_gcash | is_bdo | is_bpi, 0), else_=1)), 0).label("cash_count"),
                 func.coalesce(func.sum(case((is_gcash, 1), else_=0)), 0).label("gcash_count"),
+                func.coalesce(func.sum(case((is_bdo, 1), else_=0)), 0).label("bdo_count"),
+                func.coalesce(func.sum(case((is_bpi, 1), else_=0)), 0).label("bpi_count"),
             )
             .filter(func.date(Transaction.created_at).in_(dates))
             .group_by(func.date(Transaction.created_at))
@@ -85,10 +97,23 @@ class SalesRepository:
             result[row.tx_date] = {
                 "cash_total": float(row.cash_total or 0),
                 "gcash_total": float(row.gcash_total or 0),
+                "bdo_total": float(row.bdo_total or 0),
+                "bpi_total": float(row.bpi_total or 0),
                 "cash_count": int(row.cash_count or 0),
                 "gcash_count": int(row.gcash_count or 0),
+                "bdo_count": int(row.bdo_count or 0),
+                "bpi_count": int(row.bpi_count or 0),
             }
-        empty = {"cash_total": 0.0, "gcash_total": 0.0, "cash_count": 0, "gcash_count": 0}
+        empty = {
+            "cash_total": 0.0,
+            "gcash_total": 0.0,
+            "bdo_total": 0.0,
+            "bpi_total": 0.0,
+            "cash_count": 0,
+            "gcash_count": 0,
+            "bdo_count": 0,
+            "bpi_count": 0,
+        }
         return {d: result.get(d, empty) for d in dates}
 
     def get_daily_transactions(self, report_date: date) -> list[Transaction]:

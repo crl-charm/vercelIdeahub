@@ -79,8 +79,12 @@ class SalesService:
                     "notes": r.notes,
                     "cash_total": float(pay.get("cash_total", 0)),
                     "gcash_total": float(pay.get("gcash_total", 0)),
+                    "bdo_total": float(pay.get("bdo_total", 0)),
+                    "bpi_total": float(pay.get("bpi_total", 0)),
                     "cash_count": int(pay.get("cash_count", 0)),
                     "gcash_count": int(pay.get("gcash_count", 0)),
+                    "bdo_count": int(pay.get("bdo_count", 0)),
+                    "bpi_count": int(pay.get("bpi_count", 0)),
                 }
             )
         return shaped

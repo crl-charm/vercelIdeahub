@@ -16,4 +16,4 @@ if __name__ == "__main__":
     # Disable debug mode in production
     debug_mode = os.environ.get('FLASK_ENV') != 'production'
     socketio.run(app, host="0.0.0.0", port=5001, debug=debug_mode, allow_unsafe_werkzeug=True)
-    
+

@@ -5,13 +5,14 @@ from typing import TypedDict, Optional
 
 from sqlalchemy import func, and_
 
-from app.models import Transaction, OrderItem, MenuItem, Order
+from app.models import Transaction, OrderItem, MenuItem, Order, CustomerSession
 from app.services.export_service import ExportService
 
 
 class AnalyticsSummary(TypedDict):
     daily_sales: list[dict]
     top_foods: list[dict]
+    top_customers: list[dict]
     date_range: dict
 
 
@@ -94,9 +95,39 @@ class AnalyticsReportService(ExportService):
             for row in top_foods_rows
         ]
 
+        # Get top customers
+        top_customers_rows = (
+            self._db.session.query(
+                CustomerSession.customer_name,
+                func.count(CustomerSession.id).label("visits"),
+                func.sum(Transaction.total_bill).label("total_spent"),
+            )
+            .join(Transaction, Transaction.session_id == CustomerSession.id)
+            .filter(
+                and_(
+                    func.date(Transaction.created_at) >= start_date,
+                    func.date(Transaction.created_at) <= end_date,
+                )
+            )
+            .group_by(CustomerSession.customer_name)
+            .order_by(func.sum(Transaction.total_bill).desc())
+            .limit(10)
+            .all()
+        )
+        
+        top_customers = [
+            {
+                "name": row.customer_name,
+                "visits": int(row.visits or 0),
+                "total_spent": float(row.total_spent or 0),
+            }
+            for row in top_customers_rows
+        ]
+
         return {
             "daily_sales": daily_sales,
             "top_foods": top_foods,
+            "top_customers": top_customers,
             "date_range": {
                 "start": str(start_date),
                 "end": str(end_date),

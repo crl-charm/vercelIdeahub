@@ -261,14 +261,16 @@
     margin-bottom: 0.5rem;
   }
 
-  .form-control, .form-select {
+  .form-control,
+  .form-select {
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     padding: 0.75rem 1rem;
     transition: all 0.3s ease;
   }
 
-  .form-control:focus, .form-select:focus {
+  .form-control:focus,
+  .form-select:focus {
     border-color: #ff8c42;
     box-shadow: 0 0 0 0.2rem rgba(255, 140, 66, 0.1);
   }
@@ -382,13 +384,8 @@
     <button class="btn-add-menu" data-bs-toggle="modal" data-bs-target="#addItemModal">
       + Add Menu Item
     </button>
-    <button
-      id="btnAddVariants"
-      class="btn-add-menu"
-      style="display: none;"
-      data-bs-toggle="modal"
-      data-bs-target="#variantModal"
-    >
+    <button id="btnAddVariants" class="btn-add-menu" style="display: none;" data-bs-toggle="modal"
+      data-bs-target="#variantModal">
       + Add Beverage Variants
     </button>
   </div>
@@ -433,7 +430,8 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Description</label>
-            <textarea id="description" class="form-control" placeholder="Brief description of the item" rows="3"></textarea>
+            <textarea id="description" class="form-control" placeholder="Brief description of the item"
+              rows="3"></textarea>
           </div>
           <div class="mb-3">
             <label class="form-label">Picture Upload</label>
@@ -463,39 +461,22 @@
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Base name *</label>
-            <input
-              type="text"
-              id="variantBaseName"
-              class="form-control"
-              placeholder="e.g., Latte"
-              required
-            >
+            <input type="text" id="variantBaseName" class="form-control" placeholder="e.g., Latte" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Variant labels *</label>
-            <input
-              type="text"
-              id="variantLabels"
-              class="form-control"
-              placeholder="e.g., Hot,Iced"
-              required
-            >
+            <input type="text" id="variantLabels" class="form-control" placeholder="e.g., Hot,Iced" required>
             <div class="form-text text-muted">Comma-separated. Each label becomes a variant prefix.</div>
           </div>
           <div class="mb-3">
             <label class="form-label">Variant prices (₱) *</label>
-            <input
-              type="text"
-              id="variantPrices"
-              class="form-control"
-              placeholder="e.g., 80,95"
-              required
-            >
+            <input type="text" id="variantPrices" class="form-control" placeholder="e.g., 80,95" required>
             <div class="form-text text-muted">Must match the number of labels.</div>
           </div>
           <div class="mb-3">
             <label class="form-label">Description</label>
-            <textarea id="variantDescription" class="form-control" placeholder="Shared description for all variants" rows="3"></textarea>
+            <textarea id="variantDescription" class="form-control" placeholder="Shared description for all variants"
+              rows="3"></textarea>
           </div>
           <div class="mb-3">
             <label class="form-label">Picture Upload</label>
@@ -542,7 +523,8 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Description</label>
-            <textarea id="editDescription" class="form-control" placeholder="Brief description of the item" rows="3"></textarea>
+            <textarea id="editDescription" class="form-control" placeholder="Brief description of the item"
+              rows="3"></textarea>
           </div>
           <div class="mb-3">
             <label class="form-label">Picture Upload</label>
@@ -565,180 +547,180 @@
 
 {% block scripts %}
 <script>
-let currentItemId = null;
-let allItems = [];
-let currentFilter = 'All';
-const CATEGORIES = ["Main Dish", "Snack", "Beverages"];
+  let currentItemId = null;
+  let allItems = [];
+  let currentFilter = 'All';
+  const CATEGORIES = ["Main Dish", "Snack", "Beverages"];
 
-// Socket.IO for real-time updates
-const socket = io();
+  // Socket.IO for real-time updates
+  const socket = io();
 
-socket.on('menu_update', function(data) {
-  console.log('Menu update:', data);
-  loadItems();
-  if (data.event === 'create') {
-    showToast('✓ New menu item added!', 'success');
-  } else if (data.event === 'update') {
-    showToast('✓ Menu item updated!', 'success');
-  } else if (data.event === 'delete') {
-    showToast('✓ Menu item deleted!', 'success');
-  } else if (data.event === 'availability_toggle') {
-    showToast('✓ Item availability toggled!', 'success');
-  }
-});
-
-socket.on('connect', function() {
-  console.log('Connected to server for real-time updates');
-});
-
-socket.on('disconnect', function() {
-  console.log('Disconnected from server');
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  loadItems();
-  setupEventListeners();
-  setupImagePreviews();
-  initializeCategoryTabs();
-});
-
-function initializeCategoryTabs() {
-  const container = document.getElementById('categoryTabs');
-  container.innerHTML = '<div class="category-tab active" data-category="All">All Items</div>';
-  
-  CATEGORIES.forEach(cat => {
-    const tab = document.createElement('div');
-    tab.className = 'category-tab';
-    tab.textContent = cat;
-    tab.dataset.category = cat;
-    container.appendChild(tab);
-  });
-  
-  setupEventListeners();
-}
-
-function setupEventListeners() {
-  document.querySelectorAll('.category-tab').forEach(tab => {
-    tab.removeEventListener('click', tabClickHandler);
-    tab.addEventListener('click', tabClickHandler);
-  });
-  
-  // Add search input listener
-  const searchInput = document.getElementById('searchInput');
-  if (searchInput) {
-    searchInput.removeEventListener('input', searchInputHandler);
-    searchInput.addEventListener('input', searchInputHandler);
-  }
-}
-
-function searchInputHandler() {
-  filterAndRender();
-}
-
-function tabClickHandler() {
-  document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
-  this.classList.add('active');
-  currentFilter = this.dataset.category;
-  filterAndRender();
-}
-
-function setupImagePreviews() {
-  document.getElementById('image').addEventListener('change', function(e) {
-    const preview = document.getElementById('imagePreview1');
-    if (e.target.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        preview.src = event.target.result;
-        preview.classList.add('show');
-      };
-      reader.readAsDataURL(e.target.files[0]);
+  socket.on('menu_update', function (data) {
+    console.log('Menu update:', data);
+    loadItems();
+    if (data.event === 'create') {
+      showToast('✓ New menu item added!', 'success');
+    } else if (data.event === 'update') {
+      showToast('✓ Menu item updated!', 'success');
+    } else if (data.event === 'delete') {
+      showToast('✓ Menu item deleted!', 'success');
+    } else if (data.event === 'availability_toggle') {
+      showToast('✓ Item availability toggled!', 'success');
     }
   });
 
-  document.getElementById('editImage').addEventListener('change', function(e) {
-    const preview = document.getElementById('imagePreview2');
-    if (e.target.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        preview.src = event.target.result;
-        preview.classList.add('show');
-      };
-      reader.readAsDataURL(e.target.files[0]);
-    }
+  socket.on('connect', function () {
+    console.log('Connected to server for real-time updates');
   });
 
-  const variantImageInput = document.getElementById('variantImage');
-  if (variantImageInput) {
-    variantImageInput.addEventListener('change', function(e) {
-      const preview = document.getElementById('variantImagePreview');
+  socket.on('disconnect', function () {
+    console.log('Disconnected from server');
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    loadItems();
+    setupEventListeners();
+    setupImagePreviews();
+    initializeCategoryTabs();
+  });
+
+  function initializeCategoryTabs() {
+    const container = document.getElementById('categoryTabs');
+    container.innerHTML = '<div class="category-tab active" data-category="All">All Items</div>';
+
+    CATEGORIES.forEach(cat => {
+      const tab = document.createElement('div');
+      tab.className = 'category-tab';
+      tab.textContent = cat;
+      tab.dataset.category = cat;
+      container.appendChild(tab);
+    });
+
+    setupEventListeners();
+  }
+
+  function setupEventListeners() {
+    document.querySelectorAll('.category-tab').forEach(tab => {
+      tab.removeEventListener('click', tabClickHandler);
+      tab.addEventListener('click', tabClickHandler);
+    });
+
+    // Add search input listener
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.removeEventListener('input', searchInputHandler);
+      searchInput.addEventListener('input', searchInputHandler);
+    }
+  }
+
+  function searchInputHandler() {
+    filterAndRender();
+  }
+
+  function tabClickHandler() {
+    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    currentFilter = this.dataset.category;
+    filterAndRender();
+  }
+
+  function setupImagePreviews() {
+    document.getElementById('image').addEventListener('change', function (e) {
+      const preview = document.getElementById('imagePreview1');
       if (e.target.files[0]) {
         const reader = new FileReader();
-        reader.onload = function(event) {
+        reader.onload = function (event) {
           preview.src = event.target.result;
           preview.classList.add('show');
         };
         reader.readAsDataURL(e.target.files[0]);
-      } else {
-        preview.classList.remove('show');
       }
     });
-  }
-}
 
-function parseMenuResponse(response) {
-  return response.json().then(data => {
-    if (response.status === 401) {
-      throw new Error(data.error || 'Session expired. Please refresh the page and log in again.');
-    }
-    if (!response.ok || data.success === false) {
-      throw new Error(data.error || `Request failed (${response.status})`);
-    }
-    return data;
-  });
-}
-
-function loadItems() {
-  fetch('/admin/menu/api/items/all', { credentials: 'include' })
-    .then(parseMenuResponse)
-    .then(data => {
-      allItems = data.data;
-      filterAndRender();
-    })
-    .catch(err => {
-      console.error('Load items error:', err);
-      showToast('✗ ' + err.message, 'error');
+    document.getElementById('editImage').addEventListener('change', function (e) {
+      const preview = document.getElementById('imagePreview2');
+      if (e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          preview.src = event.target.result;
+          preview.classList.add('show');
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
     });
-}
 
-function filterAndRender() {
-  const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-  const variantsBtn = document.getElementById('btnAddVariants');
-  if (variantsBtn) {
-    variantsBtn.style.display = currentFilter === 'Beverages' ? 'inline-flex' : 'none';
+    const variantImageInput = document.getElementById('variantImage');
+    if (variantImageInput) {
+      variantImageInput.addEventListener('change', function (e) {
+        const preview = document.getElementById('variantImagePreview');
+        if (e.target.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            preview.src = event.target.result;
+            preview.classList.add('show');
+          };
+          reader.readAsDataURL(e.target.files[0]);
+        } else {
+          preview.classList.remove('show');
+        }
+      });
+    }
   }
-  let filtered = currentFilter === 'All' ? allItems : allItems.filter(item => item.category === currentFilter);
-  
-  // Apply search filter
-  if (searchQuery) {
-    filtered = filtered.filter(item => {
-      const nameMatch = item.name && item.name.toLowerCase().includes(searchQuery);
-      const categoryMatch = item.category && item.category.toLowerCase().includes(searchQuery);
-      const descriptionMatch = item.description && typeof item.description === 'string' && item.description.toLowerCase().includes(searchQuery);
-      return nameMatch || categoryMatch || descriptionMatch;
+
+  function parseMenuResponse(response) {
+    return response.json().then(data => {
+      if (response.status === 401) {
+        throw new Error(data.error || 'Session expired. Please refresh the page and log in again.');
+      }
+      if (!response.ok || data.success === false) {
+        throw new Error(data.error || `Request failed (${response.status})`);
+      }
+      return data;
     });
   }
-  
-  const grid = document.getElementById('menuGrid');
-  const emptyState = document.getElementById('emptyState');
-  
-  if (filtered.length === 0) {
-    grid.innerHTML = '';
-    emptyState.style.display = 'block';
-    return;
+
+  function loadItems() {
+    fetch('/admin/menu/api/items/all', { credentials: 'include' })
+      .then(parseMenuResponse)
+      .then(data => {
+        allItems = data.data;
+        filterAndRender();
+      })
+      .catch(err => {
+        console.error('Load items error:', err);
+        showToast('✗ ' + err.message, 'error');
+      });
   }
-  
-  emptyState.style.display = 'none';
-  grid.innerHTML = filtered.map(item => `
+
+  function filterAndRender() {
+    const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+    const variantsBtn = document.getElementById('btnAddVariants');
+    if (variantsBtn) {
+      variantsBtn.style.display = currentFilter === 'Beverages' ? 'inline-flex' : 'none';
+    }
+    let filtered = currentFilter === 'All' ? allItems : allItems.filter(item => item.category === currentFilter);
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(item => {
+        const nameMatch = item.name && item.name.toLowerCase().includes(searchQuery);
+        const categoryMatch = item.category && item.category.toLowerCase().includes(searchQuery);
+        const descriptionMatch = item.description && typeof item.description === 'string' && item.description.toLowerCase().includes(searchQuery);
+        return nameMatch || categoryMatch || descriptionMatch;
+      });
+    }
+
+    const grid = document.getElementById('menuGrid');
+    const emptyState = document.getElementById('emptyState');
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '';
+      emptyState.style.display = 'block';
+      return;
+    }
+
+    emptyState.style.display = 'none';
+    grid.innerHTML = filtered.map(item => `
     <div class="menu-card">
       <div class="menu-card-image">
         ${item.image_url ? `<img src="${item.image_url}" alt="${item.name}">` : '<div class="menu-card-image-placeholder">🖼️</div>'}
@@ -750,170 +732,179 @@ function filterAndRender() {
         ${item.description ? `<p style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">${item.description}</p>` : ''}
         <div class="menu-card-price">₱${parseFloat(item.price).toFixed(2)}</div>
         <div class="status-badge ${item.is_available ? 'status-available' : 'status-unavailable'}">
-          ${item.is_available ? '✓ Available' : '✗ Unavailable'}
+          ${item.is_available ? '<i class="bi bi-check-circle me-1"></i> Available' : '<i class="bi bi-x-circle me-1"></i> Unavailable'}
         </div>
       </div>
       <div class="menu-card-actions">
         <button class="btn-icon btn-edit" onclick="editItem(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${item.category}', '${item.image_url || ''}')">
-          ✏️ Edit
+          <i class="bi bi-pencil-square"></i> Edit
         </button>
         <button class="btn-icon btn-toggle" onclick="toggleAvailability(${item.id})">
-          ${item.is_available ? '🔒 Disable' : '🔓 Enable'}
+          ${item.is_available ? '<i class="bi bi-lock"></i> Disable' : '<i class="bi bi-unlock"></i> Enable'}
         </button>
         <button class="btn-icon btn-delete" onclick="deleteItem(${item.id})">
-          🗑️ Delete
+          <i class="bi bi-trash3"></i> Delete
         </button>
       </div>
     </div>
   `).join('');
-}
-
-function createItem() {
-  const formData = new FormData();
-  formData.append('name', document.getElementById('itemName').value);
-  formData.append('category', document.getElementById('category').value);
-  formData.append('price', document.getElementById('price').value);
-  formData.append('description', document.getElementById('description').value);
-  
-  const imageFile = document.getElementById('image').files[0];
-  if (imageFile) {
-    formData.append('image', imageFile);
   }
 
-  csrfFetch('/admin/menu/api/items', {
-    method: 'POST',
-    body: formData,
-    headers: { 'Accept': 'application/json' }
-  })
-    .then(parseMenuResponse)
-    .then(() => {
-      showToast('✓ Menu item created successfully!', 'success');
-      bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
-      document.getElementById('addItemForm').reset();
-      document.getElementById('imagePreview1').classList.remove('show');
-      loadItems();
+  function createItem() {
+    const formData = new FormData();
+    formData.append('name', document.getElementById('itemName').value);
+    formData.append('category', document.getElementById('category').value);
+    formData.append('price', document.getElementById('price').value);
+    formData.append('description', document.getElementById('description').value);
+
+    const imageFile = document.getElementById('image').files[0];
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    csrfFetch('/admin/menu/api/items', {
+      method: 'POST',
+      body: formData,
+      headers: { 'Accept': 'application/json' }
     })
-    .catch(err => showToast('✗ ' + err.message, 'error'));
-}
-
-function createBeverageVariants() {
-  const baseName = document.getElementById('variantBaseName').value.trim();
-  const labelsRaw = document.getElementById('variantLabels').value.trim();
-  const pricesRaw = document.getElementById('variantPrices').value.trim();
-  const description = document.getElementById('variantDescription').value.trim();
-
-  const labels = labelsRaw.split(',').map(s => s.trim()).filter(Boolean);
-  const pricesStrArr = pricesRaw.split(',').map(s => s.trim()).filter(Boolean);
-  const prices = pricesStrArr.map(p => Number(p));
-
-  if (!baseName) return showToast('Base name is required', 'error');
-  if (!labels.length) return showToast('Variant labels are required', 'error');
-  if (!pricesStrArr.length) return showToast('Variant prices are required', 'error');
-  if (labels.length !== prices.length) return showToast('Labels count must match prices count', 'error');
-  if (prices.some(p => Number.isNaN(p) || p < 0)) return showToast('Prices must be valid numbers >= 0', 'error');
-
-  const formData = new FormData();
-  formData.append('base_name', baseName);
-  formData.append('variant_labels', labels.join(','));
-  formData.append('variant_prices', prices.join(','));
-  formData.append('description', description);
-
-  const imageFile = document.getElementById('variantImage').files[0];
-  if (imageFile) {
-    formData.append('image', imageFile);
+      .then(parseMenuResponse)
+      .then(() => {
+        showToast('✓ Menu item created successfully!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
+        document.getElementById('addItemForm').reset();
+        document.getElementById('imagePreview1').classList.remove('show');
+        loadItems();
+      })
+      .catch(err => showToast('✗ ' + err.message, 'error'));
   }
 
-  csrfFetch('/admin/menu/api/items/variants', {
-    method: 'POST',
-    body: formData,
-    headers: { 'Accept': 'application/json' }
-  })
-    .then(parseMenuResponse)
-    .then(() => {
-      showToast('✓ Beverage variants created!', 'success');
-      bootstrap.Modal.getInstance(document.getElementById('variantModal')).hide();
-      document.getElementById('variantForm').reset();
-      const preview = document.getElementById('variantImagePreview');
-      if (preview) preview.classList.remove('show');
-      loadItems();
-    })
-    .catch(err => showToast('✗ ' + err.message, 'error'));
-}
+  function createBeverageVariants() {
+    const baseName = document.getElementById('variantBaseName').value.trim();
+    const labelsRaw = document.getElementById('variantLabels').value.trim();
+    const pricesRaw = document.getElementById('variantPrices').value.trim();
+    const description = document.getElementById('variantDescription').value.trim();
 
-function editItem(itemId, name, price, category, imageUrl) {
-  currentItemId = itemId;
-  document.getElementById('editItemName').value = name;
-  document.getElementById('editPrice').value = price;
-  document.getElementById('editCategory').value = category;
-  
-  // Fetch full item data to get description
-  fetch(`/admin/menu/api/items/all`)
-    .then(r => r.json())
-    .then(data => {
-      const item = data.data.find(i => i.id === itemId);
-      if (item) {
-        document.getElementById('editDescription').value = item.description || '';
-      }
+    const labels = labelsRaw.split(',').map(s => s.trim()).filter(Boolean);
+    const pricesStrArr = pricesRaw.split(',').map(s => s.trim()).filter(Boolean);
+    const prices = pricesStrArr.map(p => Number(p));
+
+    if (!baseName) return showToast('Base name is required', 'error');
+    if (!labels.length) return showToast('Variant labels are required', 'error');
+    if (!pricesStrArr.length) return showToast('Variant prices are required', 'error');
+    if (labels.length !== prices.length) return showToast('Labels count must match prices count', 'error');
+    if (prices.some(p => Number.isNaN(p) || p < 0)) return showToast('Prices must be valid numbers >= 0', 'error');
+
+    const formData = new FormData();
+    formData.append('base_name', baseName);
+    formData.append('variant_labels', labels.join(','));
+    formData.append('variant_prices', prices.join(','));
+    formData.append('description', description);
+
+    const imageFile = document.getElementById('variantImage').files[0];
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    csrfFetch('/admin/menu/api/items/variants', {
+      method: 'POST',
+      body: formData,
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(parseMenuResponse)
+      .then(() => {
+        showToast('✓ Beverage variants created!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('variantModal')).hide();
+        document.getElementById('variantForm').reset();
+        const preview = document.getElementById('variantImagePreview');
+        if (preview) preview.classList.remove('show');
+        loadItems();
+      })
+      .catch(err => showToast('✗ ' + err.message, 'error'));
+  }
+
+  function editItem(itemId, name, price, category, imageUrl) {
+    currentItemId = itemId;
+    document.getElementById('editItemName').value = name;
+    document.getElementById('editPrice').value = price;
+    document.getElementById('editCategory').value = category;
+
+    // Fetch full item data to get description
+    fetch(`/admin/menu/api/items/all`)
+      .then(r => r.json())
+      .then(data => {
+        const item = data.data.find(i => i.id === itemId);
+        if (item) {
+          document.getElementById('editDescription').value = item.description || '';
+        }
+      });
+
+    const currentImg = document.getElementById('currentImage');
+    if (imageUrl) {
+      currentImg.src = imageUrl;
+      currentImg.style.display = 'block';
+    } else {
+      currentImg.style.display = 'none';
+    }
+
+    document.getElementById('imagePreview2').classList.remove('show');
+    document.getElementById('editImage').value = '';
+
+    new bootstrap.Modal(document.getElementById('editItemModal')).show();
+  }
+
+  function saveItem() {
+    const formData = new FormData();
+    formData.append('name', document.getElementById('editItemName').value);
+    formData.append('category', document.getElementById('editCategory').value);
+    formData.append('price', document.getElementById('editPrice').value);
+    formData.append('description', document.getElementById('editDescription').value);
+
+    const imageFile = document.getElementById('editImage').files[0];
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    csrfFetch(`/admin/menu/api/items/${currentItemId}`, {
+      method: 'PATCH',
+      body: formData,
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(parseMenuResponse)
+      .then(() => {
+        showToast('✓ Menu item updated successfully!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('editItemModal')).hide();
+        loadItems();
+      })
+      .catch(err => showToast('✗ ' + err.message, 'error'));
+  }
+
+  function toggleAvailability(itemId) {
+    csrfFetch(`/admin/menu/api/items/${itemId}/availability`, {
+      method: 'PATCH',
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(parseMenuResponse)
+      .then(data => {
+        showToast(`✓ Item ${data.is_available ? 'enabled' : 'disabled'} successfully!`, 'success');
+        loadItems();
+      })
+      .catch(err => {
+        console.error('Toggle error:', err);
+        showToast('✗ ' + err.message, 'error');
+      });
+  }
+
+  async function deleteItem(itemId) {
+    const confirmed = await showConfirmDialog({
+      title: 'Delete Menu Item',
+      message: 'Are you sure you want to delete this menu item? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmClass: 'btn-danger',
+      iconType: 'delete',
+      icon: '<i class="bi bi-trash3 fs-1 text-danger"></i>'
     });
-  
-  const currentImg = document.getElementById('currentImage');
-  if (imageUrl) {
-    currentImg.src = imageUrl;
-    currentImg.style.display = 'block';
-  } else {
-    currentImg.style.display = 'none';
-  }
-  
-  document.getElementById('imagePreview2').classList.remove('show');
-  document.getElementById('editImage').value = '';
-  
-  new bootstrap.Modal(document.getElementById('editItemModal')).show();
-}
+    if (!confirmed) return;
 
-function saveItem() {
-  const formData = new FormData();
-  formData.append('name', document.getElementById('editItemName').value);
-  formData.append('category', document.getElementById('editCategory').value);
-  formData.append('price', document.getElementById('editPrice').value);
-  formData.append('description', document.getElementById('editDescription').value);
-  
-  const imageFile = document.getElementById('editImage').files[0];
-  if (imageFile) {
-    formData.append('image', imageFile);
-  }
-
-  csrfFetch(`/admin/menu/api/items/${currentItemId}`, {
-    method: 'PATCH',
-    body: formData,
-    headers: { 'Accept': 'application/json' }
-  })
-    .then(parseMenuResponse)
-    .then(() => {
-      showToast('✓ Menu item updated successfully!', 'success');
-      bootstrap.Modal.getInstance(document.getElementById('editItemModal')).hide();
-      loadItems();
-    })
-    .catch(err => showToast('✗ ' + err.message, 'error'));
-}
-
-function toggleAvailability(itemId) {
-  csrfFetch(`/admin/menu/api/items/${itemId}/availability`, {
-    method: 'PATCH',
-    headers: { 'Accept': 'application/json' }
-  })
-    .then(parseMenuResponse)
-    .then(data => {
-      showToast(`✓ Item ${data.is_available ? 'enabled' : 'disabled'} successfully!`, 'success');
-      loadItems();
-    })
-    .catch(err => {
-      console.error('Toggle error:', err);
-      showToast('✗ ' + err.message, 'error');
-    });
-}
-
-function deleteItem(itemId) {
-  if (confirm('Are you sure you want to delete this menu item?')) {
     csrfFetch(`/admin/menu/api/items/${itemId}`, {
       method: 'DELETE',
       headers: { 'Accept': 'application/json' }
@@ -928,15 +919,14 @@ function deleteItem(itemId) {
         showToast('✗ ' + err.message, 'error');
       });
   }
-}
 
-function showToast(message, type) {
-  const alertDiv = document.createElement('div');
-  alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
-  alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
-  alertDiv.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-  document.body.appendChild(alertDiv);
-  setTimeout(() => alertDiv.remove(), 4000);
-}
+  function showToast(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+    alertDiv.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 4000);
+  }
 </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-VALID_PAYMENT_METHODS = frozenset({"cash", "gcash"})
+VALID_PAYMENT_METHODS = frozenset({"cash", "gcash", "bdo", "bpi"})
 
 
 def normalize_payment_method(value: str | None) -> str:
@@ -9,4 +9,11 @@ def normalize_payment_method(value: str | None) -> str:
 
 
 def payment_method_label(value: str | None) -> str:
-    return "GCash" if normalize_payment_method(value) == "gcash" else "Cash"
+    method = normalize_payment_method(value)
+    if method == "gcash":
+        return "GCash"
+    elif method == "bdo":
+        return "BDO"
+    elif method == "bpi":
+        return "BPI"
+    return "Cash"

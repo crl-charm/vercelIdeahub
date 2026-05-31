@@ -1,22 +1,63 @@
-<div class="container-fluid">
-  <h2 class="mb-4">Analytics</h2>
+<style>
+  .analytics-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    background: #ffffff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .analytics-card:hover {
+    box-shadow: 0 15px 35px rgba(231, 197, 91, 0.08);
+  }
+  .hover-scale {
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    border-radius: 8px;
+  }
+  .hover-scale:hover {
+    transform: translateX(6px);
+    background-color: rgba(231, 197, 91, 0.06) !important;
+  }
+  .rank-badge {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .leaderboard-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    border-bottom: 2px solid #e7c55b;
+    padding-bottom: 8px;
+    display: inline-block;
+  }
+</style>
+
+<div class="container-fluid py-2">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h2 class="mb-0 fw-bold text-dark">Business Intelligence & Analytics</h2>
+      <p class="text-muted mb-0">Track daily revenues, food popularity, and customer loyalty.</p>
+    </div>
+  </div>
   
   <!-- Date Range Selector -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <div class="row">
+  <div class="card analytics-card mb-4 border-0">
+    <div class="card-body p-4">
+      <div class="row align-items-end g-3">
         <div class="col-md-4">
-          <label class="form-label">Start Date</label>
-          <input type="date" id="startDate" class="form-control" />
+          <label class="form-label fw-semibold text-secondary small"><i class="bi bi-calendar-event me-1"></i>Start Date</label>
+          <input type="date" id="startDate" class="form-control border-light-subtle shadow-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">End Date</label>
-          <input type="date" id="endDate" class="form-control" />
+          <label class="form-label fw-semibold text-secondary small"><i class="bi bi-calendar-event-fill me-1"></i>End Date</label>
+          <input type="date" id="endDate" class="form-control border-light-subtle shadow-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">&nbsp;</label>
-          <button class="btn btn-warning w-100 text-white" onclick="updateAnalytics()">
-            <i class="bi bi-search me-1"></i>Update
+          <button class="btn btn-warning w-100 text-white fw-bold py-2 shadow-sm" onclick="updateAnalytics()" style="background-color: #e7c55b; border-color: #e7c55b;">
+            <i class="bi bi-arrow-repeat me-1"></i>Update Report
           </button>
         </div>
       </div>
@@ -24,23 +65,59 @@
   </div>
 
   <!-- Charts Row -->
-  <div class="row g-3">
-    <!-- Daily Sales Bar Chart -->
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Daily Sales</h5>
-          <canvas id="salesChart"></canvas>
+  <div class="row g-4 mb-4">
+    <!-- Daily Sales Bar Chart - Full Width -->
+    <div class="col-12">
+      <div class="card analytics-card border-0">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title fw-bold text-dark mb-0"><i class="bi bi-graph-up-arrow text-warning me-2"></i>Daily Revenue Flow</h5>
+            <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-2 rounded-pill fw-semibold">Bar Chart</span>
+          </div>
+          <div style="position: relative; height: 320px;">
+            <canvas id="salesChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Top Foods Card -->
+    <div class="col-lg-7 col-12">
+      <div class="card analytics-card border-0 h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="card-title fw-bold text-dark mb-0"><i class="bi bi-egg-fried text-warning me-2"></i>Top Selling Foods</h5>
+            <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-2 rounded-pill fw-semibold">Top 1-10</span>
+          </div>
+          <div class="row align-items-center g-3">
+            <div class="col-md-5 text-center">
+              <div style="position: relative; height: 220px; width: 100%;">
+                <canvas id="foodsChart"></canvas>
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div class="list-group list-group-flush" id="foodsRankedList">
+                <p class="text-center text-muted py-4">No sales data found.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Top Foods Pie Chart -->
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Top Selling Foods</h5>
-          <canvas id="foodsChart"></canvas>
+    <!-- Top Customers Card -->
+    <div class="col-lg-5 col-12">
+      <div class="card analytics-card border-0 h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="card-title fw-bold text-dark mb-0"><i class="bi bi-people-fill text-warning me-2"></i>Top Customers</h5>
+            <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-2 rounded-pill fw-semibold">Leaderboard</span>
+          </div>
+          <div class="list-group list-group-flush" id="customersRankedList">
+            <p class="text-center text-muted py-4">No customer sessions found.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -102,6 +179,7 @@ async function loadAnalytics() {
     
     updateSalesChart(analyticsData.daily_sales || []);
     updateFoodsChart(analyticsData.top_foods || []);
+    updateCustomersList(analyticsData.top_customers || []);
   } catch (error) {
     console.error('Error loading analytics:', error);
   }
@@ -110,7 +188,6 @@ async function loadAnalytics() {
 function updateSalesChart(dailySales) {
   const ctx = document.getElementById('salesChart').getContext('2d');
   
-  // Destroy previous chart if exists
   if (salesChartInstance) {
     salesChartInstance.destroy();
   }
@@ -127,24 +204,32 @@ function updateSalesChart(dailySales) {
         data: revenues,
         backgroundColor: '#e7c55b',
         borderColor: '#c9a43a',
-        borderWidth: 1,
-        borderRadius: 4,
+        borderWidth: 1.5,
+        borderRadius: 6,
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           display: false,
         }
       },
       scales: {
+        x: {
+          grid: {
+            display: false
+          }
+        },
         y: {
           beginAtZero: true,
+          grid: {
+            color: '#f1f5f9'
+          },
           ticks: {
             callback: function(value) {
-              return '₱' + value.toFixed(0);
+              return '₱' + value.toLocaleString();
             }
           }
         }
@@ -156,7 +241,6 @@ function updateSalesChart(dailySales) {
 function updateFoodsChart(topFoods) {
   const ctx = document.getElementById('foodsChart').getContext('2d');
   
-  // Destroy previous chart if exists
   if (foodsChartInstance) {
     foodsChartInstance.destroy();
   }
@@ -165,12 +249,12 @@ function updateFoodsChart(topFoods) {
   const quantities = topFoods.map(f => f.quantity);
   
   const colors = [
-    '#e7c55b', '#f7efd2', '#c9a43a', '#ffc107', '#ff9800',
-    '#ff7043', '#f44336', '#e91e63', '#9c27b0', '#673ab7'
+    '#e7c55b', '#f59e0b', '#d97706', '#b45309', '#78350f',
+    '#fbbf24', '#f59e0b', '#fef3c7', '#fffbeb', '#fffbeb'
   ];
   
   foodsChartInstance = new Chart(ctx, {
-    type: 'pie',
+    type: 'doughnut',
     data: {
       labels: labels,
       datasets: [{
@@ -182,10 +266,10 @@ function updateFoodsChart(topFoods) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'bottom',
+          display: false,
         },
         tooltip: {
           callbacks: {
@@ -194,16 +278,85 @@ function updateFoodsChart(topFoods) {
             }
           }
         }
-      }
+      },
+      cutout: '60%'
     }
   });
+
+  // Update List Group
+  const listEl = document.getElementById('foodsRankedList');
+  if (!topFoods || topFoods.length === 0) {
+    listEl.innerHTML = '<p class="text-center text-muted py-4">No top selling foods in this period.</p>';
+    return;
+  }
+
+  const totalQty = topFoods.reduce((sum, f) => sum + f.quantity, 0);
+  
+  let html = '';
+  topFoods.forEach((food, index) => {
+    const rank = index + 1;
+    const pct = totalQty > 0 ? ((food.quantity / totalQty) * 100).toFixed(1) : 0;
+    
+    let rankBadgeClass = 'bg-secondary text-white';
+    if (rank === 1) rankBadgeClass = 'bg-warning text-dark fw-bold'; // Gold
+    else if (rank === 2) rankBadgeClass = 'bg-light text-dark border'; // Silver
+    else if (rank === 3) rankBadgeClass = 'bg-dark text-white'; // Bronze/Dark
+    
+    html += `
+      <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-2 border-0 border-bottom border-light hover-scale">
+        <div class="d-flex align-items-center">
+          <span class="badge rounded-circle ${rankBadgeClass} rank-badge me-3">${rank}</span>
+          <span class="fw-semibold text-dark small">${food.name}</span>
+        </div>
+        <div class="text-end">
+          <span class="badge bg-warning-subtle text-warning-emphasis fw-bold">${food.quantity} items</span>
+          <span class="text-muted small ms-1" style="font-size: 0.75rem;">(${pct}%)</span>
+        </div>
+      </div>
+    `;
+  });
+  listEl.innerHTML = html;
+}
+
+function updateCustomersList(topCustomers) {
+  const listEl = document.getElementById('customersRankedList');
+  if (!topCustomers || topCustomers.length === 0) {
+    listEl.innerHTML = '<p class="text-center text-muted py-4">No customer session records in this period.</p>';
+    return;
+  }
+
+  let html = '';
+  topCustomers.forEach((cust, index) => {
+    const rank = index + 1;
+    
+    let rankBadgeClass = 'bg-secondary text-white';
+    if (rank === 1) rankBadgeClass = 'bg-warning text-dark fw-bold'; // Gold
+    else if (rank === 2) rankBadgeClass = 'bg-light text-dark border'; // Silver
+    else if (rank === 3) rankBadgeClass = 'bg-dark text-white'; // Bronze/Dark
+    
+    html += `
+      <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-2 border-0 border-bottom border-light hover-scale">
+        <div class="d-flex align-items-center">
+          <span class="badge rounded-circle ${rankBadgeClass} rank-badge me-3">${rank}</span>
+          <div>
+            <span class="fw-semibold text-dark small">${cust.name}</span>
+            <br>
+            <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-clock-history me-1"></i>${cust.visits} visit(s)</small>
+          </div>
+        </div>
+        <div class="text-end">
+          <span class="fw-bold text-success small">₱${cust.total_spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+        </div>
+      </div>
+    `;
+  });
+  listEl.innerHTML = html;
 }
 
 function updateAnalytics() {
   loadAnalytics();
 }
 
-// Load analytics on page load
 document.addEventListener('DOMContentLoaded', function() {
   initializeDatePickers();
   loadAnalytics();

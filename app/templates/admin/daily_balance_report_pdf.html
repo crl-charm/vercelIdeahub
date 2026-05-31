@@ -38,7 +38,7 @@
       margin-bottom: 24px;
     }
     .summary-payments .summary-box {
-      width: 50%;
+      width: 25%;
     }
     .summary-box {
       display: table-cell;
@@ -70,6 +70,8 @@
     .net { color: #1d4ed8; }
     .cash { color: #166534; }
     .gcash { color: #1d4ed8; }
+    .bdo { color: #b91c1c; }
+    .bpi { color: #b45309; }
     h2 {
       font-size: 13pt;
       color: #374151;
@@ -146,6 +148,16 @@
       <div class="value gcash">Php {{ "%.2f"|format(total_gcash) }}</div>
       <div class="sub">{{ gcash_count }} checkout(s)</div>
     </div>
+    <div class="summary-box">
+      <div class="label">BDO Payments</div>
+      <div class="value bdo">Php {{ "%.2f"|format(total_bdo) }}</div>
+      <div class="sub">{{ bdo_count }} checkout(s)</div>
+    </div>
+    <div class="summary-box">
+      <div class="label">BPI Payments</div>
+      <div class="value bpi">Php {{ "%.2f"|format(total_bpi) }}</div>
+      <div class="sub">{{ bpi_count }} checkout(s)</div>
+    </div>
   </div>
 
   <h2>Daily Reports</h2>
@@ -157,6 +169,8 @@
         <th class="amount">Revenue</th>
         <th class="amount">Cash</th>
         <th class="amount">GCash</th>
+        <th class="amount">BDO</th>
+        <th class="amount">BPI</th>
         <th class="amount">Expenses</th>
         <th class="amount">Net</th>
         <th class="amount">Orders</th>
@@ -171,6 +185,8 @@
         <td class="amount">Php {{ "%.2f"|format(r.total_revenue) }}</td>
         <td class="amount">Php {{ "%.2f"|format(r.cash_total) }}</td>
         <td class="amount">Php {{ "%.2f"|format(r.gcash_total) }}</td>
+        <td class="amount">Php {{ "%.2f"|format(r.bdo_total) }}</td>
+        <td class="amount">Php {{ "%.2f"|format(r.bpi_total) }}</td>
         <td class="amount">Php {{ "%.2f"|format(r.total_expenses) }}</td>
         <td class="amount">Php {{ "%.2f"|format(r.net_balance) }}</td>
         <td class="amount">{{ r.total_orders }}</td>

@@ -358,9 +358,11 @@
         </div>
 
         <div class="collapse show" id="staffLinks">
+            <!-- Hidden per request
             <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/staff-performance'">
                 <i class="bi bi-trophy me-2"></i>Performance
             </button>
+            -->
 
             <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/analytics'">
                 <i class="bi bi-graph-up me-2"></i>Analytics
@@ -454,7 +456,7 @@ window.showConfirmDialog = function(options) {
 
     var iconType = options.iconType || "default";
     iconEl.className = "ih-confirm-icon mb-3 " + iconType;
-    iconEl.textContent = options.icon || (iconType === "gcash" ? "📱" : iconType === "cash" ? "💵" : "✦");
+    iconEl.innerHTML = options.icon || (iconType === "gcash" ? "📱" : iconType === "cash" ? "💵" : "✦");
 
     var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 

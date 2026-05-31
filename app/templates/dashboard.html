@@ -96,11 +96,15 @@
       <div class="modal-footer flex-column align-items-stretch gap-2">
         <div id="payment-method-section" class="w-100" style="display:none;">
           <label class="form-label fw-semibold mb-2">Payment Method</label>
-          <div class="btn-group w-100" role="group" aria-label="Payment method">
+          <div class="d-flex flex-wrap gap-2 w-100" role="group" aria-label="Payment method">
             <input type="radio" class="btn-check" name="paymentMethod" id="paymentCash" value="cash" checked>
-            <label class="btn btn-outline-success" for="paymentCash">💵 Cash</label>
+            <label class="btn btn-outline-success flex-fill" for="paymentCash"><i class="bi bi-cash-stack me-1"></i> Cash</label>
             <input type="radio" class="btn-check" name="paymentMethod" id="paymentGcash" value="gcash">
-            <label class="btn btn-outline-primary" for="paymentGcash">📱 GCash</label>
+            <label class="btn btn-outline-primary flex-fill" for="paymentGcash"><i class="bi bi-phone me-1"></i> GCash</label>
+            <input type="radio" class="btn-check" name="paymentMethod" id="paymentBdo" value="bdo">
+            <label class="btn btn-outline-danger flex-fill" for="paymentBdo"><i class="bi bi-bank me-1"></i> BDO</label>
+            <input type="radio" class="btn-check" name="paymentMethod" id="paymentBpi" value="bpi">
+            <label class="btn btn-outline-warning text-dark flex-fill" for="paymentBpi"><i class="bi bi-bank2 me-1"></i> BPI</label>
           </div>
         </div>
         <div class="d-flex justify-content-between w-100">
@@ -360,18 +364,21 @@ function viewOrder(sessionId) {
             document.getElementById("payment-method-section").style.display = "block";
             document.getElementById("paymentCash").checked = true;
             document.getElementById("paymentGcash").checked = false;
+            document.getElementById("paymentBdo").checked = false;
+            document.getElementById("paymentBpi").checked = false;
 
             function updatePaymentHint() {
                 const selected = document.querySelector('input[name="paymentMethod"]:checked');
                 const hint = document.getElementById("selected-payment-hint");
                 if (!hint || !selected) return;
-                hint.textContent = selected.value === "gcash"
-                    ? "Payment selected: GCash"
-                    : "Payment selected: Cash";
+                const labels = { cash: "Cash", gcash: "GCash", bdo: "BDO", bpi: "BPI" };
+                hint.textContent = "Payment selected: " + (labels[selected.value] || selected.value);
             }
 
             document.getElementById("paymentCash").onchange = updatePaymentHint;
             document.getElementById("paymentGcash").onchange = updatePaymentHint;
+            document.getElementById("paymentBdo").onchange = updatePaymentHint;
+            document.getElementById("paymentBpi").onchange = updatePaymentHint;
             updatePaymentHint();
 
             let modal = new bootstrap.Modal(document.getElementById('receiptModal'));
@@ -380,15 +387,24 @@ function viewOrder(sessionId) {
             document.getElementById("confirmCheckoutBtn").onclick = async function () {
                 const selected = document.querySelector('input[name="paymentMethod"]:checked');
                 const paymentMethod = selected ? selected.value : "cash";
-                const paymentLabel = paymentMethod === "gcash" ? "GCash" : "Cash";
+                const labels = { cash: "Cash", gcash: "GCash", bdo: "BDO", bpi: "BPI" };
+                const paymentLabel = labels[paymentMethod] || paymentMethod;
+
+                const classes = { cash: "btn-success", gcash: "btn-primary", bdo: "btn-danger", bpi: "btn-warning text-dark" };
+                const icons = {
+                    cash: '<i class="bi bi-cash-stack fs-1 text-success"></i>',
+                    gcash: '<i class="bi bi-phone fs-1 text-primary"></i>',
+                    bdo: '<i class="bi bi-bank fs-1 text-danger"></i>',
+                    bpi: '<i class="bi bi-bank2 fs-1 text-warning"></i>'
+                };
 
                 const confirmed = await showConfirmDialog({
                     title: "Confirm Checkout",
                     message: `Complete checkout for this customer using ${paymentLabel}?`,
                     confirmText: `Pay with ${paymentLabel}`,
-                    confirmClass: paymentMethod === "gcash" ? "btn-primary" : "btn-success",
+                    confirmClass: classes[paymentMethod] || "btn-success",
                     iconType: paymentMethod,
-                    icon: paymentMethod === "gcash" ? "📱" : "💵"
+                    icon: icons[paymentMethod] || "💵"
                 });
                 if (!confirmed) return;
 
