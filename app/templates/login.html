@@ -8,124 +8,124 @@ IdeaHub Login
 
 <div class="login-wrapper">
 
-<div class="login-card">
+  <div class="login-card">
 
-<div class="text-center mb-4">
-  <img src="{{ url_for('static', filename='css/images/logo.jpg') }}" alt="IdeaHub" class="login-logo mb-2" />
-  <div class="visually-hidden">IdeaHub</div>
-  <p class="brand-subtitle">
-    Idea Hub Coworking Space + Cafe
-  </p>
-</div>
+    <div class="text-center mb-4">
+      <img src="{{ url_for('static', filename='css/images/logo.png') }}" alt="IdeaHub" class="login-logo mb-2" />
+      <div class="visually-hidden">IdeaHub</div>
+      <p class="brand-subtitle">
+        Idea Hub Coworking Space + Cafe
+      </p>
+    </div>
 
-<!--Flash Message-->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
+    <!--Flash Message-->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
     {% for category, message in messages %}
 
-      <div id="flash-message" class="alert alert-{{ category }} text-center">
-        {{ message }}
-      </div>
+    <div id="flash-message" class="alert alert-{{ category }} text-center">
+      {{ message }}
+    </div>
 
     {% endfor %}
-  {% endif %}
-{% endwith %}
+    {% endif %}
+    {% endwith %}
 
-<form id="loginForm">
+    <form id="loginForm">
 
-<div class="mb-3">
+      <div class="mb-3">
 
-<label class="form-label">Username</label>
+        <label class="form-label">Username</label>
 
-<input type="text" class="form-control" id="username" required>
+        <input type="text" class="form-control" id="username" required>
 
-</div>
+      </div>
 
-<div class="mb-4">
+      <div class="mb-4">
 
-<label class="form-label">Password</label>
+        <label class="form-label">Password</label>
 
-<div class="input-group">
-  <input type="password" class="form-control" id="password" required>
-  <button type="button" class="btn btn-outline-secondary password-toggle" id="togglePassword" aria-label="Show password">
-    <i class="bi bi-eye"></i>
-  </button>
-</div>
+        <div class="input-group">
+          <input type="password" class="form-control" id="password" required>
+          <button type="button" class="btn btn-outline-secondary password-toggle" id="togglePassword"
+            aria-label="Show password">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
 
-</div>
+      </div>
 
-<button class="btn btn-login w-100" id="loginBtn">
-Login
-</button>
+      <button class="btn btn-login w-100" id="loginBtn">
+        Login
+      </button>
 
-</form>
+    </form>
 
-</div>
+  </div>
 
 </div>
 
 <script>
 
-document.getElementById("loginForm").addEventListener("submit", async function(e){
+  document.getElementById("loginForm").addEventListener("submit", async function (e) {
 
-  e.preventDefault()
+    e.preventDefault()
 
-  const username = document.getElementById("username").value
-  const password = document.getElementById("password").value
+    const username = document.getElementById("username").value
+    const password = document.getElementById("password").value
 
-  try {
-    const response = await fetch("/api/login",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      credentials:"include",
-      body: JSON.stringify({
-        username: username,
-        password: password
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          username: username,
+          password: password
+        })
       })
-    })
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if(response.ok){
-      showToast("Login successful! Redirecting…", "success")
-      setTimeout(function(){ window.location.href = data.redirect || "/dashboard"; }, 1500)
-    }else{
-      showToast(data.error || "Invalid credentials.", "error")
+      if (response.ok) {
+        showToast("Login successful! Redirecting…", "success")
+        setTimeout(function () { window.location.href = data.redirect || "/dashboard"; }, 1500)
+      } else {
+        showToast(data.error || "Invalid credentials.", "error")
+      }
+    } catch (err) {
+      showToast("An error occurred. Please try again.", "error")
     }
-  } catch (err) {
-    showToast("An error occurred. Please try again.", "error")
-  }
 
-})
+  })
 
-const passwordInput = document.getElementById("password");
-const togglePassword = document.getElementById("togglePassword");
+  const passwordInput = document.getElementById("password");
+  const togglePassword = document.getElementById("togglePassword");
 
-togglePassword.addEventListener("click", function () {
-  const isHidden = passwordInput.type === "password";
-  passwordInput.type = isHidden ? "text" : "password";
-  togglePassword.innerHTML = isHidden
-    ? '<i class="bi bi-eye-slash"></i>'
-    : '<i class="bi bi-eye"></i>';
-});
+  togglePassword.addEventListener("click", function () {
+    const isHidden = passwordInput.type === "password";
+    passwordInput.type = isHidden ? "text" : "password";
+    togglePassword.innerHTML = isHidden
+      ? '<i class="bi bi-eye-slash"></i>'
+      : '<i class="bi bi-eye"></i>';
+  });
 
 </script>
 
 <script>
-    setTimeout(function () {
-        let flash = document.getElementById("flash-message");
-        if (flash) {
-            flash.style.transition = "opacity 0.5s ease";
-            flash.style.opacity = "0";
+  setTimeout(function () {
+    let flash = document.getElementById("flash-message");
+    if (flash) {
+      flash.style.transition = "opacity 0.5s ease";
+      flash.style.opacity = "0";
 
-            setTimeout(() => {
-                flash.remove();
-            }, 500);
-        }
-    }, 10000);
+      setTimeout(() => {
+        flash.remove();
+      }, 500);
+    }
+  }, 10000);
 </script>
 
 {% endblock %}
-

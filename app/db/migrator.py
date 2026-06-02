@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from sqlalchemy import text, inspect
-from app.models.idea import Idea, IdeaVote
 from app.models.finance import FinanceBudget, FinanceTransaction
-from app.models.management import Department
 from app.models.soft_balance import SoftBalanceEntry
 from app.models.space_price_history import SpacePriceHistory
 from app.models.payable import Payable
+from app.models.menu_category import MenuCategory
 
 
 class SchemaMigrator:
@@ -18,7 +17,7 @@ class SchemaMigrator:
 
     def run(self) -> None:
         db = self._db
-        _ = (Idea, IdeaVote, FinanceBudget, FinanceTransaction, Department, SoftBalanceEntry, SpacePriceHistory, Payable)
+        _ = (FinanceBudget, FinanceTransaction, SoftBalanceEntry, SpacePriceHistory, Payable, MenuCategory)
         try:
             db.create_all()
             # Phase 3: Drop the obsolete reservations table if it exists
@@ -92,10 +91,17 @@ class SchemaMigrator:
                 "ALTER TABLE menu_items ADD COLUMN is_available BOOLEAN DEFAULT TRUE",
             ),
             (
-                "space_types",
-                "qr_token",
-                "ALTER TABLE space_types ADD COLUMN qr_token VARCHAR(50) NULL UNIQUE",
+                "menu_items",
+                "created_at",
+                "ALTER TABLE menu_items ADD COLUMN created_at DATETIME NULL",
             ),
+            (
+                "menu_items",
+                "updated_at",
+                "ALTER TABLE menu_items ADD COLUMN updated_at DATETIME NULL",
+            ),
+
+
             (
                 "staff_performance_logs",
                 "customers_served",

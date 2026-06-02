@@ -76,10 +76,8 @@ def create_app():
     from app.routes.analytics import analytics_bp
     from app.routes.receipts import receipts_bp
     from app.routes.menu import menu_bp
-    from app.routes.qr_order import qr_bp, order_bp as qr_order_bp
     from app.routes.payables import payables_bp
     from app.controllers.analytics_controller import AnalyticsController
-    from app.controllers.performance_controller import PerformanceController
     from app.controllers.finance_controller import FinanceController
     from app.controllers.management_controller import ManagementController
 
@@ -101,8 +99,6 @@ def create_app():
     app.register_blueprint(analytics_bp)
     app.register_blueprint(receipts_bp)
     app.register_blueprint(menu_bp)
-    app.register_blueprint(qr_bp)
-    app.register_blueprint(qr_order_bp)
     app.register_blueprint(payables_bp)
 
     # Import Socket.IO handlers to register events
@@ -110,7 +106,6 @@ def create_app():
 
     controllers = [
         AnalyticsController(db),
-        PerformanceController(db),
         FinanceController(db),
         ManagementController(db),
     ]

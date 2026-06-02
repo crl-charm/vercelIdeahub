@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.models.management import Department, UserRole
+from app.models.management import UserRole
 from app.models.user import User
 from app.services.base_service import BaseService
 
@@ -38,11 +38,8 @@ class ManagementService(BaseService):
         self._db.session.commit()
         return True
 
-    def get_departments(self) -> list[dict]:
-        return [{"id": d.id, "name": d.name} for d in Department.query.order_by(Department._name.asc()).all()]
-
     def get_summary(self) -> dict:
-        return {"users": User.query.count(), "departments": Department.query.count()}
+        return {"users": User.query.count()}
 
     def get_dashboard_data(self) -> dict:
         return self.get_summary()

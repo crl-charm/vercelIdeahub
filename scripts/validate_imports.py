@@ -22,8 +22,8 @@ def test_model_imports():
             MenuItem, Order, OrderItem, Transaction, BoardroomBooking,
             LoungeBooking, StaffAttendance, InventoryItem, InventoryLog,
             Receivable, Expense, StaffPerformanceLog, DailySalesReport,
-            SoftBalanceEntry, BaseModel, Department, UserRole,
-            Idea, IdeaVote, FinanceBudget, FinanceTransaction
+            SoftBalanceEntry, BaseModel, UserRole,
+            FinanceBudget, FinanceTransaction
         )
         print("[OK] All models imported successfully")
         return True
@@ -43,7 +43,6 @@ def test_repository_imports():
         'app.repositories.inventory_repository',
         'app.repositories.menu_repository',
         'app.repositories.order_repository',
-        'app.repositories.qr_repository',
         'app.repositories.receivable_repository',
         'app.repositories.sales_repository',
         'app.repositories.session_repository',

@@ -369,7 +369,7 @@
 <div class="container-fluid menu-container">
   <!-- Header -->
   <div class="menu-header">
-    <h1>🍽️ Menu Management</h1>
+    <h1> Menu Management</h1>
     <p>Manage your menu items across Main Dish, Snacks, and Beverages categories</p>
   </div>
 
@@ -384,7 +384,10 @@
     <button class="btn-add-menu" data-bs-toggle="modal" data-bs-target="#addItemModal">
       + Add Menu Item
     </button>
-    <button id="btnAddVariants" class="btn-add-menu" style="display: none;" data-bs-toggle="modal"
+    <button class="btn-add-menu" style="background: #2e7d32; margin-left: 0.5rem;" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+      + Add Category
+    </button>
+    <button id="btnAddVariants" class="btn-add-menu" style="display: none; margin-left: 0.5rem;" data-bs-toggle="modal"
       data-bs-target="#variantModal">
       + Add Beverage Variants
     </button>
@@ -443,6 +446,30 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn-add-menu" onclick="createItem()">Create Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);">
+        <h5 class="modal-title">📁 Add New Category</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="addCategoryForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Category Name *</label>
+            <input type="text" id="categoryName" class="form-control" placeholder="e.g., Dessert" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" onclick="createCategory()">Create Category</button>
         </div>
       </form>
     </div>
@@ -550,14 +577,14 @@
   let currentItemId = null;
   let allItems = [];
   let currentFilter = 'All';
-  const CATEGORIES = ["Main Dish", "Snack", "Beverages"];
+  let CATEGORIES = [];
 
   // Socket.IO for real-time updates
   const socket = io();
 
   socket.on('menu_update', function (data) {
     console.log('Menu update:', data);
-    loadItems();
+    loadCategories(loadItems);
     if (data.event === 'create') {
       showToast('✓ New menu item added!', 'success');
     } else if (data.event === 'update') {
@@ -566,6 +593,8 @@
       showToast('✓ Menu item deleted!', 'success');
     } else if (data.event === 'availability_toggle') {
       showToast('✓ Item availability toggled!', 'success');
+    } else if (data.event === 'create_category') {
+      showToast('✓ New category added!', 'success');
     }
   });
 
@@ -578,25 +607,77 @@
   });
 
   document.addEventListener('DOMContentLoaded', function () {
-    loadItems();
-    setupEventListeners();
-    setupImagePreviews();
-    initializeCategoryTabs();
+    loadCategories(function() {
+      loadItems();
+      setupImagePreviews();
+    });
   });
 
-  function initializeCategoryTabs() {
-    const container = document.getElementById('categoryTabs');
-    container.innerHTML = '<div class="category-tab active" data-category="All">All Items</div>';
+  function loadCategories(callback) {
+    fetch('/admin/menu/api/categories', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          CATEGORIES = data.data;
+          
+          // Re-render tabs
+          const container = document.getElementById('categoryTabs');
+          if (container) {
+            container.innerHTML = `<div class="category-tab ${currentFilter === 'All' ? 'active' : ''}" data-category="All">All Items</div>`;
+            CATEGORIES.forEach(cat => {
+              const tab = document.createElement('div');
+              tab.className = `category-tab ${currentFilter === cat ? 'active' : ''}`;
+              tab.textContent = cat;
+              tab.dataset.category = cat;
+              container.appendChild(tab);
+            });
+            setupEventListeners();
+          }
+          
+          // Populate select dropdowns
+          const populateSelect = (selectId) => {
+            const select = document.getElementById(selectId);
+            if (select) {
+              const val = select.value; // save selection
+              select.innerHTML = '<option value="">Select category...</option>';
+              CATEGORIES.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                select.appendChild(opt);
+              });
+              select.value = val;
+            }
+          };
+          
+          populateSelect('category');
+          populateSelect('editCategory');
+          
+          if (callback) callback();
+        }
+      });
+  }
 
-    CATEGORIES.forEach(cat => {
-      const tab = document.createElement('div');
-      tab.className = 'category-tab';
-      tab.textContent = cat;
-      tab.dataset.category = cat;
-      container.appendChild(tab);
-    });
-
-    setupEventListeners();
+  function createCategory() {
+    const name = document.getElementById('categoryName').value.trim();
+    if (!name) {
+      showToast('Category name is required', 'error');
+      return;
+    }
+    
+    csrfFetch('/admin/menu/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name })
+    })
+    .then(parseMenuResponse)
+    .then(() => {
+      showToast('✓ Category created successfully!', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
+      document.getElementById('addCategoryForm').reset();
+      loadCategories(loadItems);
+    })
+    .catch(err => showToast('✗ ' + err.message, 'error'));
   }
 
   function setupEventListeners() {

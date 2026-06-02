@@ -73,6 +73,11 @@ class ReceivableService:
         emit_receivable_marked_paid(receivable_id)
         return {"success": True}
 
+    def mark_customer_paid(self, customer_name: str) -> dict[str, Any]:
+        success = self.repo.mark_customer_paid(customer_name)
+        self.repo.save()
+        return {"success": True}
+
     def emit_due_reminders(self) -> None:
         due_today = self.repo.list_due_today()
         for r in due_today:

@@ -662,7 +662,7 @@
   <!-- MENU SECTION -->
   <div class="menu-section">
     <div class="page-header">
-      <div class="page-title">🍽️ Browse Menu</div>
+      <div class="page-title">Browse Menu</div>
       <div class="search-container">
         <input type="text" id="menu-search" class="search-input" placeholder="🔍 Search menu items...">
       </div>
@@ -750,17 +750,39 @@ function parseCategory(category) {
 }
 
 function buildCategoryFilters() {
-  const categories = ["All", "Main Dish", "Beverages", "Snacks"];
-  const filtersContainer = document.getElementById("category-filters");
-  filtersContainer.innerHTML = "";
-
-  categories.forEach(cat => {
-    const btn = document.createElement("button");
-    btn.className = "category-filter" + (cat === "All" ? " active" : "");
-    btn.textContent = cat;
-    btn.onclick = () => filterByCategory(cat);
-    filtersContainer.appendChild(btn);
-  });
+  fetch('/admin/menu/api/categories', { credentials: 'include' })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const categories = ["All", ...data.data];
+        const filtersContainer = document.getElementById("category-filters");
+        if (filtersContainer) {
+          filtersContainer.innerHTML = "";
+          categories.forEach(cat => {
+            const btn = document.createElement("button");
+            btn.className = "category-filter" + (cat === activeCategory ? " active" : "");
+            btn.textContent = cat;
+            btn.onclick = () => filterByCategory(cat);
+            filtersContainer.appendChild(btn);
+          });
+        }
+      }
+    })
+    .catch(err => {
+      console.error('Error loading categories:', err);
+      const categories = ["All", "Main Dish", "Beverages", "Snack"];
+      const filtersContainer = document.getElementById("category-filters");
+      if (filtersContainer) {
+        filtersContainer.innerHTML = "";
+        categories.forEach(cat => {
+          const btn = document.createElement("button");
+          btn.className = "category-filter" + (cat === activeCategory ? " active" : "");
+          btn.textContent = cat;
+          btn.onclick = () => filterByCategory(cat);
+          filtersContainer.appendChild(btn);
+        });
+      }
+    });
 }
 
 function filterByCategory(category) {
@@ -778,7 +800,9 @@ function renderMenuItems() {
   if (activeCategory !== "All") {
     filtered = filtered.filter(item => {
       const parsed = parseCategory(item.category);
-      return parsed.major === activeCategory;
+      const filterCat = activeCategory === "Snack" ? "Snacks" : activeCategory;
+      const itemMajor = parsed.major === "Snack" ? "Snacks" : parsed.major;
+      return itemMajor === filterCat || item.category === activeCategory;
     });
   }
   

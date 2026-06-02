@@ -31,11 +31,6 @@ class ManagementController(BaseController):
             page = request.args.get("page", 1, type=int)
             return render_template("management/users.html", users=self._service.get_users(page=page, per_page=20))
 
-        @self.blueprint.get("/management/departments")
-        @admin_required
-        def management_departments():
-            return render_template("management/departments.html", departments=self._service.get_departments())
-
         @self.blueprint.get("/management/settings")
         @admin_required
         def management_settings():
@@ -55,10 +50,7 @@ class ManagementController(BaseController):
             updated = self._service.update_role(user_id, str(payload.get("role", "")))
             return jsonify({"success": updated})
 
-        @self.blueprint.get("/api/management/departments")
-        @admin_required
-        def management_departments_api():
-            return jsonify({"success": True, "data": self._service.get_departments()})
+
 
     def get_dashboard_data(self) -> dict:
         return self._service.get_dashboard_data()

@@ -17,8 +17,7 @@ from .staff_performance import StaffPerformanceLog
 from .daily_sales_report import DailySalesReport
 from .soft_balance import SoftBalanceEntry
 from .base_model import BaseModel
-from .management import Department, UserRole
-from .idea import Idea, IdeaVote
+from .management import UserRole
 from .finance import FinanceBudget, FinanceTransaction
 
 # Explicit exports for production safety
@@ -44,10 +43,7 @@ __all__ = [
     'DailySalesReport',
     'SoftBalanceEntry',
     'BaseModel',
-    'Department',
     'UserRole',
-    'Idea',
-    'IdeaVote',
     'FinanceBudget',
     'FinanceTransaction',
 ]

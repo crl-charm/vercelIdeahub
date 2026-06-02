@@ -151,6 +151,7 @@
         </div>
       </div>
       <div class="modal-footer">
+        <button type="button" class="btn btn-success" id="btn-fully-paid-customer" onclick="markCustomerAsFullyPaid()">Fully Paid</button>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -313,7 +314,6 @@ function renderReceivablesList() {
     // Total calculation: sum of all unpaid receivables
     if (!rec.paid) {
       totalUnpaid += (rec.amount_owed - rec.partial_paid);
-      unpaidCount++;
     }
 
     const name = rec.customer_name.trim();
@@ -343,6 +343,13 @@ function renderReceivablesList() {
 
     if (!groups[name].customer_contact && rec.customer_contact) {
       groups[name].customer_contact = rec.customer_contact;
+    }
+  });
+
+  // Calculate unique debtors with unpaid balance
+  Object.values(groups).forEach(g => {
+    if (g.has_unpaid && g.outstanding_balance > 0) {
+      unpaidCount++;
     }
   });
 
@@ -490,6 +497,15 @@ function openViewOrderModal(customerName) {
   });
   document.getElementById('viewOutstandingBalance').textContent = '₱' + unpaidTotal.toFixed(2);
 
+  const fullyPaidBtn = document.getElementById('btn-fully-paid-customer');
+  if (fullyPaidBtn) {
+    if (unpaidTotal > 0) {
+      fullyPaidBtn.style.display = 'inline-block';
+    } else {
+      fullyPaidBtn.style.display = 'none';
+    }
+  }
+
   const tbody = document.getElementById('view-order-table-body');
   tbody.innerHTML = '';
 
@@ -629,6 +645,43 @@ function confirmMarkPaid() {
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Confirm Paid';
     showToast('Error marking as paid', 'error');
+  });
+}
+
+async function markCustomerAsFullyPaid() {
+  const customerName = document.getElementById('viewCustomerName').textContent;
+  if (!customerName || customerName === '—') return;
+
+  const confirmed = await window.showConfirmDialog({
+    title: 'Mark All as Fully Paid?',
+    message: `Are you sure you want to mark all outstanding balances for ${customerName} as fully paid?`,
+    confirmText: 'Yes, Mark Paid',
+    confirmClass: 'btn-success',
+    iconType: 'cash',
+    icon: '💵'
+  });
+
+  if (!confirmed) return;
+
+  csrfFetch('/admin/receivables/api/receivables/mark-customer-paid', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customer_name: customerName })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showToast(`All debts for ${customerName} have been marked as paid.`, 'success');
+      if (viewOrderModalInstance) {
+        viewOrderModalInstance.hide();
+      }
+      loadReceivables();
+    } else {
+      showToast(data.error || 'Error updating debt', 'error');
+    }
+  })
+  .catch(() => {
+    showToast('Error updating debt', 'error');
   });
 }
 </script>

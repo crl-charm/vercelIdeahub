@@ -8,13 +8,69 @@
   --muted: #6b7280;
   --border: #e5e7eb;
   --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
+
+  /* Unified Typography System */
+  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-heading: "Playfair Display", Georgia, serif;
+
+  /* Sophisticated Semantic Status Colors */
+  --success: #16a34a;       /* Elegant Green */
+  --success-soft: #dcfce7;
+  --danger: #dc2626;        /* Elegant Crimson */
+  --danger-soft: #fee2e2;
+  --warning: #d97706;       /* Soft Amber */
+  --warning-soft: #fef3c7;
+  --info: #2563eb;          /* Indigo Blue */
+  --info-soft: #dbeafe;
 }
 
 body {
   background: linear-gradient(180deg, #f9fafc 0%, var(--bg) 100%);
   color: var(--text);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* ── Typographic Hierarchy ── */
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--text);
+}
+
+h1 { font-size: 2.1rem; }
+h2 { font-size: 1.7rem; }
+h3 { font-size: 1.4rem; }
+h4 { font-size: 1.15rem; }
+h5 { font-size: 0.98rem; }
+h6 { font-size: 0.8rem; }
+
+.brand-title {
+  font-family: var(--font-heading);
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
+.brand-subtitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+input, button, select, textarea {
+  font-family: var(--font-body) !important;
+}
+
 
 .navbar {
   position: fixed;

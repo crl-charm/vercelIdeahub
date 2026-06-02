@@ -24,8 +24,13 @@ _service = MenuService(repo=MenuRepository())
 
 logger = logging.getLogger(__name__)
 
-# Valid categories
-VALID_CATEGORIES = ["Main Dish", "Snack", "Beverages"]
+def get_valid_categories():
+    try:
+        from app.models.menu_category import MenuCategory
+        return [c.name for c in MenuCategory.query.order_by(MenuCategory.id).all()]
+    except Exception as e:
+        logger.warning(f"Error fetching categories from DB: {e}")
+        return ["Main Dish", "Snack", "Beverages"]
 
 def get_upload_folder():
     """Get upload folder from config, create if needed"""
@@ -136,7 +141,7 @@ def delete_old_image(image_url):
 @login_required
 def menu_page() -> str:
     items = _service.list_all()
-    return render_template("admin/menu.html", items=items, categories=VALID_CATEGORIES)
+    return render_template("admin/menu.html", items=items, categories=get_valid_categories())
 
 
 @menu_bp.route("/api/items", methods=["GET"])
@@ -159,7 +164,41 @@ def api_all_items() -> tuple:
 @login_required
 @csrf.exempt
 def api_get_categories() -> tuple:
-    return jsonify({"success": True, "data": VALID_CATEGORIES}), 200
+    return jsonify({"success": True, "data": get_valid_categories()}), 200
+
+
+@menu_bp.route("/api/categories", methods=["POST"])
+@login_required
+@csrf.exempt
+def api_create_category() -> tuple:
+    if request.is_json:
+        data = request.get_json() or {}
+        name = str(data.get("name", "")).strip()
+    else:
+        name = request.form.get("name", "").strip()
+    
+    if not name:
+        return jsonify({"success": False, "error": "Category name is required"}), 400
+        
+    from app.models.menu_category import MenuCategory
+    from app import db
+    
+    existing = MenuCategory.query.filter(db.func.lower(MenuCategory.name) == name.lower()).first()
+    if existing:
+        return jsonify({"success": False, "error": "Category already exists"}), 400
+        
+    try:
+        new_cat = MenuCategory(name=name)
+        db.session.add(new_cat)
+        db.session.commit()
+        
+        emit_menu_update('create_category', {'name': name})
+        
+        return jsonify({"success": True, "data": {"name": name}}), 201
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error creating category: {e}")
+        return jsonify({"success": False, "error": "Database error"}), 500
 
 
 @menu_bp.route("/api/items", methods=["POST"])
@@ -179,8 +218,9 @@ def api_create_item() -> tuple:
         description = request.form.get("description", "").strip() or None
     
     # Validate category
-    if category not in VALID_CATEGORIES:
-        return jsonify({"success": False, "error": f"Category must be one of: {', '.join(VALID_CATEGORIES)}"}), 400
+    valid_cats = get_valid_categories()
+    if category not in valid_cats:
+        return jsonify({"success": False, "error": f"Category must be one of: {', '.join(valid_cats)}"}), 400
     
     # Validate required fields
     if not name:
@@ -243,7 +283,7 @@ def api_create_item_variants() -> tuple:
         description = request.form.get("description", "").strip() or None
 
     # Validate category
-    if category not in VALID_CATEGORIES:
+    if category not in get_valid_categories():
         return jsonify({"success": False, "error": "Invalid category configuration"}), 500
 
     if not base_name:
@@ -301,9 +341,9 @@ def api_update_item(item_id: int) -> tuple:
     from app import db
     
     category = request.form.get("category", "").strip()
-    
-    if category and category not in VALID_CATEGORIES:
-        return jsonify({"success": False, "error": f"Category must be one of: {', '.join(VALID_CATEGORIES)}"}), 400
+    valid_cats = get_valid_categories()
+    if category and category not in valid_cats:
+        return jsonify({"success": False, "error": f"Category must be one of: {', '.join(valid_cats)}"}), 400
     
     # Validate price if provided
     price = request.form.get("price", "").strip()

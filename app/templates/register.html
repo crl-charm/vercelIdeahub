@@ -9,19 +9,19 @@
   <div class="login-card" style="width: 420px;">
 
     <div class="text-center mb-4">
-      <img src="{{ url_for('static', filename='css/images/logo.jpg') }}" alt="IdeaHub" class="login-logo mb-2" />
+      <img src="{{ url_for('static', filename='css/images/logo.png') }}" alt="IdeaHub" class="login-logo mb-2" />
       <h2 class="brand-title mt-2 visually-hidden">IdeaHub</h2>
       <p class="brand-subtitle">Create a New Account</p>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div id="flash-message" class="alert alert-{{ category }} text-center">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div id="flash-message" class="alert alert-{{ category }} text-center">
+      {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
 
     <form id="registerForm">
@@ -40,7 +40,8 @@
         <label class="form-label">Password</label>
         <div class="input-group">
           <input type="password" class="form-control" id="password" placeholder="Enter password" minlength="8" required>
-          <button type="button" class="btn btn-outline-secondary password-toggle" id="toggleRegisterPassword" aria-label="Show password">
+          <button type="button" class="btn btn-outline-secondary password-toggle" id="toggleRegisterPassword"
+            aria-label="Show password">
             <i class="bi bi-eye"></i>
           </button>
         </div>
@@ -50,8 +51,10 @@
       <div class="mb-4">
         <label class="form-label">Confirm Password</label>
         <div class="input-group">
-          <input type="password" class="form-control" id="confirm_password" placeholder="Re-enter password" minlength="8" required>
-          <button type="button" class="btn btn-outline-secondary password-toggle" id="toggleRegisterConfirmPassword" aria-label="Show confirm password">
+          <input type="password" class="form-control" id="confirm_password" placeholder="Re-enter password"
+            minlength="8" required>
+          <button type="button" class="btn btn-outline-secondary password-toggle" id="toggleRegisterConfirmPassword"
+            aria-label="Show confirm password">
             <i class="bi bi-eye"></i>
           </button>
         </div>
@@ -62,7 +65,7 @@
       </button>
 
       <p class="text-center mt-3" style="font-size:14px; color:#777;">
-        Already have an account? 
+        Already have an account?
         <a href="/login" style="color:#e7c55b; text-decoration:none; font-weight:600;">Login</a>
       </p>
 
@@ -74,72 +77,72 @@
 
 <script>
 
-document.getElementById("registerForm").addEventListener("submit", async function(e) {
+  document.getElementById("registerForm").addEventListener("submit", async function (e) {
 
-  e.preventDefault();
+    e.preventDefault();
 
-  const full_name        = document.getElementById("full_name").value.trim();
-  const username         = document.getElementById("username").value.trim();
-  const password         = document.getElementById("password").value;
-  const confirm_password = document.getElementById("confirm_password").value;
+    const full_name = document.getElementById("full_name").value.trim();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const confirm_password = document.getElementById("confirm_password").value;
 
-  if (password !== confirm_password) {
-    showToast("Passwords do not match.", "error");
-    return;
-  }
-
-  if (password.length < 8) {
-    showToast("Password must be at least 8 characters.", "error");
-    return;
-  }
-
-  const btn = document.getElementById("registerBtn");
-  btn.disabled = true;
-  btn.textContent = "Creating...";
-
-  try {
-    const response = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ full_name, username, role: "staff", password })
-    });
-
-    const data = await response.json();
-
-    btn.disabled = false;
-    btn.textContent = "Create Account";
-
-    if (response.ok) {
-      showToast("Account created successfully!", "success");
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 1500);
-    } else {
-      showToast(data.error || "Registration failed.", "error");
+    if (password !== confirm_password) {
+      showToast("Passwords do not match.", "error");
+      return;
     }
-  } catch (err) {
-    btn.disabled = false;
-    btn.textContent = "Create Account";
-    showToast("An error occurred. Please try again.", "error");
+
+    if (password.length < 8) {
+      showToast("Password must be at least 8 characters.", "error");
+      return;
+    }
+
+    const btn = document.getElementById("registerBtn");
+    btn.disabled = true;
+    btn.textContent = "Creating...";
+
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ full_name, username, role: "staff", password })
+      });
+
+      const data = await response.json();
+
+      btn.disabled = false;
+      btn.textContent = "Create Account";
+
+      if (response.ok) {
+        showToast("Account created successfully!", "success");
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1500);
+      } else {
+        showToast(data.error || "Registration failed.", "error");
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = "Create Account";
+      showToast("An error occurred. Please try again.", "error");
+    }
+
+  });
+
+  function setupPasswordToggle(inputId, buttonId) {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+
+    button.addEventListener("click", function () {
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      button.innerHTML = isHidden
+        ? '<i class="bi bi-eye-slash"></i>'
+        : '<i class="bi bi-eye"></i>';
+    });
   }
 
-});
-
-function setupPasswordToggle(inputId, buttonId) {
-  const input = document.getElementById(inputId);
-  const button = document.getElementById(buttonId);
-
-  button.addEventListener("click", function () {
-    const isHidden = input.type === "password";
-    input.type = isHidden ? "text" : "password";
-    button.innerHTML = isHidden
-      ? '<i class="bi bi-eye-slash"></i>'
-      : '<i class="bi bi-eye"></i>';
-  });
-}
-
-setupPasswordToggle("password", "toggleRegisterPassword");
-setupPasswordToggle("confirm_password", "toggleRegisterConfirmPassword");
+  setupPasswordToggle("password", "toggleRegisterPassword");
+  setupPasswordToggle("confirm_password", "toggleRegisterConfirmPassword");
 
 </script>
 

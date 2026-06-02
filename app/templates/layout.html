@@ -3,194 +3,305 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<title>{% block title %}IdeaHub{% endblock %}</title>
+  <title>{% block title %}IdeaHub{% endblock %}</title>
 
-<!-- Bootstrap -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
-<!-- Socket.IO -->
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Custom CSS -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
-<style>
-#ih-toast-container {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  pointer-events: none;
-}
-.ih-toast {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  width: 330px;
-  padding: 16px 18px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 8px 30px rgba(15,23,42,0.13);
-  position: relative;
-  overflow: hidden;
-  pointer-events: all;
-  animation: ih-in 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
-  font-family: "Segoe UI", sans-serif;
-}
-.ih-toast::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  border-radius: 14px 0 0 14px;
-}
-.ih-toast.success::before { background: #c9a43a; }
-.ih-toast.error::before   { background: #dc2626; }
-.ih-toast.warning::before { background: #f59e0b; }
-.ih-toast.info::before    { background: #3b82f6; }
-.ih-toast-icon {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  font-size: 15px; font-weight: 700;
-}
-.ih-toast.success .ih-toast-icon { background: #f7efd2; color: #c9a43a; }
-.ih-toast.error   .ih-toast-icon { background: #fef2f2; color: #dc2626; }
-.ih-toast.warning .ih-toast-icon { background: #fffbeb; color: #d97706; }
-.ih-toast.info    .ih-toast-icon { background: #eff6ff; color: #3b82f6; }
-.ih-toast-body { flex: 1; }
-.ih-toast-title {
-  font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.07em;
-  color: #9ca3af; margin-bottom: 3px;
-}
-.ih-toast-msg { font-size: 14px; font-weight: 500; color: #1f2937; }
-.ih-toast-close {
-  background: none; border: none;
-  font-size: 18px; color: #9ca3af;
-  cursor: pointer; line-height: 1;
-  padding: 0; flex-shrink: 0;
-}
-.ih-toast-close:hover { color: #1f2937; }
-.ih-toast-bar {
-  position: absolute;
-  bottom: 0; left: 0;
-  height: 3px;
-  border-radius: 0 0 0 14px;
-  animation: ih-bar 3.2s linear forwards;
-}
-.ih-toast.success .ih-toast-bar { background: #c9a43a; }
-.ih-toast.error   .ih-toast-bar { background: #dc2626; }
-.ih-toast.warning .ih-toast-bar { background: #f59e0b; }
-.ih-toast.info    .ih-toast-bar { background: #3b82f6; }
-.ih-toast.hide { animation: ih-out 0.3s ease forwards; }
-@keyframes ih-in {
-  from { opacity:0; transform: translateX(50px) scale(0.96); }
-  to   { opacity:1; transform: translateX(0) scale(1); }
-}
-@keyframes ih-out {
-  from { opacity:1; transform: translateX(0) scale(1); }
-  to   { opacity:0; transform: translateX(50px) scale(0.96); }
-}
-@keyframes ih-bar {
-  from { width: 100%; }
-  to   { width: 0%; }
-}
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-/* Sidebar section labels */
-.sidebar-section-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #9ca3af;
-  padding: 4px 8px 2px;
-  margin-top: 10px;
-  margin-bottom: 2px;
-}
+  <style>
+    #ih-toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
 
-/* Sidebar collapse toggle */
-.sidebar-collapse-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  user-select: none;
-}
-.sidebar-collapse-toggle .bi {
-  font-size: 11px;
-  transition: transform 0.2s;
-}
-.sidebar-collapse-toggle.collapsed .bi {
-  transform: rotate(-90deg);
-}
+    .ih-toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      width: 330px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.13);
+      position: relative;
+      overflow: hidden;
+      pointer-events: all;
+      animation: ih-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      font-family: var(--font-body);
+    }
 
-/* IdeaHub confirm dialog */
-.ih-confirm-modal .modal-content {
-  border-radius: 16px;
-  overflow: hidden;
-}
-.ih-confirm-icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  background: linear-gradient(135deg, #f7efd2 0%, #fef8e7 100%);
-  border: 2px solid #e7c55b;
-}
-.ih-confirm-icon.gcash {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border-color: #3b82f6;
-}
-.ih-confirm-icon.cash {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border-color: #22c55e;
-}
+    .ih-toast::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      border-radius: 14px 0 0 14px;
+    }
 
-@media (max-width: 767.98px) {
-  #ih-toast-container {
-    left: 16px;
-    right: 16px;
-  }
-  .ih-toast {
-    width: calc(100vw - 32px);
-    max-width: 100%;
-  }
-}
-</style>
+    .ih-toast.success::before {
+      background: #c9a43a;
+    }
+
+    .ih-toast.error::before {
+      background: #dc2626;
+    }
+
+    .ih-toast.warning::before {
+      background: #f59e0b;
+    }
+
+    .ih-toast.info::before {
+      background: #3b82f6;
+    }
+
+    .ih-toast-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .ih-toast.success .ih-toast-icon {
+      background: #f7efd2;
+      color: #c9a43a;
+    }
+
+    .ih-toast.error .ih-toast-icon {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .ih-toast.warning .ih-toast-icon {
+      background: #fffbeb;
+      color: #d97706;
+    }
+
+    .ih-toast.info .ih-toast-icon {
+      background: #eff6ff;
+      color: #3b82f6;
+    }
+
+    .ih-toast-body {
+      flex: 1;
+    }
+
+    .ih-toast-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #9ca3af;
+      margin-bottom: 3px;
+    }
+
+    .ih-toast-msg {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1f2937;
+    }
+
+    .ih-toast-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #9ca3af;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .ih-toast-close:hover {
+      color: #1f2937;
+    }
+
+    .ih-toast-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      border-radius: 0 0 0 14px;
+      animation: ih-bar 3.2s linear forwards;
+    }
+
+    .ih-toast.success .ih-toast-bar {
+      background: #c9a43a;
+    }
+
+    .ih-toast.error .ih-toast-bar {
+      background: #dc2626;
+    }
+
+    .ih-toast.warning .ih-toast-bar {
+      background: #f59e0b;
+    }
+
+    .ih-toast.info .ih-toast-bar {
+      background: #3b82f6;
+    }
+
+    .ih-toast.hide {
+      animation: ih-out 0.3s ease forwards;
+    }
+
+    @keyframes ih-in {
+      from {
+        opacity: 0;
+        transform: translateX(50px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    @keyframes ih-out {
+      from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(50px) scale(0.96);
+      }
+    }
+
+    @keyframes ih-bar {
+      from {
+        width: 100%;
+      }
+
+      to {
+        width: 0%;
+      }
+    }
+
+    /* Sidebar section labels */
+    .sidebar-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      padding: 4px 8px 2px;
+      margin-top: 10px;
+      margin-bottom: 2px;
+    }
+
+    /* Sidebar collapse toggle */
+    .sidebar-collapse-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .sidebar-collapse-toggle .bi {
+      font-size: 11px;
+      transition: transform 0.2s;
+    }
+
+    .sidebar-collapse-toggle.collapsed .bi {
+      transform: rotate(-90deg);
+    }
+
+    /* IdeaHub confirm dialog */
+    .ih-confirm-modal .modal-content {
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .ih-confirm-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      background: linear-gradient(135deg, #f7efd2 0%, #fef8e7 100%);
+      border: 2px solid #e7c55b;
+    }
+
+    .ih-confirm-icon.gcash {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-color: #3b82f6;
+    }
+
+    .ih-confirm-icon.cash {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border-color: #22c55e;
+    }
+
+    @media (max-width: 767.98px) {
+      #ih-toast-container {
+        left: 16px;
+        right: 16px;
+      }
+
+      .ih-toast {
+        width: calc(100vw - 32px);
+        max-width: 100%;
+      }
+    }
+  </style>
 
 </head>
 
 <body>
 
-<!-- TOP NAVBAR -->
-<nav class="navbar navbar-expand-md mobile-top-bar navbar-light bg-white shadow-sm px-3 px-md-4">
+  <!-- TOP NAVBAR -->
+  <nav class="navbar navbar-expand-md mobile-top-bar navbar-light bg-white shadow-sm px-3 px-md-4">
 
     <a class="navbar-brand mb-0" href="/dashboard">
-      <img src="{{ url_for('static', filename='css/images/logo.jpg') }}" alt="IdeaHub" class="site-logo" style="height: 40px;" />
+      <img src="{{ url_for('static', filename='css/images/logo.png') }}" alt="IdeaHub" class="site-logo"
+        style="height: 40px;" />
     </a>
 
     <div class="d-flex align-items-center gap-2 ms-auto d-md-none">
       <a class="nav-link p-1 position-relative" href="/orders" aria-label="Orders">
         <i class="bi bi-bag fs-5 text-secondary"></i>
-        <span id="orders-badge-mobile" class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-warning" style="display:none; font-size:10px;">0</span>
+        <span id="orders-badge-mobile"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-warning"
+          style="display:none; font-size:10px;">0</span>
       </a>
-      <button class="btn btn-outline-secondary mobile-menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#siteNavDrawer" aria-label="Open menu">
+      <button class="btn btn-outline-secondary mobile-menu-btn" type="button" data-bs-toggle="offcanvas"
+        data-bs-target="#siteNavDrawer" aria-label="Open menu">
         <i class="bi bi-list fs-4"></i>
       </button>
     </div>
@@ -198,14 +309,10 @@
     <div class="collapse navbar-collapse d-none d-md-flex" id="mainNavbarNav">
       <div class="ms-auto d-flex gap-2">
 
-        <a class="nav-link top-nav-link d-inline me-3" href="/dashboard">Dashboard</a>
         <a class="nav-link top-nav-link d-inline me-3" href="/orders">
           Orders
-          <span
-            id="orders-badge"
-            class="badge text-bg-warning ms-2"
-            style="display:none; vertical-align: middle;"
-          >0</span>
+          <span id="orders-badge" class="badge text-bg-warning ms-2"
+            style="display:none; vertical-align: middle;">0</span>
         </a>
         <a class="nav-link top-nav-link d-inline me-3" href="/profile">Profile</a>
         <a class="nav-link top-nav-link d-inline text-danger" href="/logout">Logout</a>
@@ -213,610 +320,622 @@
       </div>
     </div>
 
-</nav>
+  </nav>
 
-<nav class="mobile-bottom-nav d-md-none" aria-label="Primary navigation">
-  <a href="/dashboard" class="mobile-bottom-nav-item" data-nav-path="/dashboard">
-    <i class="bi bi-grid"></i>
-    <span>Dashboard</span>
-  </a>
-  <a href="/orders" class="mobile-bottom-nav-item" data-nav-path="/orders">
-    <i class="bi bi-bag"></i>
-    <span>Orders</span>
-  </a>
-  <a href="/checkout-records" class="mobile-bottom-nav-item" data-nav-path="/checkout-records">
-    <i class="bi bi-receipt"></i>
-    <span>Records</span>
-  </a>
-  <button type="button" class="mobile-bottom-nav-item mobile-bottom-nav-more" data-bs-toggle="offcanvas" data-bs-target="#siteNavDrawer" aria-label="More navigation">
-    <i class="bi bi-three-dots"></i>
-    <span>More</span>
-  </button>
-</nav>
+  <nav class="mobile-bottom-nav d-md-none" aria-label="Primary navigation">
+    <a href="/dashboard" class="mobile-bottom-nav-item" data-nav-path="/dashboard">
+      <i class="bi bi-grid"></i>
+      <span>Dashboard</span>
+    </a>
+    <a href="/orders" class="mobile-bottom-nav-item" data-nav-path="/orders">
+      <i class="bi bi-bag"></i>
+      <span>Orders</span>
+    </a>
+    <a href="/checkout-records" class="mobile-bottom-nav-item" data-nav-path="/checkout-records">
+      <i class="bi bi-receipt"></i>
+      <span>Records</span>
+    </a>
+    <button type="button" class="mobile-bottom-nav-item mobile-bottom-nav-more" data-bs-toggle="offcanvas"
+      data-bs-target="#siteNavDrawer" aria-label="More navigation">
+      <i class="bi bi-three-dots"></i>
+      <span>More</span>
+    </button>
+  </nav>
 
-<div class="offcanvas offcanvas-end" tabindex="-1" id="siteNavDrawer" aria-labelledby="siteNavDrawerLabel">
-  <div class="offcanvas-header border-bottom">
-    <h5 class="offcanvas-title fw-bold" id="siteNavDrawerLabel">Menu</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="siteNavDrawer" aria-labelledby="siteNavDrawerLabel">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title fw-bold" id="siteNavDrawerLabel">Menu</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+      {% include 'partials/mobile_drawer_nav.html' %}
+    </div>
   </div>
-  <div class="offcanvas-body p-3">
-    {% include 'partials/mobile_drawer_nav.html' %}
-  </div>
-</div>
 
-<div class="d-flex">
+  <div class="d-flex">
 
     <!-- SIDEBAR -->
     <div class="sidebar p-3 d-none d-md-block">
 
-        <!-- NAVIGATION -->
-        <div class="sidebar-section-label">Navigation</div>
+      <!-- NAVIGATION -->
+      <div class="sidebar-section-label">Navigation</div>
 
-        {% if session.get("role") == "admin" %}
-        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" style="background-color: #fff3cd; border: 2px solid #ffc107; color: #856404; font-weight: 600;" onclick="window.location.href='/admin'">
-            <i class="bi bi-shield-lock me-2"></i>Admin Panel
-        </button>
-        {% endif %}
+      {% if session.get("role") == "admin" %}
+      <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn"
+        style="background-color: #fff3cd; border: 2px solid #ffc107; color: #856404; font-weight: 600;"
+        onclick="window.location.href='/admin'">
+        <i class="bi bi-shield-lock me-2"></i>Admin Panel
+      </button>
+      {% endif %}
 
-        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/dashboard'">
-            <i class="bi bi-grid me-2"></i>Dashboard
-        </button>
+      <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/dashboard'">
+        <i class="bi bi-grid me-2"></i>Dashboard
+      </button>
 
-        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/checkout-records'">
-            <i class="bi bi-receipt me-2"></i>Checkout Records
-        </button>
+      <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/checkout-records'">
+        <i class="bi bi-receipt me-2"></i>Checkout Records
+      </button>
 
 
-        <button class="btn w-100 text-start mb-2 sidebar-btn nav-btn" onclick="window.location.href='/lounge-booking'">
-            <i class="bi bi-calendar-check me-2"></i>Boardroom Booking
-        </button>
+      <button class="btn w-100 text-start mb-2 sidebar-btn nav-btn" onclick="window.location.href='/lounge-booking'">
+        <i class="bi bi-calendar-check me-2"></i>Boardroom Booking
+      </button>
 
-        <!-- SPACES -->
-        <div class="sidebar-section-label">Spaces</div>
+      <!-- SPACES -->
+      <div class="sidebar-section-label">Spaces</div>
 
-        <button class="btn w-100 text-start mb-1 sidebar-btn space-btn" onclick="window.location.href='/dashboard?space=Regular%20Lounge'">
-            <i class="bi bi-person me-2"></i>Regular
-        </button>
+      <button class="btn w-100 text-start mb-1 sidebar-btn space-btn"
+        onclick="window.location.href='/dashboard?space=Regular%20Lounge'">
+        <i class="bi bi-person me-2"></i>Regular
+      </button>
 
-        <button class="btn w-100 text-start mb-1 sidebar-btn space-btn" onclick="window.location.href='/dashboard?space=Premium%20Lounge'">
-            <i class="bi bi-star me-2"></i>Premium
-        </button>
+      <button class="btn w-100 text-start mb-1 sidebar-btn space-btn"
+        onclick="window.location.href='/dashboard?space=Premium%20Lounge'">
+        <i class="bi bi-star me-2"></i>Premium
+      </button>
 
-        <button class="btn w-100 text-start mb-2 sidebar-btn space-btn" onclick="window.location.href='/dashboard?space=Boardroom'">
-            <i class="bi bi-building me-2"></i>Boardroom
-        </button>
+      <button class="btn w-100 text-start mb-2 sidebar-btn space-btn"
+        onclick="window.location.href='/dashboard?space=Boardroom'">
+        <i class="bi bi-building me-2"></i>Boardroom
+      </button>
 
-        <!-- STAFF OPERATIONS (visible to all staff and admin) -->
-        {% if session.get("role") in ["admin", "staff"] %}
-        <div class="sidebar-section-label">Operations</div>
+      <!-- STAFF OPERATIONS (visible to all staff and admin) -->
+      {% if session.get("role") in ["admin", "staff"] %}
+      <div class="sidebar-section-label">Operations</div>
 
+      <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/inventory'">
+        <i class="bi bi-boxes me-2"></i>Inventory
+      </button>
+
+      <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/menu'">
+        <i class="bi bi-menu-button-wide me-2"></i>Menu
+      </button>
+
+      <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/expenses'">
+        <i class="bi bi-wallet2 me-2"></i>Expenses
+      </button>
+
+      <button class="btn w-100 text-start mb-2 sidebar-btn nav-btn" onclick="window.location.href='/admin/receivables'">
+        <i class="bi bi-people me-2"></i>Receivables
+        <span id="debt-badge" class="badge bg-danger ms-1"
+          style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
+      </button>
+      {% endif %}
+
+      {% if session.get("role") == "admin" %}
+      <!-- MANAGEMENT -->
+      <div class="sidebar-section-label sidebar-collapse-toggle" data-bs-toggle="collapse" data-bs-target="#mgmtLinks">
+        <span>Management</span>
+        <i class="bi bi-chevron-down"></i>
+      </div>
+
+      <div class="collapse show" id="mgmtLinks">
         <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/inventory'">
-            <i class="bi bi-boxes me-2"></i>Inventory
+          <i class="bi bi-boxes me-2"></i>Inventory
         </button>
 
         <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/menu'">
-            <i class="bi bi-menu-button-wide me-2"></i>Menu
+          <i class="bi bi-menu-button-wide me-2"></i>Menu
+        </button>
+
+      </div>
+
+      <!-- FINANCE -->
+      <div class="sidebar-section-label sidebar-collapse-toggle mt-1" data-bs-toggle="collapse"
+        data-bs-target="#financeLinks">
+        <span>Finance</span>
+        <i class="bi bi-chevron-down"></i>
+      </div>
+
+      <div class="collapse show" id="financeLinks">
+        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn"
+          onclick="window.location.href='/admin/daily-balance'">
+          <i class="bi bi-cash-stack me-2"></i>Daily Balance
         </button>
 
         <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/expenses'">
-            <i class="bi bi-wallet2 me-2"></i>Expenses
+          <i class="bi bi-wallet2 me-2"></i>Expenses
         </button>
 
-        <button class="btn w-100 text-start mb-2 sidebar-btn nav-btn" onclick="window.location.href='/admin/receivables'">
-            <i class="bi bi-people me-2"></i>Receivables
-            <span id="debt-badge" class="badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
+        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn"
+          onclick="window.location.href='/admin/receivables'">
+          <i class="bi bi-people me-2"></i>Receivables
+          <span id="debt-badge" class="badge bg-danger ms-1"
+            style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
         </button>
-        {% endif %}
+        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/payables'">
+          <i class="bi bi-card-checklist me-2"></i>Payables
+          <span class="payables-badge badge bg-danger ms-1"
+            style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
+        </button>
+      </div>
 
-        {% if session.get("role") == "admin" %}
-        <!-- MANAGEMENT -->
-        <div class="sidebar-section-label sidebar-collapse-toggle" data-bs-toggle="collapse" data-bs-target="#mgmtLinks">
-            <span>Management</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
+      <!-- STAFF -->
+      <div class="sidebar-section-label sidebar-collapse-toggle mt-1" data-bs-toggle="collapse"
+        data-bs-target="#staffLinks">
+        <span>Staff</span>
+        <i class="bi bi-chevron-down"></i>
+      </div>
 
-        <div class="collapse show" id="mgmtLinks">
-            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/inventory'">
-                <i class="bi bi-boxes me-2"></i>Inventory
-            </button>
-
-            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/menu'">
-                <i class="bi bi-menu-button-wide me-2"></i>Menu
-            </button>
-
-        </div>
-
-        <!-- FINANCE -->
-        <div class="sidebar-section-label sidebar-collapse-toggle mt-1" data-bs-toggle="collapse" data-bs-target="#financeLinks">
-            <span>Finance</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-
-        <div class="collapse show" id="financeLinks">
-            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/daily-balance'">
-                <i class="bi bi-cash-stack me-2"></i>Daily Balance
-            </button>
-
-            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/expenses'">
-                <i class="bi bi-wallet2 me-2"></i>Expenses
-            </button>
-
-            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/receivables'">
-                <i class="bi bi-people me-2"></i>Receivables
-                <span id="debt-badge" class="badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
-            </button>
-            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/payables'">
-                <i class="bi bi-card-checklist me-2"></i>Payables
-                <span class="payables-badge badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
-            </button>
-        </div>
-
-        <!-- STAFF -->
-        <div class="sidebar-section-label sidebar-collapse-toggle mt-1" data-bs-toggle="collapse" data-bs-target="#staffLinks">
-            <span>Staff</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-
-        <div class="collapse show" id="staffLinks">
-            <!-- Hidden per request
+      <div class="collapse show" id="staffLinks">
+        <!-- Hidden per request
             <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/staff-performance'">
                 <i class="bi bi-trophy me-2"></i>Performance
             </button>
             -->
 
-            <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/analytics'">
-                <i class="bi bi-graph-up me-2"></i>Analytics
-            </button>
-        </div>
-        {% endif %}
+        <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/analytics'">
+          <i class="bi bi-graph-up me-2"></i>Analytics
+        </button>
+      </div>
+      {% endif %}
 
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="content p-3 p-md-4 w-100" id="main-content">
 
-        {% block content %}
-        {% endblock %}
+      {% block content %}
+      {% endblock %}
 
     </div>
 
-</div>
+  </div>
 
 
-<!-- IdeaHub Toast Container -->
-<div id="ih-toast-container"></div>
+  <!-- IdeaHub Toast Container -->
+  <div id="ih-toast-container"></div>
 
-<!-- IdeaHub Confirm Dialog -->
-<div class="modal fade ih-confirm-modal" id="ihConfirmModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content ih-confirm-content border-0 shadow-lg">
-      <div class="modal-body text-center px-4 pt-4 pb-2">
-        <div id="ihConfirmIcon" class="ih-confirm-icon mb-3">✦</div>
-        <h5 id="ihConfirmTitle" class="fw-bold mb-2">Confirm</h5>
-        <p id="ihConfirmMessage" class="text-muted mb-0"></p>
-      </div>
-      <div class="modal-footer border-0 justify-content-center gap-2 px-4 pb-4 pt-2">
-        <button type="button" class="btn btn-light px-4" id="ihConfirmCancelBtn">Cancel</button>
-        <button type="button" class="btn btn-success px-4" id="ihConfirmBtn">Confirm</button>
+  <!-- IdeaHub Confirm Dialog -->
+  <div class="modal fade ih-confirm-modal" id="ihConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content ih-confirm-content border-0 shadow-lg">
+        <div class="modal-body text-center px-4 pt-4 pb-2">
+          <div id="ihConfirmIcon" class="ih-confirm-icon mb-3">✦</div>
+          <h5 id="ihConfirmTitle" class="fw-bold mb-2">Confirm</h5>
+          <p id="ihConfirmMessage" class="text-muted mb-0"></p>
+        </div>
+        <div class="modal-footer border-0 justify-content-center gap-2 px-4 pb-4 pt-2">
+          <button type="button" class="btn btn-light px-4" id="ihConfirmCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-success px-4" id="ihConfirmBtn">Confirm</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-function showToast(message, type) {
-  type = type || "success";
-  var container = document.getElementById("ih-toast-container");
-  var icons  = { success: "✦", error: "✕", warning: "!", info: "i" };
-  var titles = { success: "Success", error: "Error", warning: "Warning", info: "Info" };
-  var toast = document.createElement("div");
-  toast.className = "ih-toast " + type;
-  toast.innerHTML =
-    '<div class="ih-toast-icon">' + icons[type] + '</div>' +
-    '<div class="ih-toast-body">' +
-      '<div class="ih-toast-title">' + titles[type] + '</div>' +
-      '<div class="ih-toast-msg">' + message + '</div>' +
-    '</div>' +
-    '<button class="ih-toast-close" onclick="dismissToast(this.closest(\'.ih-toast\'))">×</button>' +
-    '<div class="ih-toast-bar"></div>';
-  container.appendChild(toast);
-  setTimeout(function() { dismissToast(toast); }, 3200);
-}
-function dismissToast(toast) {
-  if (!toast || toast.classList.contains("hide")) return;
-  toast.classList.add("hide");
-  setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
-}
-
-/**
- * Modern confirm dialog (replaces browser confirm()).
- * Returns a Promise that resolves true if confirmed, false if cancelled.
- */
-window.showConfirmDialog = function(options) {
-  options = options || {};
-  return new Promise(function(resolve) {
-    var modalEl = document.getElementById("ihConfirmModal");
-    var titleEl = document.getElementById("ihConfirmTitle");
-    var messageEl = document.getElementById("ihConfirmMessage");
-    var iconEl = document.getElementById("ihConfirmIcon");
-    var confirmBtn = document.getElementById("ihConfirmBtn");
-    var cancelBtn = document.getElementById("ihConfirmCancelBtn");
-    var settled = false;
-
-    function finish(result) {
-      if (settled) return;
-      settled = true;
-      resolve(result);
+  <script>
+    function showToast(message, type) {
+      type = type || "success";
+      var container = document.getElementById("ih-toast-container");
+      var icons = { success: "✦", error: "✕", warning: "!", info: "i" };
+      var titles = { success: "Success", error: "Error", warning: "Warning", info: "Info" };
+      var toast = document.createElement("div");
+      toast.className = "ih-toast " + type;
+      toast.innerHTML =
+        '<div class="ih-toast-icon">' + icons[type] + '</div>' +
+        '<div class="ih-toast-body">' +
+        '<div class="ih-toast-title">' + titles[type] + '</div>' +
+        '<div class="ih-toast-msg">' + message + '</div>' +
+        '</div>' +
+        '<button class="ih-toast-close" onclick="dismissToast(this.closest(\'.ih-toast\'))">×</button>' +
+        '<div class="ih-toast-bar"></div>';
+      container.appendChild(toast);
+      setTimeout(function () { dismissToast(toast); }, 3200);
+    }
+    function dismissToast(toast) {
+      if (!toast || toast.classList.contains("hide")) return;
+      toast.classList.add("hide");
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
     }
 
-    titleEl.textContent = options.title || "Confirm";
-    messageEl.textContent = options.message || "Are you sure you want to continue?";
-    confirmBtn.textContent = options.confirmText || "Confirm";
-    confirmBtn.className = "btn px-4 " + (options.confirmClass || "btn-success");
+    /**
+     * Modern confirm dialog (replaces browser confirm()).
+     * Returns a Promise that resolves true if confirmed, false if cancelled.
+     */
+    window.showConfirmDialog = function (options) {
+      options = options || {};
+      return new Promise(function (resolve) {
+        var modalEl = document.getElementById("ihConfirmModal");
+        var titleEl = document.getElementById("ihConfirmTitle");
+        var messageEl = document.getElementById("ihConfirmMessage");
+        var iconEl = document.getElementById("ihConfirmIcon");
+        var confirmBtn = document.getElementById("ihConfirmBtn");
+        var cancelBtn = document.getElementById("ihConfirmCancelBtn");
+        var settled = false;
 
-    var iconType = options.iconType || "default";
-    iconEl.className = "ih-confirm-icon mb-3 " + iconType;
-    iconEl.innerHTML = options.icon || (iconType === "gcash" ? "📱" : iconType === "cash" ? "💵" : "✦");
+        function finish(result) {
+          if (settled) return;
+          settled = true;
+          resolve(result);
+        }
 
-    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        titleEl.textContent = options.title || "Confirm";
+        messageEl.textContent = options.message || "Are you sure you want to continue?";
+        confirmBtn.textContent = options.confirmText || "Confirm";
+        confirmBtn.className = "btn px-4 " + (options.confirmClass || "btn-success");
 
-    function onConfirm() {
-      modal.hide();
-      finish(true);
-    }
+        var iconType = options.iconType || "default";
+        iconEl.className = "ih-confirm-icon mb-3 " + iconType;
+        iconEl.innerHTML = options.icon || (iconType === "gcash" ? "📱" : iconType === "cash" ? "💵" : "✦");
 
-    function onCancel() {
-      modal.hide();
-      finish(false);
-    }
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-    function onHidden() {
-      confirmBtn.removeEventListener("click", onConfirm);
-      cancelBtn.removeEventListener("click", onCancel);
-      modalEl.removeEventListener("hidden.bs.modal", onHidden);
-      finish(false);
-    }
+        function onConfirm() {
+          modal.hide();
+          finish(true);
+        }
 
-    confirmBtn.addEventListener("click", onConfirm);
-    cancelBtn.addEventListener("click", onCancel);
-    modalEl.addEventListener("hidden.bs.modal", onHidden);
+        function onCancel() {
+          modal.hide();
+          finish(false);
+        }
 
-    modal.show();
-  });
-};
+        function onHidden() {
+          confirmBtn.removeEventListener("click", onConfirm);
+          cancelBtn.removeEventListener("click", onCancel);
+          modalEl.removeEventListener("hidden.bs.modal", onHidden);
+          finish(false);
+        }
 
-/**
- * CSRF-aware fetch wrapper
- * Automatically includes CSRF token from meta tag for state-changing requests
- */
-window.csrfFetch = function(url, options) {
-  options = options || {};
+        confirmBtn.addEventListener("click", onConfirm);
+        cancelBtn.addEventListener("click", onCancel);
+        modalEl.addEventListener("hidden.bs.modal", onHidden);
 
-  const headers = new Headers(options.headers || {});
-  const method = (options.method || 'GET').toUpperCase();
-  const csrfToken = document.querySelector('meta[name="csrf-token"]');
-  const token = csrfToken ? csrfToken.getAttribute('content') : '';
-
-  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method) && token) {
-    headers.set('X-CSRFToken', token);
-  }
-
-  if (['POST', 'PUT', 'PATCH'].includes(method) && options.body instanceof FormData) {
-    headers.delete('Content-Type');
-  }
-
-  options.headers = headers;
-
-  if (!('credentials' in options)) {
-    options.credentials = 'include';
-  }
-
-  return fetch(url, options);
-};
-
-</script>
-
-<script>
-  window.createSmartPoller = function createSmartPoller(fn, intervalMs, opts) {
-    opts = opts || {};
-    const runImmediately = opts.runImmediately !== false;
-    const minIntervalMs = Math.max(1000, Number(intervalMs) || 1000);
-    let timer = null;
-    let stopped = false;
-    let inFlight = false;
-
-    async function tick() {
-      if (stopped) return;
-      if (document.hidden) { schedule(); return; }
-      if (inFlight) { schedule(); return; }
-      inFlight = true;
-      try { await fn(); } catch (_) {}
-      finally { inFlight = false; schedule(); }
-    }
-
-    function schedule() {
-      if (stopped) return;
-      timer = window.setTimeout(tick, minIntervalMs);
-    }
-
-    function stop() {
-      stopped = true;
-      if (timer) window.clearTimeout(timer);
-      timer = null;
-    }
-
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && !stopped) {
-        if (timer) window.clearTimeout(timer);
-        timer = window.setTimeout(tick, 250);
-      }
-    });
-
-    if (runImmediately) { window.setTimeout(tick, 0); } else { schedule(); }
-    return { stop };
-  };
-</script>
-
-{% block scripts %}
-{% endblock %}
-
-<script>
-  (function enableSpaNav() {
-    function extractUrl(el) {
-      if (!el) return null;
-      if (el.tagName === "A") return el.getAttribute("href");
-      const clickText = el.getAttribute("onclick") || "";
-      const match = clickText.match(/href='([^']+)'/);
-      return match ? match[1] : null;
-    }
-
-    async function navigate(url, clickedEl) {
-      if (!url || url.startsWith("#") || url.startsWith("javascript:")) return;
-      window.history.pushState({}, "", url);
-      document.querySelectorAll(".top-nav-link, .nav-btn").forEach((node) => node.classList.remove("active"));
-      if (clickedEl) clickedEl.classList.add("active");
-
-      const sidebar = document.querySelector(".sidebar");
-      if (sidebar) sessionStorage.setItem("navScrollPos", String(sidebar.scrollTop));
-
-      const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }, credentials: "include" });
-      if (!res.ok) {
-        window.location.href = url;
-        return;
-      }
-      const html = await res.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      const newMain = doc.querySelector("#main-content");
-      const currentMain = document.querySelector("#main-content");
-      if (newMain && currentMain) {
-        currentMain.innerHTML = newMain.innerHTML;
-        window.scrollTo(0, 0);
-      } else {
-        window.location.href = url;
-      }
-    }
-
-    document.querySelectorAll(".top-nav-link, .sidebar .nav-btn, .sidebar .space-btn")
-      .forEach((el) => {
-        el.addEventListener("click", function (e) {
-          // Only intercept links explicitly marked for SPA.
-          // Most admin pages rely on page-level scripts that must run on full load.
-          if (!this.classList.contains("spa-enabled")) return;
-          const url = extractUrl(this);
-          if (!url) return;
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          navigate(url, this).catch(() => { window.location.href = url; });
-        }, true);
+        modal.show();
       });
+    };
 
-    window.addEventListener("popstate", () => {
-      const pos = sessionStorage.getItem("navScrollPos");
-      const sidebar = document.querySelector(".sidebar");
-      if (pos && sidebar) sidebar.scrollTop = parseInt(pos, 10);
-      navigate(window.location.pathname + window.location.search, null).catch(() => {});
-    });
-  })();
-</script>
+    /**
+     * CSRF-aware fetch wrapper
+     * Automatically includes CSRF token from meta tag for state-changing requests
+     */
+    window.csrfFetch = function (url, options) {
+      options = options || {};
 
-<script>
-  function navPathMatches(basePath, btnPath) {
-    if (btnPath === basePath) return true;
-    if (btnPath === "/orders" && basePath.startsWith("/orders")) return true;
-    if (btnPath !== "/dashboard" && btnPath && basePath.startsWith(btnPath)) return true;
-    return false;
-  }
+      const headers = new Headers(options.headers || {});
+      const method = (options.method || 'GET').toUpperCase();
+      const csrfToken = document.querySelector('meta[name="csrf-token"]');
+      const token = csrfToken ? csrfToken.getAttribute('content') : '';
 
-  (function setActiveNavigation() {
-    const path = window.location.pathname;
-    const basePath = path.split('?')[0];
-
-    document.querySelectorAll(".top-nav-link").forEach(link => {
-      if (basePath === "/logout") return;
-      const href = link.getAttribute("href");
-      if (navPathMatches(basePath, href)) {
-        link.classList.add("active");
-      } else {
-        link.classList.remove("active");
+      if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method) && token) {
+        headers.set('X-CSRFToken', token);
       }
-    });
 
-    document.querySelectorAll(".mobile-bottom-nav-item[data-nav-path]").forEach(link => {
-      const navPath = link.getAttribute("data-nav-path");
-      link.classList.toggle("active", navPathMatches(basePath, navPath));
-    });
+      if (['POST', 'PUT', 'PATCH'].includes(method) && options.body instanceof FormData) {
+        headers.delete('Content-Type');
+      }
 
-    document.querySelectorAll(".drawer-nav-btn").forEach(btn => {
-      const btnPath = (btn.getAttribute("data-href") || "").split("?")[0];
-      btn.classList.toggle("active", navPathMatches(basePath, btnPath));
-    });
+      options.headers = headers;
 
-    document.querySelectorAll(".sidebar-btn").forEach(btn => {
-      const clickText = btn.getAttribute("onclick") || "";
-      const urlMatch = clickText.match(/href='([^']*)'|href=\"([^\"]*)\"/);  
-      if (!urlMatch) {
-        btn.classList.remove("active");
-        return;
+      if (!('credentials' in options)) {
+        options.credentials = 'include';
       }
-      const btnPath = (urlMatch[1] || urlMatch[2]).split("?")[0];
-      
-      // Check if this button matches current path
-      let isActive = false;
-      if (btnPath === basePath) {
-        isActive = true;
-      } else if (btnPath !== "/dashboard" && basePath.startsWith(btnPath)) {
-        isActive = true;
-      } else if (btnPath === "/dashboard" && basePath === "/dashboard") {
-        isActive = true;
+
+      return fetch(url, options);
+    };
+
+  </script>
+
+  <script>
+    window.createSmartPoller = function createSmartPoller(fn, intervalMs, opts) {
+      opts = opts || {};
+      const runImmediately = opts.runImmediately !== false;
+      const minIntervalMs = Math.max(1000, Number(intervalMs) || 1000);
+      let timer = null;
+      let stopped = false;
+      let inFlight = false;
+
+      async function tick() {
+        if (stopped) return;
+        if (document.hidden) { schedule(); return; }
+        if (inFlight) { schedule(); return; }
+        inFlight = true;
+        try { await fn(); } catch (_) { }
+        finally { inFlight = false; schedule(); }
       }
-      
-      if (isActive) {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
+
+      function schedule() {
+        if (stopped) return;
+        timer = window.setTimeout(tick, minIntervalMs);
       }
-    });
-  })();
-  
-  // Re-run on page load and when navigating
-  document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => {
-      const evt = new Event('navigationReady');
-      document.dispatchEvent(evt);
-      (function setActiveNavigation() {
-        const path = window.location.pathname;
-        const basePath = path.split('?')[0];
-        document.querySelectorAll(".sidebar-btn").forEach(btn => {
-          const clickText = btn.getAttribute("onclick") || "";
-          const urlMatch = clickText.match(/href='([^']*)'|href=\"([^\"]*)\"/);  
-          if (!urlMatch) {
-            btn.classList.remove("active");
-            return;
-          }
-          const btnPath = (urlMatch[1] || urlMatch[2]).split("?")[0];
-          let isActive = false;
-          if (btnPath === basePath) {
-            isActive = true;
-          } else if (btnPath !== "/dashboard" && basePath.startsWith(btnPath)) {
-            isActive = true;
-          } else if (btnPath === "/dashboard" && basePath === "/dashboard") {
-            isActive = true;
-          }
-          if (isActive) {
-            btn.classList.add("active");
-          } else {
-            btn.classList.remove("active");
-          }
-        });
-      })();
-    }, 100);
-  });
-  async function updateOrdersBadge() {
-    const badge = document.getElementById("orders-badge");
-    const badgeMobile = document.getElementById("orders-badge-mobile");
-    if (!badge && !badgeMobile) return;
-    try {
-      const res = await fetch("/api/orders/pending-count", { credentials: "include" });
-      if (!res.ok) return;
-      const data = await res.json();
-      const count = Number((data && data.pending_sessions) || 0);
-      [badge, badgeMobile].forEach(el => {
-        if (!el) return;
-        if (count > 0) {
-          el.textContent = String(count);
-          el.style.display = "inline-block";
-        } else {
-          el.style.display = "none";
+
+      function stop() {
+        stopped = true;
+        if (timer) window.clearTimeout(timer);
+        timer = null;
+      }
+
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && !stopped) {
+          if (timer) window.clearTimeout(timer);
+          timer = window.setTimeout(tick, 250);
         }
       });
-    } catch (_) {}
-  }
 
-  document.querySelectorAll(".drawer-nav-btn").forEach(btn => {
-    btn.addEventListener("click", function () {
-      const href = this.getAttribute("data-href");
-      if (href) window.location.href = href;
+      if (runImmediately) { window.setTimeout(tick, 0); } else { schedule(); }
+      return { stop };
+    };
+  </script>
+
+  {% block scripts %}
+  {% endblock %}
+
+  <script>
+    (function enableSpaNav() {
+      function extractUrl(el) {
+        if (!el) return null;
+        if (el.tagName === "A") return el.getAttribute("href");
+        const clickText = el.getAttribute("onclick") || "";
+        const match = clickText.match(/href='([^']+)'/);
+        return match ? match[1] : null;
+      }
+
+      async function navigate(url, clickedEl) {
+        if (!url || url.startsWith("#") || url.startsWith("javascript:")) return;
+        window.history.pushState({}, "", url);
+        document.querySelectorAll(".top-nav-link, .nav-btn").forEach((node) => node.classList.remove("active"));
+        if (clickedEl) clickedEl.classList.add("active");
+
+        const sidebar = document.querySelector(".sidebar");
+        if (sidebar) sessionStorage.setItem("navScrollPos", String(sidebar.scrollTop));
+
+        const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }, credentials: "include" });
+        if (!res.ok) {
+          window.location.href = url;
+          return;
+        }
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const newMain = doc.querySelector("#main-content");
+        const currentMain = document.querySelector("#main-content");
+        if (newMain && currentMain) {
+          currentMain.innerHTML = newMain.innerHTML;
+          window.scrollTo(0, 0);
+        } else {
+          window.location.href = url;
+        }
+      }
+
+      document.querySelectorAll(".top-nav-link, .sidebar .nav-btn, .sidebar .space-btn")
+        .forEach((el) => {
+          el.addEventListener("click", function (e) {
+            // Only intercept links explicitly marked for SPA.
+            // Most admin pages rely on page-level scripts that must run on full load.
+            if (!this.classList.contains("spa-enabled")) return;
+            const url = extractUrl(this);
+            if (!url) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            navigate(url, this).catch(() => { window.location.href = url; });
+          }, true);
+        });
+
+      window.addEventListener("popstate", () => {
+        const pos = sessionStorage.getItem("navScrollPos");
+        const sidebar = document.querySelector(".sidebar");
+        if (pos && sidebar) sidebar.scrollTop = parseInt(pos, 10);
+        navigate(window.location.pathname + window.location.search, null).catch(() => { });
+      });
+    })();
+  </script>
+
+  <script>
+    function navPathMatches(basePath, btnPath) {
+      if (btnPath === basePath) return true;
+      if (btnPath === "/orders" && basePath.startsWith("/orders")) return true;
+      if (btnPath !== "/dashboard" && btnPath && basePath.startsWith(btnPath)) return true;
+      return false;
+    }
+
+    function setActiveNavigation() {
+      const path = window.location.pathname;
+      const basePath = path.split('?')[0];
+      const currentUrl = window.location.pathname + window.location.search;
+      const currentSearch = window.location.search;
+
+      document.querySelectorAll(".top-nav-link").forEach(link => {
+        if (basePath === "/logout") return;
+        const href = link.getAttribute("href");
+        if (navPathMatches(basePath, href)) {
+          link.classList.add("active");
+        } else {
+          link.classList.remove("active");
+        }
+      });
+
+      document.querySelectorAll(".mobile-bottom-nav-item[data-nav-path]").forEach(link => {
+        const navPath = link.getAttribute("data-nav-path");
+        link.classList.toggle("active", navPathMatches(basePath, navPath));
+      });
+
+      document.querySelectorAll(".drawer-nav-btn").forEach(btn => {
+        const fullHref = btn.getAttribute("data-href") || "";
+        const btnPath = fullHref.split("?")[0];
+        let isActive = false;
+
+        if (btn.classList.contains("space-btn")) {
+          isActive = decodeURIComponent(currentUrl).startsWith(decodeURIComponent(fullHref));
+        } else {
+          if (btnPath === "/dashboard") {
+            isActive = (basePath === "/dashboard" && !currentSearch.includes("space="));
+          } else {
+            isActive = navPathMatches(basePath, btnPath);
+          }
+        }
+        btn.classList.toggle("active", isActive);
+      });
+
+      document.querySelectorAll(".sidebar-btn").forEach(btn => {
+        const clickText = btn.getAttribute("onclick") || "";
+        const urlMatch = clickText.match(/href='([^']*)'|href=\"([^\"]*)\"/);
+        if (!urlMatch) {
+          btn.classList.remove("active");
+          return;
+        }
+        const fullBtnPath = urlMatch[1] || urlMatch[2];
+        const btnPath = fullBtnPath.split("?")[0];
+
+        // Check if this button matches current path
+        let isActive = false;
+        if (btn.classList.contains("space-btn")) {
+          isActive = decodeURIComponent(currentUrl).startsWith(decodeURIComponent(fullBtnPath));
+        } else {
+          if (btnPath === "/dashboard") {
+            isActive = (basePath === "/dashboard" && !currentSearch.includes("space="));
+          } else {
+            if (btnPath === basePath) {
+              isActive = true;
+            } else if (btnPath !== "/dashboard" && basePath.startsWith(btnPath)) {
+              isActive = true;
+            }
+          }
+        }
+
+        if (isActive) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+    }
+
+    // Run immediately
+    setActiveNavigation();
+
+    // Re-run on page load and when navigating
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(() => {
+        const evt = new Event('navigationReady');
+        document.dispatchEvent(evt);
+        setActiveNavigation();
+      }, 100);
     });
-  });
-  window.createSmartPoller(updateOrdersBadge, 15000);
-</script>
-
-<script>
-  (function boardroomOverdueNotifier() {
-    const alerted = new Set();
-    async function poll() {
+    async function updateOrdersBadge() {
+      const badge = document.getElementById("orders-badge");
+      const badgeMobile = document.getElementById("orders-badge-mobile");
+      if (!badge && !badgeMobile) return;
       try {
-        const res = await fetch("/api/lounge-bookings/overdue-alerts", { credentials: "include" });
+        const res = await fetch("/api/orders/pending-count", { credentials: "include" });
         if (!res.ok) return;
         const data = await res.json();
-        if (!Array.isArray(data)) return;
-        data.forEach(row => {
-          const key = String(row.booking_id);
-          if (alerted.has(key)) return;
-          alerted.add(key);
-          showToast(`Boardroom session for ${row.customer_name} is over time. Extend or checkout now.`, "warning");
-        });
-      } catch (_) {}
-    }
-    window.createSmartPoller(poll, 60000);
-  })();
-</script>
-
-<script>
-  /* Poll for unpaid receivables and show count badge on sidebar link */
-  (function debtDueNotifier() {
-    const alerted = new Set();
-    const badges = document.querySelectorAll("#debt-badge, .debt-badge-drawer");
-    async function poll() {
-      try {
-        const res = await fetch("/admin/receivables/api/receivables/unpaid", { credentials: "include" });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!data.success) return;
-        const unpaid = data.data || [];
-        badges.forEach(badge => {
-          if (!badge) return;
-          if (unpaid.length > 0) {
-            badge.style.display = "inline-block";
-            badge.textContent = unpaid.length;
-          } else {
-            badge.style.display = "none";
-          }
-        });
-      } catch (_) {}
-    }
-    window.createSmartPoller(poll, 60000);
-  })();
-</script>
-
-{% if session.get("role") == "admin" %}
-<script>
-  /* Poll for payables due/overdue count and show count badge on sidebar/drawer link */
-  (function payablesDueNotifier() {
-    const badges = document.querySelectorAll(".payables-badge");
-    async function poll() {
-      try {
-        const res = await fetch("/admin/payables/api/due-count", { credentials: "include" });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!data.success) return;
-        const count = data.count || 0;
-        badges.forEach(badge => {
-          if (!badge) return;
+        const count = Number((data && data.pending_sessions) || 0);
+        [badge, badgeMobile].forEach(el => {
+          if (!el) return;
           if (count > 0) {
-            badge.style.display = "inline-block";
-            badge.textContent = count;
+            el.textContent = String(count);
+            el.style.display = "inline-block";
           } else {
-            badge.style.display = "none";
+            el.style.display = "none";
           }
         });
-      } catch (_) {}
+      } catch (_) { }
     }
-    window.createSmartPoller(poll, 60000);
-  })();
-</script>
-{% endif %}
+
+    document.querySelectorAll(".drawer-nav-btn").forEach(btn => {
+      btn.addEventListener("click", function () {
+        const href = this.getAttribute("data-href");
+        if (href) window.location.href = href;
+      });
+    });
+    window.createSmartPoller(updateOrdersBadge, 15000);
+  </script>
+
+  <script>
+    (function boardroomOverdueNotifier() {
+      const alerted = new Set();
+      async function poll() {
+        try {
+          const res = await fetch("/api/lounge-bookings/overdue-alerts", { credentials: "include" });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!Array.isArray(data)) return;
+          data.forEach(row => {
+            const key = String(row.booking_id);
+            if (alerted.has(key)) return;
+            alerted.add(key);
+            showToast(`Boardroom session for ${row.customer_name} is over time. Extend or checkout now.`, "warning");
+          });
+        } catch (_) { }
+      }
+      window.createSmartPoller(poll, 60000);
+    })();
+  </script>
+
+  <script>
+    /* Poll for unpaid receivables and show count badge on sidebar link */
+    (function debtDueNotifier() {
+      const alerted = new Set();
+      const badges = document.querySelectorAll("#debt-badge, .debt-badge-drawer");
+      async function poll() {
+        try {
+          const res = await fetch("/admin/receivables/api/receivables/unpaid", { credentials: "include" });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data.success) return;
+          const unpaid = data.data || [];
+          badges.forEach(badge => {
+            if (!badge) return;
+            if (unpaid.length > 0) {
+              badge.style.display = "inline-block";
+              badge.textContent = unpaid.length;
+            } else {
+              badge.style.display = "none";
+            }
+          });
+        } catch (_) { }
+      }
+      window.createSmartPoller(poll, 60000);
+    })();
+  </script>
+
+  {% if session.get("role") == "admin" %}
+  <script>
+    /* Poll for payables due/overdue count and show count badge on sidebar/drawer link */
+    (function payablesDueNotifier() {
+      const badges = document.querySelectorAll(".payables-badge");
+      async function poll() {
+        try {
+          const res = await fetch("/admin/payables/api/due-count", { credentials: "include" });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data.success) return;
+          const count = data.count || 0;
+          badges.forEach(badge => {
+            if (!badge) return;
+            if (count > 0) {
+              badge.style.display = "inline-block";
+              badge.textContent = count;
+            } else {
+              badge.style.display = "none";
+            }
+          });
+        } catch (_) { }
+      }
+      window.createSmartPoller(poll, 60000);
+    })();
+  </script>
+  {% endif %}
 
 </body>
 

@@ -62,6 +62,21 @@ class ReceivableRepository:
         receivable.paid_at = datetime.utcnow()
         return True
 
+    def mark_customer_paid(self, customer_name: str) -> bool:
+        stripped_name = customer_name.strip()
+        unpaid = Receivable.query.filter(
+            Receivable.paid == False
+        ).all()
+        matched_count = 0
+        from datetime import datetime
+        now = datetime.utcnow()
+        for r in unpaid:
+            if r.customer_name.strip().lower() == stripped_name.lower():
+                r.paid = True
+                r.paid_at = now
+                matched_count += 1
+        return matched_count > 0
+
     def mark_partial_paid(self, receivable_id: int, amount: float) -> bool:
         receivable = self.get(receivable_id)
         if not receivable:

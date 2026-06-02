@@ -3,157 +3,259 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>{% block title %}{% endblock %}</title>
+  <title>{% block title %}{% endblock %}</title>
 
-<!-- Bootstrap -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
-<!-- Bootstrap Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<!-- Custom CSS -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-<style>
-#ih-toast-container {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  pointer-events: none;
-}
-.ih-toast {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  width: 330px;
-  padding: 16px 18px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 8px 30px rgba(15,23,42,0.13);
-  position: relative;
-  overflow: hidden;
-  pointer-events: all;
-  animation: ih-in 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
-  font-family: "Segoe UI", sans-serif;
-}
-.ih-toast::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  border-radius: 14px 0 0 14px;
-}
-.ih-toast.success::before { background: #c9a43a; }
-.ih-toast.error::before   { background: #dc2626; }
-.ih-toast.warning::before { background: #f59e0b; }
-.ih-toast.info::before    { background: #3b82f6; }
-.ih-toast-icon {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  font-size: 15px; font-weight: 700;
-}
-.ih-toast.success .ih-toast-icon { background: #f7efd2; color: #c9a43a; }
-.ih-toast.error   .ih-toast-icon { background: #fef2f2; color: #dc2626; }
-.ih-toast.warning .ih-toast-icon { background: #fffbeb; color: #d97706; }
-.ih-toast.info    .ih-toast-icon { background: #eff6ff; color: #3b82f6; }
-.ih-toast-body { flex: 1; }
-.ih-toast-title {
-  font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.07em;
-  color: #9ca3af; margin-bottom: 3px;
-}
-.ih-toast-msg { font-size: 14px; font-weight: 500; color: #1f2937; }
-.ih-toast-close {
-  background: none; border: none;
-  font-size: 18px; color: #9ca3af;
-  cursor: pointer; line-height: 1;
-  padding: 0; flex-shrink: 0;
-}
-.ih-toast-close:hover { color: #1f2937; }
-.ih-toast-bar {
-  position: absolute;
-  bottom: 0; left: 0;
-  height: 3px;
-  border-radius: 0 0 0 14px;
-  animation: ih-bar 3.2s linear forwards;
-}
-.ih-toast.success .ih-toast-bar { background: #c9a43a; }
-.ih-toast.error   .ih-toast-bar { background: #dc2626; }
-.ih-toast.warning .ih-toast-bar { background: #f59e0b; }
-.ih-toast.info    .ih-toast-bar { background: #3b82f6; }
-.ih-toast.hide { animation: ih-out 0.3s ease forwards; }
-@keyframes ih-in {
-  from { opacity:0; transform: translateX(50px) scale(0.96); }
-  to   { opacity:1; transform: translateX(0) scale(1); }
-}
-@keyframes ih-out {
-  from { opacity:1; transform: translateX(0) scale(1); }
-  to   { opacity:0; transform: translateX(50px) scale(0.96); }
-}
-@keyframes ih-bar {
-  from { width: 100%; }
-  to   { width: 0%; }
-}
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-/* Mobile responsive adjustments */
-@media (max-width: 767.98px) {
-  #ih-toast-container {
-    top: 16px;
-    right: 8px;
-    left: 8px;
-  }
-  .ih-toast {
-    width: calc(100vw - 16px);
-    max-width: 100%;
-  }
-}
-</style>
+  <style>
+    #ih-toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .ih-toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      width: 330px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.13);
+      position: relative;
+      overflow: hidden;
+      pointer-events: all;
+      animation: ih-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      font-family: var(--font-body);
+    }
+
+    .ih-toast::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      border-radius: 14px 0 0 14px;
+    }
+
+    .ih-toast.success::before {
+      background: #c9a43a;
+    }
+
+    .ih-toast.error::before {
+      background: #dc2626;
+    }
+
+    .ih-toast.warning::before {
+      background: #f59e0b;
+    }
+
+    .ih-toast.info::before {
+      background: #3b82f6;
+    }
+
+    .ih-toast-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .ih-toast.success .ih-toast-icon {
+      background: #f7efd2;
+      color: #c9a43a;
+    }
+
+    .ih-toast.error .ih-toast-icon {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .ih-toast.warning .ih-toast-icon {
+      background: #fffbeb;
+      color: #d97706;
+    }
+
+    .ih-toast.info .ih-toast-icon {
+      background: #eff6ff;
+      color: #3b82f6;
+    }
+
+    .ih-toast-body {
+      flex: 1;
+    }
+
+    .ih-toast-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #9ca3af;
+      margin-bottom: 3px;
+    }
+
+    .ih-toast-msg {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1f2937;
+    }
+
+    .ih-toast-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #9ca3af;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .ih-toast-close:hover {
+      color: #1f2937;
+    }
+
+    .ih-toast-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      border-radius: 0 0 0 14px;
+      animation: ih-bar 3.2s linear forwards;
+    }
+
+    .ih-toast.success .ih-toast-bar {
+      background: #c9a43a;
+    }
+
+    .ih-toast.error .ih-toast-bar {
+      background: #dc2626;
+    }
+
+    .ih-toast.warning .ih-toast-bar {
+      background: #f59e0b;
+    }
+
+    .ih-toast.info .ih-toast-bar {
+      background: #3b82f6;
+    }
+
+    .ih-toast.hide {
+      animation: ih-out 0.3s ease forwards;
+    }
+
+    @keyframes ih-in {
+      from {
+        opacity: 0;
+        transform: translateX(50px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    @keyframes ih-out {
+      from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(50px) scale(0.96);
+      }
+    }
+
+    @keyframes ih-bar {
+      from {
+        width: 100%;
+      }
+
+      to {
+        width: 0%;
+      }
+    }
+
+    /* Mobile responsive adjustments */
+    @media (max-width: 767.98px) {
+      #ih-toast-container {
+        top: 16px;
+        right: 8px;
+        left: 8px;
+      }
+
+      .ih-toast {
+        width: calc(100vw - 16px);
+        max-width: 100%;
+      }
+    }
+  </style>
 
 </head>
 
 <body class="bg-light">
 
-<!-- IdeaHub Toast Container -->
-<div id="ih-toast-container"></div>
+  <!-- IdeaHub Toast Container -->
+  <div id="ih-toast-container"></div>
 
-<script>
-function showToast(message, type) {
-  type = type || "success";
-  var container = document.getElementById("ih-toast-container");
-  var icons  = { success: "✦", error: "✕", warning: "!", info: "i" };
-  var titles = { success: "Success", error: "Error", warning: "Warning", info: "Info" };
-  var toast = document.createElement("div");
-  toast.className = "ih-toast " + type;
-  toast.innerHTML =
-    '<div class="ih-toast-icon">' + icons[type] + '</div>' +
-    '<div class="ih-toast-body">' +
-      '<div class="ih-toast-title">' + titles[type] + '</div>' +
-      '<div class="ih-toast-msg">' + message + '</div>' +
-    '</div>' +
-    '<button class="ih-toast-close" onclick="dismissToast(this.closest(\'.ih-toast\'))">×</button>' +
-    '<div class="ih-toast-bar"></div>';
-  container.appendChild(toast);
-  setTimeout(function() { dismissToast(toast); }, 3200);
-}
-function dismissToast(toast) {
-  if (!toast || toast.classList.contains("hide")) return;
-  toast.classList.add("hide");
-  setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
-}
-</script>
+  <script>
+    function showToast(message, type) {
+      type = type || "success";
+      var container = document.getElementById("ih-toast-container");
+      var icons = { success: "✦", error: "✕", warning: "!", info: "i" };
+      var titles = { success: "Success", error: "Error", warning: "Warning", info: "Info" };
+      var toast = document.createElement("div");
+      toast.className = "ih-toast " + type;
+      toast.innerHTML =
+        '<div class="ih-toast-icon">' + icons[type] + '</div>' +
+        '<div class="ih-toast-body">' +
+        '<div class="ih-toast-title">' + titles[type] + '</div>' +
+        '<div class="ih-toast-msg">' + message + '</div>' +
+        '</div>' +
+        '<button class="ih-toast-close" onclick="dismissToast(this.closest(\'.ih-toast\'))">×</button>' +
+        '<div class="ih-toast-bar"></div>';
+      container.appendChild(toast);
+      setTimeout(function () { dismissToast(toast); }, 3200);
+    }
+    function dismissToast(toast) {
+      if (!toast || toast.classList.contains("hide")) return;
+      toast.classList.add("hide");
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }
+  </script>
 
-{% block content %}
-{% endblock %}
+  {% block content %}
+  {% endblock %}
 
 </body>
 

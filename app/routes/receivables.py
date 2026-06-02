@@ -57,6 +57,20 @@ def api_mark_paid(rec_id: int) -> tuple:
     return jsonify(result), 200
 
 
+@receivables_bp.route("/api/receivables/mark-customer-paid", methods=["POST"])
+@login_required
+def api_mark_customer_paid() -> tuple:
+    data = request.get_json() or {}
+    customer_name = data.get("customer_name")
+    if not customer_name:
+        return jsonify({"success": False, "error": "Customer name is required"}), 400
+    
+    result = _service.mark_customer_paid(customer_name)
+    if result.get("success"):
+        emit_receivables_update('mark_paid', {'customer_name': customer_name})
+    return jsonify(result), 200
+
+
 @receivables_bp.route("/api/receivables/unpaid", methods=["GET"])
 @login_required
 def api_unpaid() -> tuple:
