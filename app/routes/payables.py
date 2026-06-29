@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from flask import Blueprint, jsonify, request, render_template, session
+import logging
 
 from app.repositories.payable_repository import PayableRepository
 from app.services.payable_service import PayableService
@@ -9,6 +10,7 @@ from app.utils.auth import admin_required
 payables_bp = Blueprint("payables", __name__, url_prefix="/admin/payables")
 
 _service = PayableService(repo=PayableRepository())
+security_logger = logging.getLogger('security')
 
 
 @payables_bp.route("", methods=["GET"])
@@ -28,23 +30,45 @@ def api_list_payables() -> tuple:
 @admin_required
 def api_create_payable() -> tuple:
     data = request.get_json() or {}
+    amount_owed = float(data.get("amount_owed") or 0)
+    creditor_name = data.get("creditor_name")
+    
     result = _service.create(
-        creditor_name=data.get("creditor_name"),
+        creditor_name=creditor_name,
         items_description=data.get("items_description"),
-        amount_owed=float(data.get("amount_owed") or 0),
+        amount_owed=amount_owed,
         due_date=data.get("due_date"),
         incurred_date=data.get("incurred_date"),
         created_by=session.get("user_id"),
     )
+    if result.get("success"):
+        security_logger.info(
+            f"Payable created: {creditor_name} - ₱{amount_owed:.2f} by user {session.get('username')} (ID: {session.get('user_id')})"
+        )
     return jsonify(result), 201
 
 
 @payables_bp.route("/api/payables/<int:p_id>/mark-paid", methods=["PATCH"])
 @admin_required
 def api_mark_paid(p_id: int) -> tuple:
-    result = _service.mark_paid(p_id)
+    data = request.get_json() or {}
+    amount_val = data.get("amount")
+    
+    amount = None
+    if amount_val is not None:
+        try:
+            amount = float(amount_val)
+        except ValueError:
+            return jsonify({"success": False, "error": "Invalid payment amount"}), 400
+            
+    result = _service.mark_paid(p_id, amount)
     if isinstance(result, tuple):
         return jsonify(result[0]), result[1]
+        
+    if result.get("success"):
+        security_logger.info(
+            f"Payable marked paid/partially-paid: ID {p_id} with amount {amount} by user {session.get('username')} (ID: {session.get('user_id')})"
+        )
     return jsonify(result), 200
 
 

@@ -53,11 +53,28 @@ class FinanceController(BaseController):
         @csrf.exempt
         def finance_add_transaction():
             payload = request.get_json(silent=True) or {}
+            txn_type = str(payload.get("type", "expense")).strip()
+            amount_val = payload.get("amount")
+            description = payload.get("description")
+            
+            if txn_type not in {"income", "expense"}:
+                return jsonify({"success": False, "error": "Invalid transaction type"}), 400
+            
+            try:
+                amount = float(amount_val)
+                if amount <= 0:
+                    return jsonify({"success": False, "error": "Amount must be greater than zero"}), 400
+            except (TypeError, ValueError):
+                return jsonify({"success": False, "error": "Invalid amount"}), 400
+                
+            from app.utils.auth import sanitize_input
+            sanitized_description = sanitize_input(description)
+            
             result = self._service.add_transaction(
                 budget_id=int(payload.get("budget_id", 1)),
-                txn_type=str(payload.get("type", "expense")),
-                amount=float(payload.get("amount", 0)),
-                description=payload.get("description"),
+                txn_type=txn_type,
+                amount=amount,
+                description=sanitized_description,
             )
             return jsonify({"success": True, "data": result})
 

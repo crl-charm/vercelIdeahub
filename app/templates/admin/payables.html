@@ -122,15 +122,16 @@
         <div class="mb-3 d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
           <i class="bi bi-check-circle-fill text-success" style="font-size: 32px;"></i>
         </div>
-        <h5 class="mb-2 fw-bold">Mark payable as Paid?</h5>
-        <p class="text-muted mb-4 small">This will close the debt to this supplier.</p>
-        <div class="text-start mb-4 p-3 bg-light border rounded-3">
+        <h5 class="mb-2 fw-bold">Record Supplier Payment</h5>
+        <p class="text-muted mb-4 small">Log a full or partial payment to this supplier.</p>
+        
+        <div class="text-start mb-3 p-3 bg-light border rounded-3">
           <div class="d-flex justify-content-between mb-2">
             <span class="text-muted">Supplier</span>
             <strong id="markPayableSupplier">—</strong>
           </div>
           <div class="d-flex justify-content-between mb-2">
-            <span class="text-muted">Amount owed</span>
+            <span class="text-muted">Remaining Balance</span>
             <strong id="markPayableAmount" class="text-danger">—</strong>
           </div>
           <div class="d-flex justify-content-between">
@@ -138,6 +139,26 @@
             <strong id="markPayableDueDate">—</strong>
           </div>
         </div>
+
+        <div class="mb-3 text-start">
+          <label class="form-label fw-semibold">Payment Type</label>
+          <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="paymentType" id="paymentTypeFull" value="full" checked autocomplete="off" onchange="togglePaymentTypeFields()">
+            <label class="btn btn-outline-success" for="paymentTypeFull">Full Payment</label>
+
+            <input type="radio" class="btn-check" name="paymentType" id="paymentTypePartial" value="partial" autocomplete="off" onchange="togglePaymentTypeFields()">
+            <label class="btn btn-outline-warning text-dark" for="paymentTypePartial">Partial Payment</label>
+          </div>
+        </div>
+
+        <div class="mb-4 text-start" id="partialAmountContainer" style="display: none;">
+          <label class="form-label fw-semibold">Payment Amount (₱) *</label>
+          <input type="number" id="payAmountInput" class="form-control" placeholder="Enter amount to pay" step="0.01" oninput="calculateRemainingBalance()">
+          <div class="form-text text-muted mt-2">
+            Remaining Balance after payment: <strong id="remainingBalanceText">₱0.00</strong>
+          </div>
+        </div>
+
         <div class="d-flex gap-2 justify-content-center">
           <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-success px-4" id="confirmPayableMarkPaidBtn">
@@ -331,17 +352,76 @@ function openMarkPayablePaidModal(pId) {
   if (!p) return;
 
   pendingPayableId = pId;
+  const remaining = p.amount_owed - p.partial_paid;
+  
   document.getElementById('markPayableSupplier').textContent = p.creditor_name;
-  document.getElementById('markPayableAmount').textContent = '₱' + (p.amount_owed - p.partial_paid).toFixed(2);
+  document.getElementById('markPayableAmount').textContent = '₱' + remaining.toFixed(2);
   document.getElementById('markPayableDueDate').textContent = p.due_date;
+
+  // Reset payment inputs
+  document.getElementById('paymentTypeFull').checked = true;
+  const payInput = document.getElementById('payAmountInput');
+  payInput.value = '';
+  payInput.max = remaining;
+  
+  togglePaymentTypeFields();
 
   if (markPayableModalInstance) {
     markPayableModalInstance.show();
   }
 }
 
+function togglePaymentTypeFields() {
+  const isPartial = document.getElementById('paymentTypePartial').checked;
+  const container = document.getElementById('partialAmountContainer');
+  const confirmBtn = document.getElementById('confirmPayableMarkPaidBtn');
+  
+  if (isPartial) {
+    container.style.display = 'block';
+    confirmBtn.className = 'btn btn-warning text-dark px-4';
+    confirmBtn.innerHTML = '<i class="bi bi-wallet2 me-1"></i> Confirm Partial Payment';
+    calculateRemainingBalance();
+  } else {
+    container.style.display = 'none';
+    confirmBtn.className = 'btn btn-success px-4';
+    confirmBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Confirm Paid';
+  }
+}
+
+function calculateRemainingBalance() {
+  const p = payablesCache.find(x => x.id === pendingPayableId);
+  if (!p) return;
+  
+  const remaining = p.amount_owed - p.partial_paid;
+  const payVal = parseFloat(document.getElementById('payAmountInput').value) || 0;
+  
+  const finalRemaining = Math.max(0, remaining - payVal);
+  document.getElementById('remainingBalanceText').textContent = '₱' + finalRemaining.toFixed(2);
+}
+
 function confirmMarkPayablePaid() {
   if (!pendingPayableId) return;
+
+  const isPartial = document.getElementById('paymentTypePartial').checked;
+  let payload = {};
+
+  if (isPartial) {
+    const payVal = parseFloat(document.getElementById('payAmountInput').value);
+    const p = payablesCache.find(x => x.id === pendingPayableId);
+    const remaining = p ? p.amount_owed - p.partial_paid : 0;
+    
+    if (isNaN(payVal) || payVal <= 0) {
+      showToast('Please enter a valid payment amount greater than 0.', 'error');
+      return;
+    }
+    
+    if (payVal > remaining) {
+      showToast(`Payment amount cannot exceed the remaining balance of ₱${remaining.toFixed(2)}.`, 'error');
+      return;
+    }
+    
+    payload.amount = payVal;
+  }
 
   const btn = document.getElementById('confirmPayableMarkPaidBtn');
   btn.disabled = true;
@@ -349,26 +429,27 @@ function confirmMarkPayablePaid() {
 
   csrfFetch(`/admin/payables/api/payables/${pendingPayableId}/mark-paid`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
   })
   .then(r => r.json())
   .then(data => {
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Confirm Paid';
+    togglePaymentTypeFields(); // restore original text
 
     if (data.success) {
       if (markPayableModalInstance) markPayableModalInstance.hide();
       pendingPayableId = null;
-      showToast('Payable marked as paid', 'success');
+      showToast(isPartial ? 'Partial payment recorded' : 'Payable marked as paid', 'success');
       loadPayables();
     } else {
-      showToast(data.error || 'Error saving payable', 'error');
+      showToast(data.error || 'Error saving payment', 'error');
     }
   })
   .catch(() => {
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Confirm Paid';
-    showToast('Error saving payable', 'error');
+    togglePaymentTypeFields(); // restore original text
+    showToast('Error saving payment', 'error');
   });
 }
 </script>

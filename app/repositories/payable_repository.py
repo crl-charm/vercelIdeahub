@@ -37,11 +37,28 @@ class PayableRepository:
         db.session.flush()
         return payable
 
-    def mark_paid(self, payable_id: int) -> bool:
+    def mark_paid(self, payable_id: int, amount: Optional[float] = None) -> bool:
         payable = self.get(payable_id)
         if not payable:
             return False
-        payable.status = "Paid"
+        
+        from decimal import Decimal
+        if amount is None:
+            payable.partial_paid = payable.amount_owed
+            payable.status = "Paid"
+        else:
+            payment_decimal = Decimal(str(amount))
+            new_partial = payable.partial_paid + payment_decimal
+            
+            if new_partial >= payable.amount_owed:
+                payable.partial_paid = payable.amount_owed
+                payable.status = "Paid"
+            else:
+                payable.partial_paid = new_partial
+                if new_partial > 0:
+                    payable.status = "Partially Paid"
+                else:
+                    payable.status = "Unpaid"
         return True
 
     def save(self) -> None:

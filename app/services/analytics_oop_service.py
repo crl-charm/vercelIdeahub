@@ -134,6 +134,28 @@ class AnalyticsReportService(ExportService):
             },
         }
 
+    def get_all_time_leaderboard(self) -> list[dict]:
+        """Get all-time top customers sorted by total spent descending."""
+        rows = (
+            self._db.session.query(
+                CustomerSession.customer_name,
+                func.count(CustomerSession.id).label("visits"),
+                func.sum(Transaction.total_bill).label("total_spent"),
+            )
+            .join(Transaction, Transaction.session_id == CustomerSession.id)
+            .group_by(CustomerSession.customer_name)
+            .order_by(func.sum(Transaction.total_bill).desc())
+            .all()
+        )
+        return [
+            {
+                "name": row.customer_name,
+                "visits": int(row.visits or 0),
+                "total_spent": float(row.total_spent or 0),
+            }
+            for row in rows
+        ]
+
     def get_dashboard_data(self) -> dict:
         return self.get_summary()
 

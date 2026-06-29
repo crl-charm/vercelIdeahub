@@ -403,6 +403,7 @@
       {% if session.get("role") in ["admin", "staff"] %}
       <div class="sidebar-section-label">Operations</div>
 
+      {% if session.get("role") == "admin" %}
       <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/inventory'">
         <i class="bi bi-boxes me-2"></i>Inventory
       </button>
@@ -414,6 +415,19 @@
       <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/admin/expenses'">
         <i class="bi bi-wallet2 me-2"></i>Expenses
       </button>
+      {% else %}
+      <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/inventory'">
+        <i class="bi bi-boxes me-2"></i>Inventory
+      </button>
+
+      <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/menu-view'">
+        <i class="bi bi-menu-button-wide me-2"></i>Menu
+      </button>
+
+      <button class="btn w-100 text-start mb-1 sidebar-btn nav-btn" onclick="window.location.href='/expenses-view'">
+        <i class="bi bi-wallet2 me-2"></i>Expenses
+      </button>
+      {% endif %}
 
       <button class="btn w-100 text-start mb-2 sidebar-btn nav-btn" onclick="window.location.href='/admin/receivables'">
         <i class="bi bi-people me-2"></i>Receivables
@@ -602,6 +616,22 @@
         modalEl.addEventListener("hidden.bs.modal", onHidden);
 
         modal.show();
+      });
+    };
+
+    /**
+     * Escape HTML special characters to prevent XSS
+     */
+    window.escapeHTML = function (str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>'"]/g, function (tag) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag;
       });
     };
 

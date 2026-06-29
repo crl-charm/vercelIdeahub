@@ -31,6 +31,8 @@
 
 {% if session.get("role") in ["admin", "staff"] %}
 <div class="sidebar-section-label">Operations</div>
+
+{% if session.get("role") == "admin" %}
 <button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/inventory">
   <i class="bi bi-boxes me-2"></i>Inventory
 </button>
@@ -40,6 +42,18 @@
 <button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/admin/expenses">
   <i class="bi bi-wallet2 me-2"></i>Expenses
 </button>
+{% else %}
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/inventory">
+  <i class="bi bi-boxes me-2"></i>Inventory
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/menu-view">
+  <i class="bi bi-menu-button-wide me-2"></i>Menu
+</button>
+<button type="button" class="btn w-100 text-start mb-1 drawer-nav-btn nav-btn" data-href="/expenses-view">
+  <i class="bi bi-wallet2 me-2"></i>Expenses
+</button>
+{% endif %}
+
 <button type="button" class="btn w-100 text-start mb-2 drawer-nav-btn nav-btn" data-href="/admin/receivables">
   <i class="bi bi-people me-2"></i>Receivables
   <span class="debt-badge-drawer badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>

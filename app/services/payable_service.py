@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Any
+from typing import Any, Optional
 
 from app.repositories.payable_repository import PayableRepository
 from app.models.payable import Payable
@@ -51,8 +51,8 @@ class PayableService:
         self.repo.save()
         return {"success": True, "data": {"id": payable.id}}
 
-    def mark_paid(self, payable_id: int) -> dict[str, Any] | tuple[dict[str, Any], int]:
-        success = self.repo.mark_paid(payable_id)
+    def mark_paid(self, payable_id: int, amount: Optional[float] = None) -> dict[str, Any] | tuple[dict[str, Any], int]:
+        success = self.repo.mark_paid(payable_id, amount)
         if not success:
             return {"error": "Payable not found"}, 404
         self.repo.save()

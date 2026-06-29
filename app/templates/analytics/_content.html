@@ -113,10 +113,15 @@
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h5 class="card-title fw-bold text-dark mb-0"><i class="bi bi-people-fill text-warning me-2"></i>Top Customers</h5>
-            <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-2 rounded-pill fw-semibold">Leaderboard</span>
+            <button class="badge bg-warning-subtle text-warning-emphasis px-3 py-2 rounded-pill fw-semibold border-0" onclick="openLeaderboardModal()" style="cursor: pointer;">Leaderboard</button>
           </div>
-          <div class="list-group list-group-flush" id="customersRankedList">
+          <div class="list-group list-group-flush mb-2" id="customersRankedList">
             <p class="text-center text-muted py-4">No customer sessions found.</p>
+          </div>
+          <div class="text-center mt-3 pt-2 border-top border-light-subtle">
+            <a href="javascript:void(0)" class="text-warning fw-semibold small text-decoration-none" onclick="openLeaderboardModal()">
+              View all-time full list here <i class="bi bi-chevron-right"></i>
+            </a>
           </div>
         </div>
       </div>
@@ -357,8 +362,156 @@ function updateAnalytics() {
   loadAnalytics();
 }
 
+let leaderboardModalInstance = null;
+let leaderboardCache = [];
+let activeLeaderboardSort = 'spent';
+
+function openLeaderboardModal() {
+  const modalEl = document.getElementById('allTimeLeaderboardModal');
+  if (!leaderboardModalInstance && modalEl) {
+    leaderboardModalInstance = new bootstrap.Modal(modalEl);
+  }
+  if (leaderboardModalInstance) {
+    leaderboardModalInstance.show();
+    loadLeaderboardData();
+  }
+}
+
+async function loadLeaderboardData() {
+  const tbody = document.getElementById('leaderboardTableBody');
+  tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2 text-warning"></span>Loading all-time leaderboard...</td></tr>';
+  
+  try {
+    const res = await fetch('/api/analytics/all-time-leaderboard', { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to fetch leaderboard data');
+    const data = await res.json();
+    
+    if (data.success && Array.isArray(data.data)) {
+      leaderboardCache = data.data;
+      activeLeaderboardSort = 'spent';
+      updateSortButtons();
+      sortAndRenderLeaderboard();
+    } else {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-4">Error loading data.</td></tr>';
+    }
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-4">Error connecting to server.</td></tr>';
+  }
+}
+
+function setLeaderboardSort(sortBy) {
+  if (activeLeaderboardSort === sortBy) return;
+  activeLeaderboardSort = sortBy;
+  updateSortButtons();
+  sortAndRenderLeaderboard();
+}
+
+function updateSortButtons() {
+  const spentBtn = document.getElementById('sortBySpentBtn');
+  const visitsBtn = document.getElementById('sortByVisitsBtn');
+  if (activeLeaderboardSort === 'spent') {
+    spentBtn.className = 'btn btn-warning text-dark fw-semibold';
+    visitsBtn.className = 'btn btn-outline-secondary fw-semibold';
+  } else {
+    spentBtn.className = 'btn btn-outline-secondary fw-semibold';
+    visitsBtn.className = 'btn btn-warning text-dark fw-semibold';
+  }
+}
+
+function sortAndRenderLeaderboard() {
+  const sorted = [...leaderboardCache].sort((a, b) => {
+    if (activeLeaderboardSort === 'visits') {
+      const diff = b.visits - a.visits;
+      return diff !== 0 ? diff : b.total_spent - a.total_spent;
+    }
+    return b.total_spent - a.total_spent;
+  });
+  renderLeaderboardTable(sorted);
+}
+
+function renderLeaderboardTable(users) {
+  const tbody = document.getElementById('leaderboardTableBody');
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No records found.</td></tr>';
+    return;
+  }
+  
+  let html = '';
+  users.forEach((user, index) => {
+    const rank = index + 1;
+    let rankBadgeClass = 'bg-secondary text-white';
+    if (rank === 1) rankBadgeClass = 'bg-warning text-dark fw-bold';
+    else if (rank === 2) rankBadgeClass = 'bg-light text-dark border';
+    else if (rank === 3) rankBadgeClass = 'bg-dark text-white';
+    
+    const highlightCol = activeLeaderboardSort === 'visits' ? 'visits' : 'spent';
+    const visitsClass = highlightCol === 'visits' ? 'fw-bold text-primary' : '';
+    const spentClass = highlightCol === 'spent' ? 'fw-bold text-success' : 'text-success';
+    
+    html += `
+      <tr>
+        <td class="text-center">
+          <span class="badge rounded-circle ${rankBadgeClass} rank-badge mx-auto">${rank}</span>
+        </td>
+        <td class="fw-semibold text-dark">${escapeHTML(user.name)}</td>
+        <td class="text-center ${visitsClass}">${user.visits}</td>
+        <td class="text-end ${spentClass} pe-4">₱${user.total_spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   initializeDatePickers();
   loadAnalytics();
 });
 </script>
+
+<!-- All-Time Leaderboard Modal -->
+<div class="modal fade" id="allTimeLeaderboardModal" tabindex="-1" aria-labelledby="allTimeLeaderboardModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold text-dark" id="allTimeLeaderboardModalLabel">
+          <i class="bi bi-trophy-fill text-warning me-2"></i>All-Time Customer Leaderboard
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+          <p class="text-muted small mb-0">Ranking of all customers across all time.</p>
+          <div class="btn-group btn-group-sm" role="group" aria-label="Sort leaderboard">
+            <button type="button" class="btn btn-warning text-dark fw-semibold" id="sortBySpentBtn" onclick="setLeaderboardSort('spent')">
+              <i class="bi bi-currency-exchange me-1"></i>Total Spent
+            </button>
+            <button type="button" class="btn btn-outline-secondary fw-semibold" id="sortByVisitsBtn" onclick="setLeaderboardSort('visits')">
+              <i class="bi bi-clock-history me-1"></i>Total Visits
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto; border-radius: 12px; border: 1px solid #f1f5f9;">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th scope="col" style="width: 80px;" class="text-center">Rank</th>
+                <th scope="col">Customer Name</th>
+                <th scope="col" class="text-center">Visits</th>
+                <th scope="col" class="text-end pe-4">Total Spent</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardTableBody">
+              <tr>
+                <td colspan="4" class="text-center text-muted py-4">Loading leaderboard...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-top-0 pt-0">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 8px;">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

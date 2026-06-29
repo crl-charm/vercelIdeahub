@@ -33,6 +33,12 @@ class AnalyticsController(BaseController):
             data = self._service.get_summary(start_date=start_date, end_date=end_date)
             return api_ok(data)
 
+        @self.blueprint.get("/api/analytics/all-time-leaderboard")
+        @admin_required
+        def all_time_leaderboard():
+            data = self._service.get_all_time_leaderboard()
+            return api_ok(data)
+
         @self.blueprint.get("/api/analytics/export")
         @admin_required
         def analytics_export():

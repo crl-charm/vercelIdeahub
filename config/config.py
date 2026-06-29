@@ -45,7 +45,7 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SECURE = os.environ.get('FLASK_ENV') == 'production'
-    PERMANENT_SESSION_LIFETIME = 3600 * 24  # 24 hours
+    PERMANENT_SESSION_LIFETIME = 7200  # 2 hours
 
     # Rate Limiting
     RATELIMIT_DEFAULT = "100 per minute"
