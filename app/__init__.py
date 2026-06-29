@@ -58,58 +58,68 @@ def create_app():
     # Register security middleware
     register_security_middleware(app)
 
-    # import routes
-    from app.routes.session_routes import session_bp
-    from app.routes.order_routes import order_bp
-    from app.routes.sales_routes import sales_bp
-    from app.routes.sales_balance import sales_bp as sales_balance_bp
-    from app.routes.user_routes import user_bp
+    # -------------------------------------------------------------------------
+    # ROUTE & CONTROLLER BLUEPRINT REGISTRATIONS (Modularized by Domain)
+    # -------------------------------------------------------------------------
+    
+    # 1. Authentication & User Management Module
     from app.routes.auth_routes import bp as auth_bp
-    from app.routes.dashboard_routes import bp as dashboard_bp
-    from app.routes.boardroom_routes import boardroom_bp
+    from app.routes.user_routes import user_bp
     from app.routes.admin_routes import admin_bp
-    from app.routes.lounge_routes import lounge_bp
-    from app.routes.inventory import inventory_bp
-    from app.routes.receivables import receivables_bp
-    from app.routes.expenses import expenses_bp
-    from app.routes.staff_performance import staff_performance_bp
-    from app.routes.analytics import analytics_bp
-    from app.routes.receipts import receipts_bp
-    from app.routes.menu import menu_bp
-    from app.routes.payables import payables_bp
-    from app.routes.staff_menu import staff_menu_bp
-    from app.routes.staff_inventory import staff_inventory_bp
-    from app.routes.staff_expenses import staff_expenses_bp
-    from app.controllers.analytics_controller import AnalyticsController
-    from app.controllers.finance_controller import FinanceController
     from app.controllers.management_controller import ManagementController
 
-    # register routes
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(user_bp)
+    app.register_blueprint(admin_bp)
+
+    # 2. POS Operations & Space Management Module
+    from app.routes.dashboard_routes import bp as dashboard_bp
+    from app.routes.session_routes import session_bp
+    from app.routes.order_routes import order_bp
+    from app.routes.lounge_routes import lounge_bp
+    from app.routes.boardroom_routes import boardroom_bp
+    from app.routes.receipts import receipts_bp
+
+    app.register_blueprint(dashboard_bp)
     app.register_blueprint(session_bp)
     app.register_blueprint(order_bp)
-    app.register_blueprint(sales_bp)
-    app.register_blueprint(sales_balance_bp)
-    app.register_blueprint(user_bp)
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(dashboard_bp)
-    app.register_blueprint(boardroom_bp)
-    app.register_blueprint(admin_bp)
     app.register_blueprint(lounge_bp)
-    app.register_blueprint(inventory_bp)
-    app.register_blueprint(receivables_bp)
-    app.register_blueprint(expenses_bp)
-    app.register_blueprint(staff_performance_bp)
-    app.register_blueprint(analytics_bp)
+    app.register_blueprint(boardroom_bp)
     app.register_blueprint(receipts_bp)
+
+    # 3. Catalog & Inventory Module (Admin & Staff)
+    from app.routes.menu import menu_bp
+    from app.routes.inventory import inventory_bp
+    from app.routes.staff_menu import staff_menu_bp
+    from app.routes.staff_inventory import staff_inventory_bp
+
     app.register_blueprint(menu_bp)
-    app.register_blueprint(payables_bp)
+    app.register_blueprint(inventory_bp)
     app.register_blueprint(staff_menu_bp)
     app.register_blueprint(staff_inventory_bp)
+
+    # 4. Financial, Accounting & Analytics Module
+    from app.routes.sales_routes import sales_bp
+    from app.routes.sales_balance import sales_bp as sales_balance_bp
+    from app.routes.expenses import expenses_bp
+    from app.routes.staff_expenses import staff_expenses_bp
+    from app.routes.receivables import receivables_bp
+    from app.routes.payables import payables_bp
+    from app.routes.staff_performance import staff_performance_bp
+    from app.routes.analytics import analytics_bp
+    from app.controllers.analytics_controller import AnalyticsController
+    from app.controllers.finance_controller import FinanceController
+
+    app.register_blueprint(sales_bp)
+    app.register_blueprint(sales_balance_bp)
+    app.register_blueprint(expenses_bp)
     app.register_blueprint(staff_expenses_bp)
+    app.register_blueprint(receivables_bp)
+    app.register_blueprint(payables_bp)
+    app.register_blueprint(staff_performance_bp)
+    app.register_blueprint(analytics_bp)
 
-    # Import Socket.IO handlers to register events
-    from app.core import socketio_handlers
-
+    # Register OOP Controllers
     controllers = [
         AnalyticsController(db),
         FinanceController(db),
@@ -117,6 +127,9 @@ def create_app():
     ]
     for controller in controllers:
         controller.register(app)
+
+    # Import Socket.IO handlers to register event handlers
+    from app.core import socketio_handlers
 
     @app.route("/")
     def home():
