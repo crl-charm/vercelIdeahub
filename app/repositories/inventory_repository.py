@@ -14,6 +14,14 @@ class InventoryRepository:
     def get_by_menu_item_id(self, menu_item_id: int) -> Optional[InventoryItem]:
         return InventoryItem.query.filter_by(menu_item_id=menu_item_id).first()
 
+    def list_by_menu_item_ids(self, menu_item_ids: list[int]) -> dict[int, InventoryItem]:
+        if not menu_item_ids:
+            return {}
+        items = InventoryItem.query.filter(
+            InventoryItem.menu_item_id.in_(menu_item_ids)
+        ).all()
+        return {item.menu_item_id: item for item in items}
+
     def list_all(self) -> list[InventoryItem]:
         return InventoryItem.query.all()
 

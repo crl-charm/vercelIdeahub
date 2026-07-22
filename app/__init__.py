@@ -1,6 +1,6 @@
-from flask import Flask, request, g
+from flask import Flask, request, g, render_template
 from flask_sqlalchemy import SQLAlchemy
-from flask import render_template
+from app.utils.auth import register_admin_blueprint, enforce_admin_access, is_admin_path
 from flask_socketio import SocketIO
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
@@ -70,7 +70,7 @@ def create_app():
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
-    app.register_blueprint(admin_bp)
+    register_admin_blueprint(app, admin_bp)
 
     # 2. POS Operations & Space Management Module
     from app.routes.dashboard_routes import bp as dashboard_bp
@@ -93,8 +93,8 @@ def create_app():
     from app.routes.staff_menu import staff_menu_bp
     from app.routes.staff_inventory import staff_inventory_bp
 
-    app.register_blueprint(menu_bp)
-    app.register_blueprint(inventory_bp)
+    register_admin_blueprint(app, menu_bp)
+    register_admin_blueprint(app, inventory_bp)
     app.register_blueprint(staff_menu_bp)
     app.register_blueprint(staff_inventory_bp)
 
@@ -110,14 +110,14 @@ def create_app():
     from app.controllers.analytics_controller import AnalyticsController
     from app.controllers.finance_controller import FinanceController
 
-    app.register_blueprint(sales_bp)
-    app.register_blueprint(sales_balance_bp)
-    app.register_blueprint(expenses_bp)
+    register_admin_blueprint(app, sales_bp)
+    register_admin_blueprint(app, sales_balance_bp)
+    register_admin_blueprint(app, expenses_bp)
     app.register_blueprint(staff_expenses_bp)
-    app.register_blueprint(receivables_bp)
-    app.register_blueprint(payables_bp)
-    app.register_blueprint(staff_performance_bp)
-    app.register_blueprint(analytics_bp)
+    register_admin_blueprint(app, receivables_bp)
+    register_admin_blueprint(app, payables_bp)
+    register_admin_blueprint(app, staff_performance_bp)
+    register_admin_blueprint(app, analytics_bp)
 
     # Register OOP Controllers
     controllers = [
@@ -169,6 +169,20 @@ def configure_logging(app):
 
 def register_security_middleware(app):
     """Register security middleware and error handlers"""
+
+    @app.before_request
+    def enforce_admin_path_access():
+        """Defense-in-depth RBAC for admin URLs."""
+        path = request.path or ""
+        if path in ("/", "/login", "/logout", "/register"):
+            return None
+        if path.startswith("/static/"):
+            return None
+        if not is_admin_path(path):
+            return None
+        denied = enforce_admin_access()
+        if denied is not None:
+            return denied
 
     @app.before_request
     def security_headers():

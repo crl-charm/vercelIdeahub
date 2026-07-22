@@ -9,7 +9,7 @@ import logging
 
 from app.repositories.menu_repository import MenuRepository
 from app.services.menu_service import MenuService
-from app.utils.auth import admin_required, login_required
+from app.utils.auth import admin_required
 from app.utils.uploads import validate_and_save_image, delete_old_image
 from app.core.socketio_handlers import emit_menu_update
 from functools import wraps
@@ -36,14 +36,14 @@ def get_valid_categories():
 
 
 @menu_bp.route("", methods=["GET"])
-@login_required
+@admin_required
 def menu_page() -> str:
     items = _service.list_all()
     return render_template("admin/menu.html", items=items, categories=get_valid_categories())
 
 
 @menu_bp.route("/api/items", methods=["GET"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_list_items() -> tuple:
     items = _service.list_available()
@@ -51,7 +51,7 @@ def api_list_items() -> tuple:
 
 
 @menu_bp.route("/api/items/all", methods=["GET"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_all_items() -> tuple:
     items = _service.list_all()
@@ -59,14 +59,14 @@ def api_all_items() -> tuple:
 
 
 @menu_bp.route("/api/categories", methods=["GET"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_get_categories() -> tuple:
     return jsonify({"success": True, "data": get_valid_categories()}), 200
 
 
 @menu_bp.route("/api/categories", methods=["POST"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_create_category() -> tuple:
     if request.is_json:
@@ -100,7 +100,7 @@ def api_create_category() -> tuple:
 
 
 @menu_bp.route("/api/items", methods=["POST"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_create_item() -> tuple:
     if request.is_json:
@@ -155,7 +155,7 @@ def api_create_item() -> tuple:
 
 
 @menu_bp.route("/api/items/variants", methods=["POST"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_create_item_variants() -> tuple:
     """
@@ -232,7 +232,7 @@ def api_create_item_variants() -> tuple:
 
 
 @menu_bp.route("/api/items/<int:item_id>", methods=["PATCH"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_update_item(item_id: int) -> tuple:
     from app.models.menu_item import MenuItem
@@ -291,7 +291,7 @@ def api_update_item(item_id: int) -> tuple:
 
 
 @menu_bp.route("/api/items/<int:item_id>/availability", methods=["PATCH"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_toggle_availability(item_id: int) -> tuple:
     result = _service.toggle_availability(item_id)
@@ -303,7 +303,7 @@ def api_toggle_availability(item_id: int) -> tuple:
 
 
 @menu_bp.route("/api/items/<int:item_id>", methods=["DELETE"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_delete_item(item_id: int) -> tuple:
     from app.models.menu_item import MenuItem
@@ -334,7 +334,7 @@ def api_delete_item(item_id: int) -> tuple:
 
 
 @menu_bp.route("/api/menu-items", methods=["GET"])
-@login_required
+@admin_required
 @csrf.exempt
 def api_menu_items_alias() -> tuple:
     items = _service.list_all()

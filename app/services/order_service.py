@@ -68,6 +68,41 @@ class OrderService:
             if not menu_item.is_available:
                 return {"error": f"{menu_item.name} is not available"}, 400
 
+        # Validate ingredient stock availability
+        from app.models.menu_item import MenuItemIngredient
+        from app.models.inventory import InventoryItem
+
+        ingredient_needs = {}
+        for item in items:
+            menu_item_id = item.get("menu_item_id")
+            qty = item.get("quantity", 1)
+            menu_item = MenuItem.query.get(menu_item_id)
+
+            recipe = MenuItemIngredient.query.filter_by(menu_item_id=menu_item_id).all()
+            if recipe:
+                for comp in recipe:
+                    needed = int(qty * comp.quantity_required)
+                    if comp.ingredient_item_id not in ingredient_needs:
+                        ingredient_needs[comp.ingredient_item_id] = [0, []]
+                    ingredient_needs[comp.ingredient_item_id][0] += needed
+                    ingredient_needs[comp.ingredient_item_id][1].append(menu_item.name)
+            else:
+                inv = InventoryItem.query.filter_by(menu_item_id=menu_item_id).first()
+                if inv:
+                    if menu_item_id not in ingredient_needs:
+                        ingredient_needs[menu_item_id] = [0, []]
+                    ingredient_needs[menu_item_id][0] += qty
+                    ingredient_needs[menu_item_id][1].append(menu_item.name)
+
+        for ing_id, (needed_qty, meals) in ingredient_needs.items():
+            inv = InventoryItem.query.filter_by(menu_item_id=ing_id).first()
+            current_stock = inv.stock_qty if inv else 0
+            if current_stock < needed_qty:
+                ing_item = MenuItem.query.get(ing_id)
+                ing_name = ing_item.name if ing_item else "Ingredient"
+                meal_list = ", ".join(set(meals))
+                return {"error": f"Insufficient stock for '{ing_name}' (Need {needed_qty}, Have {current_stock}) to prepare {meal_list}."}, 400
+
         order_id = self.repo.add_order_with_items(session_id=session_id, handled_by=handled_by, items=items)
         
         # Deduct inventory for each item in the order

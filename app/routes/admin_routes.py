@@ -3,8 +3,7 @@
 from flask import Blueprint, render_template, request, jsonify, session, redirect
 from app.repositories.admin_repository import AdminRepository
 from app.services.admin_service import AdminService
-from app.utils.auth import login_required
-from functools import wraps
+from app.utils.auth import login_required, admin_required
 
 _service = AdminService(repo=AdminRepository())
 
@@ -12,17 +11,6 @@ _service = AdminService(repo=AdminRepository())
 # ── Blueprint ─────────────────────────────────────────────────────────────────
 
 admin_bp = Blueprint("admin", __name__)
-
-
-def admin_required(view_func):
-    @wraps(view_func)
-    def wrapper(*args, **kwargs):
-        if session.get("role") != "admin":
-            if request.path.startswith("/api/"):
-                return jsonify({"error": "Unauthorized"}), 403
-            return redirect("/dashboard")
-        return view_func(*args, **kwargs)
-    return wrapper
 
 
 # ── Registration page (GET) ───────────────────────────────────────────────────

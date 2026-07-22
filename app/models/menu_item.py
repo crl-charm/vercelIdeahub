@@ -14,3 +14,15 @@ class MenuItem(db.Model):
     image_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class MenuItemIngredient(db.Model):
+    __tablename__ = "menu_item_ingredients"
+
+    id = db.Column(db.Integer, primary_key=True)
+    menu_item_id = db.Column(db.Integer, db.ForeignKey("menu_items.id", ondelete="CASCADE"), nullable=False)
+    ingredient_item_id = db.Column(db.Integer, db.ForeignKey("menu_items.id", ondelete="CASCADE"), nullable=False)
+    quantity_required = db.Column(db.Numeric(10, 2), nullable=False, default=1.00)
+
+    menu_item = db.relationship("MenuItem", foreign_keys=[menu_item_id], backref=db.backref("ingredients", cascade="all, delete-orphan"))
+    ingredient = db.relationship("MenuItem", foreign_keys=[ingredient_item_id])

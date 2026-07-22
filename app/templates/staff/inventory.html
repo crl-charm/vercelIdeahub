@@ -4,44 +4,192 @@
 
 {% block content %}
 
-<div class="container-fluid mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Inventory Management</h1>
+<style>
+  .inventory-container {
+    padding: 1.5rem 0;
+  }
+
+  .modern-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .modern-card .card-header {
+    background: #faf7e8;
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 1.5rem;
+  }
+
+  .modern-card .card-header h5 {
+    margin: 0;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .modern-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .modern-table th {
+    background: #faf7e8;
+    color: #4b5563;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+  }
+
+  .modern-table td {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    color: #1e293b;
+    vertical-align: middle;
+  }
+
+  .table-danger-custom td {
+    background-color: var(--danger-soft) !important;
+    font-weight: 600;
+  }
+
+  .table-warning-custom td {
+    background-color: var(--warning-soft) !important;
+    font-weight: 600;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .status-ok {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+
+  .status-low {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  .status-warning {
+    background: var(--warning-soft);
+    color: var(--warning);
+  }
+
+  .filter-chip {
+    border: 1px solid var(--border);
+    background: white;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  .filter-chip.active {
+    background: var(--brand);
+    border-color: var(--brand-dark);
+    color: #1e293b;
+  }
+
+  .inventory-search-bar {
+    max-width: 420px;
+  }
+
+  .inventory-search-bar .form-control {
+    border-radius: 8px;
+    padding-left: 2.25rem;
+  }
+
+  .inventory-search-bar .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+  }
+</style>
+
+<div class="container-fluid inventory-container">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold text-dark m-0">Inventory Management</h1>
+      <p class="text-muted m-0 mt-1" style="font-size: 0.9rem;">Monitor raw ingredient stock first, then recipe meal capacity</p>
+    </div>
   </div>
 
-  <div class="card">
+  <div class="mb-4 position-relative inventory-search-bar">
+    <i class="bi bi-search search-icon"></i>
+    <input type="text" id="inventorySearchInput" class="form-control shadow-sm" placeholder="Search raw ingredients or meal recipes..." autocomplete="off">
+  </div>
+
+  <div class="modern-card card">
     <div class="card-header">
-      <h5>Stock Levels</h5>
+      <h5>Direct Stock — Raw Ingredients</h5>
+      <p class="text-muted mb-0 mt-1" style="font-size: 0.85rem;">All ingredients including those used in recipes</p>
     </div>
-    <div class="card-body">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Item Name</th>
-            <th>Current Stock</th>
-            <th>Unit</th>
-            <th>Low Stock Threshold</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="inventory-table-body">
-          {% for item in items %}
-          <tr>
-            <td>{{ item.name }}</td>
-            <td>{{ item.stock_qty }}</td>
-            <td>{{ item.unit }}</td>
-            <td>{{ item.low_stock_threshold }}</td>
-            <td>
-              {% if item.stock_qty <= item.low_stock_threshold %}
-              <span class="badge bg-danger">Low Stock</span>
-              {% else %}
-              <span class="badge bg-success">OK</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="px-3 pt-3 pb-0">
+      <div class="d-flex flex-wrap gap-2 mb-2" id="directStockFilters">
+        <button type="button" class="filter-chip active" data-filter="all">All</button>
+        <button type="button" class="filter-chip" data-filter="low">Low</button>
+        <button type="button" class="filter-chip" data-filter="warning">Warning</button>
+        <button type="button" class="filter-chip" data-filter="normal">Normal</button>
+        <button type="button" class="filter-chip" data-filter="out">Out of Stock</button>
+        <button type="button" class="filter-chip" data-filter="linked">Linked</button>
+        <button type="button" class="filter-chip" data-filter="unlinked">Unlinked</button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Ingredient</th>
+              <th>Stock</th>
+              <th>Threshold</th>
+              <th>Recipes</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="direct-stock-body">
+            <tr><td colspan="5" class="text-center text-muted py-4">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="modern-card card">
+    <div class="card-header">
+      <h5>Recipe-Based Meals</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Item Name</th>
+              <th>Type</th>
+              <th>Stock / Capacity</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recipe-inventory-body">
+            <tr><td colspan="4" class="text-center text-muted py-4">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -49,40 +197,160 @@
 {% endblock %}
 
 {% block scripts %}
-<style>
-  .low-stock td:nth-child(1),
-  .low-stock td:nth-child(2),
-  .low-stock td:nth-child(3),
-  .low-stock td:nth-child(4) {
-    background-color: var(--danger-soft) !important;
-    font-weight: 600;
-  }
-</style>
-
 <script>
+let directStockItems = [];
+let recipeItems = [];
+let directStockFilter = 'all';
+let inventorySearchQuery = '';
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   loadInventory();
+  document.querySelectorAll('#directStockFilters .filter-chip').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#directStockFilters .filter-chip').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      directStockFilter = this.dataset.filter;
+      renderDirectStockTable();
+    });
+  });
+  const searchInput = document.getElementById('inventorySearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      inventorySearchQuery = this.value;
+      renderDirectStockTable();
+      renderRecipeTable();
+    });
+  }
 });
 
+function matchesInventorySearch(name) {
+  const q = inventorySearchQuery.trim().toLowerCase();
+  if (!q) return true;
+  return String(name || '').toLowerCase().includes(q);
+}
+
 function loadInventory() {
-  fetch('/inventory/api/items').then(r => r.json()).then(data => {
-    if (data.success) {
-      const tbody = document.getElementById('inventory-table-body');
-      tbody.innerHTML = '';
-      data.data.forEach(item => {
-        const isLowStock = item.stock_qty <= item.low_stock_threshold;
-        const rowClass = isLowStock ? 'low-stock' : '';
-        tbody.innerHTML += `
-          <tr class="${rowClass}">
-            <td>${item.name}</td>
-            <td>${item.stock_qty}</td>
-            <td>${item.unit}</td>
-            <td>${item.low_stock_threshold}</td>
-            <td>${isLowStock ? '<span class="badge bg-danger">Low Stock</span>' : '<span class="badge bg-success">OK</span>'}</td>
-          </tr>
-        `;
-      });
+  fetch('/inventory/api/dashboard-items')
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        directStockItems = data.direct_stock || [];
+        recipeItems = data.data || [];
+        renderDirectStockTable();
+        renderRecipeTable();
+      }
+    });
+}
+
+function filterDirectStockItems(items) {
+  return items.filter(item => {
+    if (!matchesInventorySearch(item.name)) return false;
+    switch (directStockFilter) {
+      case 'low': return item.is_low;
+      case 'warning': return item.is_warning;
+      case 'normal': return !item.is_low && !item.is_warning && !item.is_out_of_stock;
+      case 'out': return item.is_out_of_stock;
+      case 'linked': return item.is_linked;
+      case 'unlinked': return !item.is_linked;
+      default: return true;
     }
+  });
+}
+
+function renderDirectStockTable() {
+  const tbody = document.getElementById('direct-stock-body');
+  const filtered = filterDirectStockItems(directStockItems);
+
+  if (directStockItems.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No raw ingredients found.</td></tr>';
+    return;
+  }
+  if (filtered.length === 0) {
+    const msg = inventorySearchQuery.trim()
+      ? 'No ingredients match your search or filter.'
+      : 'No ingredients match this filter.';
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">${msg}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(item => {
+    let rowClass = '';
+    let badgeHtml = '';
+    if (item.is_low) {
+      rowClass = 'table-danger-custom';
+      badgeHtml = '<span class="status-badge status-low">🔴 Low Stock</span>';
+    } else if (item.is_warning) {
+      rowClass = 'table-warning-custom';
+      badgeHtml = '<span class="status-badge status-warning">🟡 Warning</span>';
+    } else {
+      badgeHtml = '<span class="status-badge status-ok">✅ OK</span>';
+    }
+
+    return `
+      <tr class="${rowClass}">
+        <td class="fw-semibold">${escapeHtml(item.name)}</td>
+        <td><strong>${item.stock_qty}</strong> ${escapeHtml(item.unit)}</td>
+        <td>${item.low_stock_threshold}</td>
+        <td>${item.recipe_count}</td>
+        <td>${badgeHtml}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderRecipeTable() {
+  const tbody = document.getElementById('recipe-inventory-body');
+  tbody.innerHTML = '';
+  const filtered = recipeItems.filter(item => matchesInventorySearch(item.name));
+
+  if (recipeItems.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No menu meals found.</td></tr>';
+    return;
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No meals match your search.</td></tr>';
+    return;
+  }
+
+  filtered.forEach(item => {
+    let typeBadge = '';
+    let capacityText = '';
+    let rowClass = '';
+    let badgeHtml = '';
+
+    if (item.has_recipe) {
+      typeBadge = '<span class="badge bg-light text-dark border">Recipe-based</span>';
+      capacityText = `<strong>${item.capacity} servings</strong> available`;
+    } else {
+      typeBadge = '<span class="badge bg-light text-success border">Direct stock meal</span>';
+      capacityText = `<strong>${item.stock_qty} ${escapeHtml(item.unit || '')}</strong> in stock`;
+    }
+
+    if (item.is_low) {
+      rowClass = 'table-danger-custom';
+      badgeHtml = '<span class="status-badge status-low">🔴 Low Stock</span>';
+    } else if (item.is_warning) {
+      rowClass = 'table-warning-custom';
+      badgeHtml = '<span class="status-badge status-warning">🟡 Warning</span>';
+    } else {
+      badgeHtml = '<span class="status-badge status-ok">✅ OK</span>';
+    }
+
+    tbody.innerHTML += `
+      <tr class="${rowClass}">
+        <td class="fw-semibold">${escapeHtml(item.name)}</td>
+        <td>${typeBadge}</td>
+        <td>${capacityText}</td>
+        <td>${badgeHtml}</td>
+      </tr>
+    `;
   });
 }
 </script>

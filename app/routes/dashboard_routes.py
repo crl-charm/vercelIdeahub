@@ -18,4 +18,6 @@ def checkout_records_page():
 @bp.route("/daily-sales")
 @login_required
 def daily_sales_page():
-    return redirect("/admin/daily-balance")
+    if session.get("role") == "admin":
+        return redirect("/admin/daily-balance")
+    return redirect("/dashboard")

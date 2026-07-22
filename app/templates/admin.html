@@ -5,7 +5,7 @@
 {% block content %}
 
 <style>
-  /* Modern Admin Panel Styles */
+  /* Admin Panel */
   .admin-header {
     background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     color: white;
@@ -20,6 +20,7 @@
     font-weight: 700;
     margin-bottom: 0.25rem;
     letter-spacing: -0.5px;
+    color: white;
   }
 
   .admin-header p {
@@ -315,13 +316,15 @@
     font-size: 0.9rem;
   }
 
-  .form-control, .form-select {
+  .form-control,
+  .form-select {
     border-radius: 8px;
     border: 1px solid #e5e7eb;
     padding: 0.75rem 1rem;
   }
 
-  .form-control:focus, .form-select:focus {
+  .form-control:focus,
+  .form-select:focus {
     border-color: #fbbf24;
     box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
   }
@@ -446,7 +449,8 @@
 
   <!-- SEARCH & FILTER -->
   <div class="filter-section">
-    <input type="text" id="searchInput" class="form-control" style="flex: 1; min-width: 200px;" placeholder="🔍 Search staff by name or username..." oninput="loadUsers()">
+    <input type="text" id="searchInput" class="form-control" style="flex: 1; min-width: 200px;"
+      placeholder="🔍 Search staff by name or username..." oninput="loadUsers()">
     <select id="roleFilter" class="form-select" style="max-width: 180px;" onchange="loadUsers()">
       <option value="all">All Roles</option>
       <option value="cashier">Cashier</option>
@@ -481,7 +485,9 @@
             </tr>
           </thead>
           <tbody id="users-table-body">
-            <tr><td colspan="6" class="text-center text-muted py-4">Loading staff...</td></tr>
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">Loading staff...</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -507,7 +513,9 @@
             </tr>
           </thead>
           <tbody id="capacity-table-body">
-            <tr><td colspan="5" class="text-center text-muted py-4">Loading spaces...</td></tr>
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">Loading spaces...</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -532,7 +540,9 @@
             </tr>
           </thead>
           <tbody id="space-prices-table-body">
-            <tr><td colspan="4" class="text-center text-muted py-4">Loading space prices...</td></tr>
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">Loading space prices...</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -560,7 +570,9 @@
             </tr>
           </thead>
           <tbody id="analytics-table-body">
-            <tr><td colspan="5" class="text-center text-muted py-4">Loading analytics...</td></tr>
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">Loading analytics...</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -586,7 +598,8 @@
         </div>
         <div class="mb-3">
           <label class="form-label">Hourly Rate (₱)</label>
-          <input type="number" class="form-control" id="edit_space_hourly_rate" placeholder="e.g. 20" step="0.01" min="0">
+          <input type="number" class="form-control" id="edit_space_hourly_rate" placeholder="e.g. 20" step="0.01"
+            min="0">
         </div>
         <div class="alert alert-info small" role="alert">
           <i class="bi bi-info-circle me-2"></i>
@@ -622,7 +635,9 @@
               </tr>
             </thead>
             <tbody id="customer-records-body">
-              <tr><td colspan="5" class="text-center text-muted py-4">Loading...</td></tr>
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">Loading...</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -650,7 +665,9 @@
               </tr>
             </thead>
             <tbody id="staff-attendance-body">
-              <tr><td colspan="3" class="text-center text-muted py-4">Loading...</td></tr>
+              <tr>
+                <td colspan="3" class="text-center text-muted py-4">Loading...</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -659,7 +676,7 @@
   </div>
 </div>
 
- 
+
 <!-- ADD USER MODAL -->
 <div class="modal fade" id="addUserModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
@@ -729,7 +746,8 @@
         </div>
         <div class="mb-3">
           <label class="form-label">New Password <small class="text-muted">(optional)</small></label>
-          <input type="password" class="form-control" id="edit_password" placeholder="Leave blank to keep current password">
+          <input type="password" class="form-control" id="edit_password"
+            placeholder="Leave blank to keep current password">
         </div>
       </div>
       <div class="modal-footer">
@@ -747,60 +765,60 @@
 {% block scripts %}
 <script>
 
-// LOAD USERS
-function loadUsers() {
+  // LOAD USERS
+  function loadUsers() {
 
-  fetch("/api/admin/users", { credentials: "include" })
-  .then(res => res.json())
-  .then(data => {
-    if (!Array.isArray(data)) {
-      document.getElementById("users-table-body").innerHTML =
-        `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load staff.</td></tr>`;
-      return;
-    }
+    fetch("/api/admin/users", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data)) {
+          document.getElementById("users-table-body").innerHTML =
+            `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load staff.</td></tr>`;
+          return;
+        }
 
-    const search = document.getElementById("searchInput").value.toLowerCase();
-    const roleFilter = document.getElementById("roleFilter").value;
-    const statusFilter = document.getElementById("statusFilter").value;
-    let filtered = data.filter(u => {
-      const matchSearch = u.name.toLowerCase().includes(search) || u.username.toLowerCase().includes(search);
-      const matchRole = roleFilter === "all" ? true : (u.job_role || "general").toLowerCase() === roleFilter;
-      const matchStatus = statusFilter === "all"
-        ? true
-        : (statusFilter === "online" ? !!u.is_online : !u.is_online);
-      return matchSearch && matchRole && matchStatus;
-    });
+        const search = document.getElementById("searchInput").value.toLowerCase();
+        const roleFilter = document.getElementById("roleFilter").value;
+        const statusFilter = document.getElementById("statusFilter").value;
+        let filtered = data.filter(u => {
+          const matchSearch = u.name.toLowerCase().includes(search) || u.username.toLowerCase().includes(search);
+          const matchRole = roleFilter === "all" ? true : (u.job_role || "general").toLowerCase() === roleFilter;
+          const matchStatus = statusFilter === "all"
+            ? true
+            : (statusFilter === "online" ? !!u.is_online : !u.is_online);
+          return matchSearch && matchRole && matchStatus;
+        });
 
-    const roleRank = { cashier: 1, cook: 2, server: 3, general: 4 };
-    filtered.sort((a, b) => {
-      const roleA = (a.job_role || "general").toLowerCase();
-      const roleB = (b.job_role || "general").toLowerCase();
-      const rankA = roleRank[roleA] || 99;
-      const rankB = roleRank[roleB] || 99;
-      if (rankA !== rankB) return rankA - rankB;
-      if ((a.is_online ? 1 : 0) !== (b.is_online ? 1 : 0)) return (b.is_online ? 1 : 0) - (a.is_online ? 1 : 0);
-      return a.name.localeCompare(b.name);
-    });
+        const roleRank = { cashier: 1, cook: 2, server: 3, general: 4 };
+        filtered.sort((a, b) => {
+          const roleA = (a.job_role || "general").toLowerCase();
+          const roleB = (b.job_role || "general").toLowerCase();
+          const rankA = roleRank[roleA] || 99;
+          const rankB = roleRank[roleB] || 99;
+          if (rankA !== rankB) return rankA - rankB;
+          if ((a.is_online ? 1 : 0) !== (b.is_online ? 1 : 0)) return (b.is_online ? 1 : 0) - (a.is_online ? 1 : 0);
+          return a.name.localeCompare(b.name);
+        });
 
-    // Stats
-    const staffOnly = data.filter(u => u.role === "staff");
-    const onlineCount = staffOnly.filter(u => u.is_online).length;
-    document.getElementById("total-staff").textContent = staffOnly.length;
-    document.getElementById("online-staff").textContent = onlineCount;
-    document.getElementById("offline-staff").textContent = staffOnly.length - onlineCount;
-    document.getElementById("count-cashier").textContent = staffOnly.filter(u => (u.job_role || "general").toLowerCase() === "cashier").length;
-    document.getElementById("count-cook").textContent = staffOnly.filter(u => (u.job_role || "general").toLowerCase() === "cook").length;
-    document.getElementById("count-server").textContent = staffOnly.filter(u => (u.job_role || "general").toLowerCase() === "server").length;
-    document.getElementById("count-general").textContent = staffOnly.filter(u => (u.job_role || "general").toLowerCase() === "general").length;
+        // Stats
+        const staffOnly = data.filter(u => u.role === "staff");
+        const onlineCount = staffOnly.filter(u => u.is_online).length;
+        document.getElementById("total-staff").textContent = staffOnly.length;
+        document.getElementById("online-staff").textContent = onlineCount;
+        document.getElementById("offline-staff").textContent = staffOnly.length - onlineCount;
+        document.getElementById("count-cashier").textContent = staffOnly.filter(u => (u.job_role || "general").toLowerCase() === "cashier").length;
+        document.getElementById("count-cook").textContent = staffOnly.filter(u => (u.job_role || "general").toLowerCase() === "cook").length;
+        document.getElementById("count-server").textContent = staffOnly.filter(u => (u.job_role || "general").toLowerCase() === "server").length;
+        document.getElementById("count-general").textContent = staffOnly.filter(u => (u.job_role || "general").toLowerCase() === "general").length;
 
-    const tbody = document.getElementById("users-table-body");
+        const tbody = document.getElementById("users-table-body");
 
-    if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No staff found.</td></tr>`;
-      return;
-    }
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No staff found.</td></tr>`;
+          return;
+        }
 
-    tbody.innerHTML = filtered.map(u => `
+        tbody.innerHTML = filtered.map(u => `
       <tr>
         <td class="ps-4 fw-semibold">${u.name}</td>
         <td class="text-muted d-none d-md-table-cell">@${u.username}</td>
@@ -832,35 +850,35 @@ function loadUsers() {
       </tr>
     `).join("");
 
-  })
-  .catch(() => {
-    document.getElementById("users-table-body").innerHTML =
-      `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load staff.</td></tr>`;
-  });
-}
+      })
+      .catch(() => {
+        document.getElementById("users-table-body").innerHTML =
+          `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load staff.</td></tr>`;
+      });
+  }
 
-function loadCustomerStats() {
-  fetch("/api/admin/customer-records", { credentials: "include" })
-  .then(res => res.json())
-  .then(data => {
-    if (Array.isArray(data)) {
-      document.getElementById("total-customers").textContent = data.length;
-    }
-  })
-  .catch(() => {
-    document.getElementById("total-customers").textContent = "—";
-  });
-}
+  function loadCustomerStats() {
+    fetch("/api/admin/customer-records", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          document.getElementById("total-customers").textContent = data.length;
+        }
+      })
+      .catch(() => {
+        document.getElementById("total-customers").textContent = "—";
+      });
+  }
 
-function openCustomerRecords() {
-  fetch("/api/admin/customer-records", { credentials: "include" })
-  .then(res => res.json())
-  .then(data => {
-    const body = document.getElementById("customer-records-body");
-    if (!Array.isArray(data) || !data.length) {
-      body.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No customer records yet.</td></tr>`;
-    } else {
-      body.innerHTML = data.map(r => `
+  function openCustomerRecords() {
+    fetch("/api/admin/customer-records", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        const body = document.getElementById("customer-records-body");
+        if (!Array.isArray(data) || !data.length) {
+          body.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No customer records yet.</td></tr>`;
+        } else {
+          body.innerHTML = data.map(r => `
         <tr>
           <td>${r.name}</td>
           <td>${r.orders}</td>
@@ -869,59 +887,59 @@ function openCustomerRecords() {
           <td>${r.time_out}</td>
         </tr>
       `).join("");
-    }
+        }
 
-    new bootstrap.Modal(document.getElementById("customerRecordsModal")).show();
-  })
-  .catch(() => {
-    showToast("Failed to load customer records.", "error");
-  });
-}
+        new bootstrap.Modal(document.getElementById("customerRecordsModal")).show();
+      })
+      .catch(() => {
+        showToast("Failed to load customer records.", "error");
+      });
+  }
 
-function loadStaffAttendanceData() {
-  return fetch("/api/admin/staff-attendance", { credentials: "include" })
-  .then(res => res.json())
-  .then(data => {
-    const body = document.getElementById("staff-attendance-body");
-    if (!Array.isArray(data) || !data.length) {
-      body.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-4">No staff attendance records yet.</td></tr>`;
-    } else {
-      body.innerHTML = data.map(r => `
+  function loadStaffAttendanceData() {
+    return fetch("/api/admin/staff-attendance", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        const body = document.getElementById("staff-attendance-body");
+        if (!Array.isArray(data) || !data.length) {
+          body.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-4">No staff attendance records yet.</td></tr>`;
+        } else {
+          body.innerHTML = data.map(r => `
         <tr>
           <td>${r.name}</td>
           <td>${r.time_in}</td>
           <td>${r.time_out}</td>
         </tr>
       `).join("");
-    }
-  });
-}
+        }
+      });
+  }
 
-function openStaffAttendance() {
-  loadStaffAttendanceData()
-  .then(() => {
-    new bootstrap.Modal(document.getElementById("staffAttendanceModal")).show();
-  })
-  .catch(() => {
-    showToast("Failed to load staff attendance records.", "error");
-  });
-}
+  function openStaffAttendance() {
+    loadStaffAttendanceData()
+      .then(() => {
+        new bootstrap.Modal(document.getElementById("staffAttendanceModal")).show();
+      })
+      .catch(() => {
+        showToast("Failed to load staff attendance records.", "error");
+      });
+  }
 
-function loadStaffAnalytics() {
-  fetch("/api/admin/staff-analytics", { credentials: "include" })
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.getElementById("analytics-table-body");
-      if (!Array.isArray(data) || !data.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No analytics data yet.</td></tr>`;
-        return;
-      }
+  function loadStaffAnalytics() {
+    fetch("/api/admin/staff-analytics", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.getElementById("analytics-table-body");
+        if (!Array.isArray(data) || !data.length) {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No analytics data yet.</td></tr>`;
+          return;
+        }
 
-      tbody.innerHTML = data.map((row, idx) => {
-        const rankBadge = idx === 0
-          ? `<span class="badge text-bg-warning text-dark">#1</span>`
-          : `<span class="badge text-bg-light border text-dark">#${idx + 1}</span>`;
-        return `
+        tbody.innerHTML = data.map((row, idx) => {
+          const rankBadge = idx === 0
+            ? `<span class="badge text-bg-warning text-dark">#1</span>`
+            : `<span class="badge text-bg-light border text-dark">#${idx + 1}</span>`;
+          return `
           <tr>
             <td class="ps-4">${rankBadge}</td>
             <td class="fw-semibold">${row.name}</td>
@@ -930,25 +948,25 @@ function loadStaffAnalytics() {
             <td>${row.orders_count}</td>
           </tr>
         `;
-      }).join("");
-    })
-    .catch(() => {
-      const tbody = document.getElementById("analytics-table-body");
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load analytics.</td></tr>`;
-    });
-}
+        }).join("");
+      })
+      .catch(() => {
+        const tbody = document.getElementById("analytics-table-body");
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load analytics.</td></tr>`;
+      });
+  }
 
-function loadCapacity() {
-  fetch("/api/admin/space-capacity", { credentials: "include" })
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.getElementById("capacity-table-body");
-      if (!Array.isArray(data) || !data.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No spaces found.</td></tr>`;
-        return;
-      }
+  function loadCapacity() {
+    fetch("/api/admin/space-capacity", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.getElementById("capacity-table-body");
+        if (!Array.isArray(data) || !data.length) {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No spaces found.</td></tr>`;
+          return;
+        }
 
-      tbody.innerHTML = data.map(s => `
+        tbody.innerHTML = data.map(s => `
         <tr>
           <td class="ps-4 fw-semibold">${s.name}</td>
           <td style="max-width:130px;">
@@ -961,219 +979,223 @@ function loadCapacity() {
           </td>
         </tr>
       `).join("");
-    })
-    .catch(() => {
-      document.getElementById("capacity-table-body").innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load capacities.</td></tr>`;
-    });
-}
-
-function saveCapacity(spaceId) {
-  const input = document.getElementById(`cap-input-${spaceId}`);
-  if (!input) return;
-  const capacity = parseInt(input.value, 10);
-  if (!capacity || capacity <= 0) {
-    showToast("Capacity must be greater than 0.", "error");
-    return;
+      })
+      .catch(() => {
+        document.getElementById("capacity-table-body").innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load capacities.</td></tr>`;
+      });
   }
 
-  csrfFetch(`/api/admin/space-capacity/${spaceId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ capacity })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        showToast(data.error, "error");
-        return;
-      }
-      showToast("Space capacity updated.", "success");
-      loadCapacity();
-    })
-    .catch(() => showToast("Failed to update capacity.", "error"));
-}
-
-
-// ROLE BADGE (auth role)
-function roleBadge(role) {
-  const r = (role || "").toLowerCase();
-  if (r === "admin") {
-    return `<span class="badge bg-danger text-capitalize">admin</span>`;
-  }
-  return `<span class="badge bg-warning text-capitalize">staff</span>`;
-}
-
-// JOB ROLE BADGE
-function jobRoleBadge(jr) {
-  const map = {
-    cashier: "bg-info text-dark",
-    cook:    "bg-success",
-    server:  "bg-primary",
-    general: "bg-secondary"
-  };
-  const cls = map[(jr || "general").toLowerCase()] || "bg-secondary";
-  return `<span class="badge ${cls} text-capitalize">${jr || "general"}</span>`;
-}
-
-function statusBadge(isOnline) {
-  return isOnline
-    ? `<span class="badge bg-success">Online</span>`
-    : `<span class="badge bg-secondary">Offline</span>`;
-}
-
-
-// ADD USER
-function addUser() {
-
-  const full_name = document.getElementById("new_full_name").value.trim();
-  const username  = document.getElementById("new_username").value.trim();
-  const password  = document.getElementById("new_password").value;
-
-  if (!full_name || !username || !password) {
-    showToast("Please fill in all fields.", "error");
-    return;
-  }
-
-  csrfFetch("/api/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ full_name, username, role: "staff",
-      job_role: document.getElementById("new_job_role").value, password })
-  })
-  .then(res => res.json().then(data => ({ status: res.status, data })))
-  .then(({ status, data }) => {
-    if (!data.message || status >= 400) { 
-      showToast(data.error || "Failed to create user.", "error"); 
-      return; 
+  function saveCapacity(spaceId) {
+    const input = document.getElementById(`cap-input-${spaceId}`);
+    if (!input) return;
+    const capacity = parseInt(input.value, 10);
+    if (!capacity || capacity <= 0) {
+      showToast("Capacity must be greater than 0.", "error");
+      return;
     }
 
-    bootstrap.Modal.getInstance(document.getElementById("addUserModal")).hide();
-    document.getElementById("new_full_name").value = "";
-    document.getElementById("new_username").value  = "";
-    document.getElementById("new_password").value  = "";
-    document.getElementById("new_job_role").value  = "general";
-    showToast("Staff created successfully!", "success");
-    loadUsers();
-  })
-  .catch((err) => {
-    console.error("Add staff error:", err);
-    showToast("Failed to create staff. Please try again.", "error");
-  });
-}
-
-
-// OPEN EDIT
-function openEdit(id, name, username, jobRole) {
-  document.getElementById("edit_user_id").value    = id;
-  document.getElementById("edit_full_name").value  = name;
-  document.getElementById("edit_username").value   = username;
-  document.getElementById("edit_password").value   = "";
-  document.getElementById("edit_job_role").value   = jobRole || "general";
-
-  new bootstrap.Modal(document.getElementById("editUserModal")).show();
-}
-
-
-// SAVE EDIT
-function saveEditUser() {
-
-  const id        = document.getElementById("edit_user_id").value;
-  const full_name = document.getElementById("edit_full_name").value.trim();
-  const username  = document.getElementById("edit_username").value.trim();
-  const password  = document.getElementById("edit_password").value;
-
-  const payload = { full_name, username, role: "staff",
-    job_role: document.getElementById("edit_job_role").value };
-  if (password) payload.password = password;
-
-  csrfFetch(`/api/admin/users/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  })
-  .then(res => res.json().then(data => ({ status: res.status, data })))
-  .then(({ status, data }) => {
-    if (data.error || status >= 400) { 
-      showToast(data.error || "Failed to update user.", "error"); 
-      return; 
-    }
-
-    bootstrap.Modal.getInstance(document.getElementById("editUserModal")).hide();
-    showToast("Staff updated successfully!", "success");
-    loadUsers();
-  })
-  .catch((err) => {
-    console.error("Edit staff error:", err);
-    showToast("Failed to update staff. Please try again.", "error");
-  });
-}
-
-
-// DELETE USER
-function deleteUser(id, name) {
-  if (!confirm(`Delete staff "${name}"? This cannot be undone.`)) return;
-
-  csrfFetch(`/api/admin/users/${id}`, {
-    method: "DELETE"
-  })
-    .then(async res => {
-      // Error pages may not be JSON (e.g. 405 HTML). Try JSON first, then fall back to text.
-      let data = null;
-      try {
-        data = await res.json();
-      } catch {
-        try {
-          const text = await res.text();
-          data = { error: text || `Request failed with status ${res.status}` };
-        } catch {
-          data = { error: `Request failed with status ${res.status}` };
+    csrfFetch(`/api/admin/space-capacity/${spaceId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ capacity })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          showToast(data.error, "error");
+          return;
         }
-      }
+        showToast("Space capacity updated.", "success");
+        loadCapacity();
+      })
+      .catch(() => showToast("Failed to update capacity.", "error"));
+  }
 
-      if (!res.ok) {
-        showToast(data && data.error ? data.error : `Request failed with status ${res.status}`, "error");
-        return;
-      }
 
-      if (data && data.error) {
-        showToast(data.error, "error");
-        return;
-      }
+  // ROLE BADGE (auth role)
+  function roleBadge(role) {
+    const r = (role || "").toLowerCase();
+    if (r === "admin") {
+      return `<span class="badge bg-danger text-capitalize">admin</span>`;
+    }
+    return `<span class="badge bg-warning text-capitalize">staff</span>`;
+  }
 
-      showToast(`Staff "${name}" deleted successfully.`, "success");
-      loadUsers();
+  // JOB ROLE BADGE
+  function jobRoleBadge(jr) {
+    const map = {
+      cashier: "bg-info text-dark",
+      cook: "bg-success",
+      server: "bg-primary",
+      general: "bg-secondary"
+    };
+    const cls = map[(jr || "general").toLowerCase()] || "bg-secondary";
+    return `<span class="badge ${cls} text-capitalize">${jr || "general"}</span>`;
+  }
+
+  function statusBadge(isOnline) {
+    return isOnline
+      ? `<span class="badge bg-success">Online</span>`
+      : `<span class="badge bg-secondary">Offline</span>`;
+  }
+
+
+  // ADD USER
+  function addUser() {
+
+    const full_name = document.getElementById("new_full_name").value.trim();
+    const username = document.getElementById("new_username").value.trim();
+    const password = document.getElementById("new_password").value;
+
+    if (!full_name || !username || !password) {
+      showToast("Please fill in all fields.", "error");
+      return;
+    }
+
+    csrfFetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name, username, role: "staff",
+        job_role: document.getElementById("new_job_role").value, password
+      })
     })
-    .catch(() => {
-      showToast("Failed to delete staff. Please try again.", "error");
-    });
-}
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (!data.message || status >= 400) {
+          showToast(data.error || "Failed to create user.", "error");
+          return;
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById("addUserModal")).hide();
+        document.getElementById("new_full_name").value = "";
+        document.getElementById("new_username").value = "";
+        document.getElementById("new_password").value = "";
+        document.getElementById("new_job_role").value = "general";
+        showToast("Staff created successfully!", "success");
+        loadUsers();
+      })
+      .catch((err) => {
+        console.error("Add staff error:", err);
+        showToast("Failed to create staff. Please try again.", "error");
+      });
+  }
+
+
+  // OPEN EDIT
+  function openEdit(id, name, username, jobRole) {
+    document.getElementById("edit_user_id").value = id;
+    document.getElementById("edit_full_name").value = name;
+    document.getElementById("edit_username").value = username;
+    document.getElementById("edit_password").value = "";
+    document.getElementById("edit_job_role").value = jobRole || "general";
+
+    new bootstrap.Modal(document.getElementById("editUserModal")).show();
+  }
+
+
+  // SAVE EDIT
+  function saveEditUser() {
+
+    const id = document.getElementById("edit_user_id").value;
+    const full_name = document.getElementById("edit_full_name").value.trim();
+    const username = document.getElementById("edit_username").value.trim();
+    const password = document.getElementById("edit_password").value;
+
+    const payload = {
+      full_name, username, role: "staff",
+      job_role: document.getElementById("edit_job_role").value
+    };
+    if (password) payload.password = password;
+
+    csrfFetch(`/api/admin/users/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (data.error || status >= 400) {
+          showToast(data.error || "Failed to update user.", "error");
+          return;
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById("editUserModal")).hide();
+        showToast("Staff updated successfully!", "success");
+        loadUsers();
+      })
+      .catch((err) => {
+        console.error("Edit staff error:", err);
+        showToast("Failed to update staff. Please try again.", "error");
+      });
+  }
+
+
+  // DELETE USER
+  function deleteUser(id, name) {
+    if (!confirm(`Delete staff "${name}"? This cannot be undone.`)) return;
+
+    csrfFetch(`/api/admin/users/${id}`, {
+      method: "DELETE"
+    })
+      .then(async res => {
+        // Error pages may not be JSON (e.g. 405 HTML). Try JSON first, then fall back to text.
+        let data = null;
+        try {
+          data = await res.json();
+        } catch {
+          try {
+            const text = await res.text();
+            data = { error: text || `Request failed with status ${res.status}` };
+          } catch {
+            data = { error: `Request failed with status ${res.status}` };
+          }
+        }
+
+        if (!res.ok) {
+          showToast(data && data.error ? data.error : `Request failed with status ${res.status}`, "error");
+          return;
+        }
+
+        if (data && data.error) {
+          showToast(data.error, "error");
+          return;
+        }
+
+        showToast(`Staff "${name}" deleted successfully.`, "success");
+        loadUsers();
+      })
+      .catch(() => {
+        showToast("Failed to delete staff. Please try again.", "error");
+      });
+  }
 
 
 
-// LOAD SPACE PRICES
-function loadSpacePrices() {
-  fetch("/api/admin/spaces/prices", { credentials: "include" })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success || !Array.isArray(data.data)) {
-        document.getElementById("space-prices-table-body").innerHTML =
-          `<tr><td colspan="4" class="text-center text-danger py-4">Failed to load space prices.</td></tr>`;
-        return;
-      }
+  // LOAD SPACE PRICES
+  function loadSpacePrices() {
+    fetch("/api/admin/spaces/prices", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success || !Array.isArray(data.data)) {
+          document.getElementById("space-prices-table-body").innerHTML =
+            `<tr><td colspan="4" class="text-center text-danger py-4">Failed to load space prices.</td></tr>`;
+          return;
+        }
 
-      const tbody = document.getElementById("space-prices-table-body");
-      
-      if (data.data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">No spaces found.</td></tr>`;
-        return;
-      }
+        const tbody = document.getElementById("space-prices-table-body");
 
-      tbody.innerHTML = data.data.map(space => {
-        const lastChanged = space.last_changed === "Never" 
-          ? "Never changed" 
-          : new Date(space.last_changed).toLocaleDateString() + " " + new Date(space.last_changed).toLocaleTimeString();
-        
-        return `
+        if (data.data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">No spaces found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.data.map(space => {
+          const lastChanged = space.last_changed === "Never"
+            ? "Never changed"
+            : new Date(space.last_changed).toLocaleDateString() + " " + new Date(space.last_changed).toLocaleTimeString();
+
+          return `
           <tr>
             <td class="ps-4 fw-semibold">${space.name}</td>
             <td>
@@ -1195,86 +1217,86 @@ function loadSpacePrices() {
             </td>
           </tr>
         `;
-      }).join("");
-    })
-    .catch(err => {
-      console.error("Load space prices error:", err);
-      document.getElementById("space-prices-table-body").innerHTML =
-        `<tr><td colspan="4" class="text-center text-danger py-4">Failed to load space prices.</td></tr>`;
-    });
-}
-
-// OPEN EDIT SPACE PRICE
-function openEditSpacePrice(spaceId, spaceName, currentRate) {
-  document.getElementById("edit_space_id").value = spaceId;
-  document.getElementById("edit_space_name").value = spaceName;
-  document.getElementById("edit_space_hourly_rate").value = currentRate.toFixed(2);
-
-  new bootstrap.Modal(document.getElementById("editSpacePriceModal")).show();
-}
-
-// SAVE SPACE PRICE
-function saveSpacePrice() {
-  const spaceId = document.getElementById("edit_space_id").value;
-  const hourlyRate = parseFloat(document.getElementById("edit_space_hourly_rate").value);
-
-  if (!spaceId || isNaN(hourlyRate)) {
-    showToast("Please enter a valid price.", "error");
-    return;
+        }).join("");
+      })
+      .catch(err => {
+        console.error("Load space prices error:", err);
+        document.getElementById("space-prices-table-body").innerHTML =
+          `<tr><td colspan="4" class="text-center text-danger py-4">Failed to load space prices.</td></tr>`;
+      });
   }
 
-  if (hourlyRate < 0) {
-    showToast("Price cannot be negative.", "error");
-    return;
+  // OPEN EDIT SPACE PRICE
+  function openEditSpacePrice(spaceId, spaceName, currentRate) {
+    document.getElementById("edit_space_id").value = spaceId;
+    document.getElementById("edit_space_name").value = spaceName;
+    document.getElementById("edit_space_hourly_rate").value = currentRate.toFixed(2);
+
+    new bootstrap.Modal(document.getElementById("editSpacePriceModal")).show();
   }
 
-  csrfFetch(`/api/admin/spaces/prices/${spaceId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ hourly_rate: hourlyRate })
-  })
-    .then(res => res.json().then(data => ({ status: res.status, data })))
-    .then(({ status, data }) => {
-      if (data.error || status >= 400) {
-        showToast(data.error || "Failed to update price.", "error");
-        return;
-      }
+  // SAVE SPACE PRICE
+  function saveSpacePrice() {
+    const spaceId = document.getElementById("edit_space_id").value;
+    const hourlyRate = parseFloat(document.getElementById("edit_space_hourly_rate").value);
 
-      bootstrap.Modal.getInstance(document.getElementById("editSpacePriceModal")).hide();
-      showToast(data.message || "Price updated successfully!", "success");
-      loadSpacePrices();
+    if (!spaceId || isNaN(hourlyRate)) {
+      showToast("Please enter a valid price.", "error");
+      return;
+    }
+
+    if (hourlyRate < 0) {
+      showToast("Price cannot be negative.", "error");
+      return;
+    }
+
+    csrfFetch(`/api/admin/spaces/prices/${spaceId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hourly_rate: hourlyRate })
     })
-    .catch(err => {
-      console.error("Save space price error:", err);
-      showToast("Failed to update price. Please try again.", "error");
-    });
-}
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (data.error || status >= 400) {
+          showToast(data.error || "Failed to update price.", "error");
+          return;
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById("editSpacePriceModal")).hide();
+        showToast(data.message || "Price updated successfully!", "success");
+        loadSpacePrices();
+      })
+      .catch(err => {
+        console.error("Save space price error:", err);
+        showToast("Failed to update price. Please try again.", "error");
+      });
+  }
 
 
-// INIT
-loadUsers();
-loadCustomerStats();
-loadStaffAnalytics();
-loadCapacity();
-loadSpacePrices();
-window.createSmartPoller(loadUsers, 30000);
-window.createSmartPoller(loadStaffAnalytics, 60000);
-window.createSmartPoller(loadCapacity, 60000);
-window.createSmartPoller(loadSpacePrices, 120000);
-
-// CONNECT SOCKET.IO FOR REAL-TIME STAFF UPDATES
-const socket = io();
-socket.on('staff_status_change', function(data) {
-  console.log("Staff status change received:", data);
+  // INIT
   loadUsers();
+  loadCustomerStats();
   loadStaffAnalytics();
-  
-  // Reload the attendance records in-place if the modal is currently open!
-  const modalEl = document.getElementById("staffAttendanceModal");
-  if (modalEl && modalEl.classList.contains("show")) {
-    loadStaffAttendanceData();
-  }
-});
+  loadCapacity();
+  loadSpacePrices();
+  window.createSmartPoller(loadUsers, 30000);
+  window.createSmartPoller(loadStaffAnalytics, 60000);
+  window.createSmartPoller(loadCapacity, 60000);
+  window.createSmartPoller(loadSpacePrices, 120000);
+
+  // CONNECT SOCKET.IO FOR REAL-TIME STAFF UPDATES
+  const socket = io();
+  socket.on('staff_status_change', function (data) {
+    console.log("Staff status change received:", data);
+    loadUsers();
+    loadStaffAnalytics();
+
+    // Reload the attendance records in-place if the modal is currently open!
+    const modalEl = document.getElementById("staffAttendanceModal");
+    if (modalEl && modalEl.classList.contains("show")) {
+      loadStaffAttendanceData();
+    }
+  });
 
 </script>
 {% endblock %}

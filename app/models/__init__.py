@@ -2,7 +2,7 @@ from .user import User
 from .space_type import SpaceType
 from .space_price_history import SpacePriceHistory
 from .customer_session import CustomerSession
-from .menu_item import MenuItem
+from .menu_item import MenuItem, MenuItemIngredient
 from .order import Order
 from .order_item import OrderItem
 from .transaction import Transaction
@@ -28,6 +28,7 @@ __all__ = [
     'SpacePriceHistory',
     'CustomerSession',
     'MenuItem',
+    'MenuItemIngredient',
     'Order',
     'OrderItem',
     'Transaction',
