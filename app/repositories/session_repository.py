@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable, Optional
+from typing import Any, Iterable, Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
@@ -103,4 +103,29 @@ class SessionRepository:
 
     def get_all_spaces(self) -> list[SpaceType]:
         return SpaceType.query.all()
+
+    def get_transaction_for_session(self, session_id: int) -> Optional[Transaction]:
+        return (
+            Transaction.query.filter_by(session_id=session_id)
+            .order_by(Transaction.created_at.desc())
+            .first()
+        )
+
+    def get_orders_for_session(self, session_id: int) -> list[dict[str, Any]]:
+        orders = (
+            Order.query.options(
+                selectinload(Order.items).selectinload(OrderItem.menu_item)
+            )
+            .filter_by(customer_session_id=session_id)
+            .all()
+        )
+        items_list = []
+        for order in orders:
+            for item in order.items:
+                items_list.append({
+                    "item_name": item.menu_item.name if item.menu_item else "Unknown Item",
+                    "quantity": item.quantity,
+                    "price": float(item.price),
+                })
+        return items_list
 

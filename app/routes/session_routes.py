@@ -60,7 +60,12 @@ def checkout(session_id):
         or request.args.get("payment_method")
         or "cash"
     )
-    resp = _service.checkout(session_id, payment_method=payment_method)
+    amount_tendered = (
+        data.get("amount_tendered")
+        or request.form.get("amount_tendered")
+        or request.args.get("amount_tendered")
+    )
+    resp = _service.checkout(session_id, payment_method=payment_method, amount_tendered=amount_tendered)
     if isinstance(resp, tuple):
         payload, status = resp
         return jsonify(payload), status

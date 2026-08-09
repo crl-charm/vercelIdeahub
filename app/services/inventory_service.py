@@ -16,16 +16,17 @@ class InventoryService:
     repo: InventoryRepository
 
     @staticmethod
-    def compute_stock_status(stock_qty: int, threshold: int) -> dict[str, bool]:
-        is_out_of_stock = stock_qty == 0
+    def compute_stock_status(stock_qty: float | Decimal, threshold: int) -> dict[str, bool]:
+        stock_val = float(stock_qty)
+        is_out_of_stock = stock_val == 0
         if threshold <= 0:
             return {
                 "is_low": is_out_of_stock,
                 "is_warning": False,
                 "is_out_of_stock": is_out_of_stock,
             }
-        is_low = stock_qty < threshold
-        stock_ratio = stock_qty / threshold
+        is_low = stock_val < threshold
+        stock_ratio = stock_val / threshold
         is_warning = not is_low and stock_ratio < 1.5
         return {
             "is_low": is_low,
@@ -41,7 +42,7 @@ class InventoryService:
             return {
                 "menu_item_id": menu_item_id,
                 "inventory_item_id": inv.id,
-                "stock_qty": inv.stock_qty,
+                "stock_qty": float(inv.stock_qty),
                 "low_stock_threshold": inv.low_stock_threshold,
                 "unit": inv.unit,
                 "persisted": True,
@@ -49,7 +50,7 @@ class InventoryService:
         return {
             "menu_item_id": menu_item_id,
             "inventory_item_id": None,
-            "stock_qty": 0,
+            "stock_qty": 0.0,
             "low_stock_threshold": DEFAULT_LOW_STOCK_THRESHOLD,
             "unit": DEFAULT_UNIT,
             "persisted": False,
@@ -196,9 +197,9 @@ class InventoryService:
                     elif ing_status["is_warning"]:
                         meal_data["is_warning"] = True
 
-                    qty_req = float(m.quantity_required)
+                    qty_req = float(m.quantity_required) * float(m.conversion_ratio or 1.0)
                     if qty_req > 0:
-                        caps.append(int(snap["stock_qty"] / qty_req))
+                        caps.append(int(float(snap["stock_qty"]) / qty_req))
                     else:
                         caps.append(0)
 
@@ -241,8 +242,10 @@ class InventoryService:
                     "ingredient_item_id": m.ingredient_item_id,
                     "ingredient_name": m.ingredient.name if m.ingredient else "Unknown",
                     "quantity_required": float(m.quantity_required),
-                    "stock_qty": snap["stock_qty"],
-                    "unit": snap["unit"],
+                    "unit": m.unit,
+                    "conversion_ratio": float(m.conversion_ratio or 1.0),
+                    "stock_qty": float(snap["stock_qty"]),
+                    "ingredient_unit": snap["unit"],
                     "inventory_item_id": snap["inventory_item_id"],
                     "persisted": snap["persisted"],
                 }
@@ -295,10 +298,10 @@ class InventoryService:
                 "id": item.id,
                 "menu_item_id": item.menu_item_id,
                 "menu_item_name": item.menu_item.name if item.menu_item else "Unknown",
-                "stock_qty": item.stock_qty,
+                "stock_qty": float(item.stock_qty),
                 "low_stock_threshold": item.low_stock_threshold,
                 "unit": item.unit,
-                "is_low": item.stock_qty < item.low_stock_threshold,
+                "is_low": float(item.stock_qty) < item.low_stock_threshold,
             }
             for item in items
         ]
@@ -311,7 +314,7 @@ class InventoryService:
             "id": item.id,
             "menu_item_id": item.menu_item_id,
             "menu_item_name": item.menu_item.name,
-            "stock_qty": item.stock_qty,
+            "stock_qty": float(item.stock_qty),
             "low_stock_threshold": item.low_stock_threshold,
             "unit": item.unit,
         }
@@ -347,15 +350,15 @@ class InventoryService:
         if new_qty < 0:
             return {"error": "Stock quantity cannot be less than zero"}, 400
 
-        old_qty = item.stock_qty
-        change = new_qty - old_qty
+        old_qty = float(item.stock_qty)
+        change = float(new_qty) - old_qty
 
         from app.models.user import User
 
         user = User.query.get(user_id) if user_id else None
         username = user.username if user else "System"
 
-        formatted_reason = f"{username} adjusted {change:+} ({old_qty} → {new_qty}) - {reason}"
+        formatted_reason = f"{username} adjusted {change:+.2f} ({old_qty:.2f} → {new_qty:.2f}) - {reason}"
         formatted_reason = formatted_reason[:100]
 
         if change > 0:
@@ -407,7 +410,7 @@ class InventoryService:
             return {"success": True}
         return {"error": "Failed to delete inventory item"}, 500
 
-    def deduct_on_order(self, menu_item_id: int, qty: int) -> bool:
+    def deduct_on_order(self, menu_item_id: int, qty: float) -> bool:
         from app.models.menu_item import MenuItemIngredient
         from app.core.socketio_handlers import emit_inventory_low_stock
 
@@ -416,7 +419,8 @@ class InventoryService:
         if ingredients:
             success = True
             for recipe_component in ingredients:
-                total_deduction = int(qty * recipe_component.quantity_required)
+                ratio = float(recipe_component.conversion_ratio or 1.0)
+                total_deduction = float(qty * recipe_component.quantity_required) * ratio
                 item = self.repo.get_by_menu_item_id(recipe_component.ingredient_item_id)
                 if item:
                     deducted = self.repo.deduct(
@@ -426,12 +430,12 @@ class InventoryService:
                         None,
                     )
                     if deducted:
-                        if item.stock_qty < item.low_stock_threshold:
+                        if float(item.stock_qty) < item.low_stock_threshold:
                             emit_inventory_low_stock(
                                 {
                                     "item_id": item.id,
                                     "menu_item": item.menu_item.name,
-                                    "stock_qty": item.stock_qty,
+                                    "stock_qty": float(item.stock_qty),
                                     "threshold": item.low_stock_threshold,
                                 }
                             )
@@ -447,12 +451,12 @@ class InventoryService:
             success = self.repo.deduct(item.id, qty, "Order deduction", None)
             if success:
                 self.repo.save()
-                if item.stock_qty < item.low_stock_threshold:
+                if float(item.stock_qty) < item.low_stock_threshold:
                     emit_inventory_low_stock(
                         {
                             "item_id": item.id,
                             "menu_item": item.menu_item.name,
-                            "stock_qty": item.stock_qty,
+                            "stock_qty": float(item.stock_qty),
                             "threshold": item.low_stock_threshold,
                         }
                     )
@@ -464,7 +468,7 @@ class InventoryService:
             {
                 "id": item.id,
                 "menu_item": item.menu_item.name,
-                "stock_qty": item.stock_qty,
+                "stock_qty": float(item.stock_qty),
                 "threshold": item.low_stock_threshold,
             }
             for item in items
@@ -475,7 +479,7 @@ class InventoryService:
         return [
             {
                 "id": log.id,
-                "change_qty": log.change_qty,
+                "change_qty": float(log.change_qty),
                 "reason": log.reason,
                 "changed_by": log.changed_by_user.username if log.changed_by_user else "System",
                 "created_at": log.created_at.strftime("%Y-%m-%d %H:%M:%S"),

@@ -29,6 +29,11 @@ def view_receipt(session_id: int) -> str:
     space_rate = sess.space_type.rate_per_minute if sess.space_type else 0
     time_bill = float(duration_min * space_rate) if space_rate else 0
 
+    tx = _repo.get_transaction_for_session(session_id)
+    payment_method_val = tx.payment_method if tx and tx.payment_method else getattr(sess, "payment_method", "cash")
+    amount_tendered_val = tx.amount_tendered if tx and tx.amount_tendered is not None else getattr(sess, "amount_tendered", None)
+    amount_tendered = float(amount_tendered_val) if amount_tendered_val is not None else None
+
     return render_template(
         "receipt.html",
         session_id=session_id,
@@ -40,8 +45,8 @@ def view_receipt(session_id: int) -> str:
         time_bill=time_bill,
         food_bill=total_food,
         total_bill=time_bill + total_food,
-        payment_method=payment_method_label(getattr(sess, "payment_method", "cash")),
-        amount_tendered=getattr(sess, "amount_tendered", None),
+        payment_method=payment_method_label(payment_method_val),
+        amount_tendered=amount_tendered,
         receipt_date=(sess.time_in + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S"),
         orders=orders,
     )

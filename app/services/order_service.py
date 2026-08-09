@@ -38,19 +38,44 @@ class OrderService:
         )
 
     def list_menu(self) -> list[dict[str, Any]]:
+        from app.services.inventory_service import InventoryService
+        from app.repositories.inventory_repository import InventoryRepository
+
+        inv_service = InventoryService(repo=InventoryRepository())
+        try:
+            inv_items = inv_service.build_recipe_inventory_items()
+            inv_data = {item["id"]: item for item in inv_items}
+        except Exception:
+            inv_data = {}
+
         items = self.repo.list_menu_items()
-        return [
-            {
-                "id": i.id,
-                "name": i.name,
-                "price": float(i.price),
-                "category": i.category,
-                "description": i.description,
-                "image_url": i.image_url,
-                "is_available": bool(i.is_available),
-            }
-            for i in items
-        ]
+        results = []
+        for i in items:
+            inv_info = inv_data.get(i.id, {})
+            # If item is not in inventory database, default capacity to a high number (e.g. 99)
+            # or treat it as direct item. Since build_recipe_inventory_items includes all non-ingredient items,
+            # they should normally be present.
+            capacity = inv_info.get("capacity", 99.0)
+            is_low = inv_info.get("is_low", False)
+            
+            # Out of stock if capacity is 0 or less
+            is_out_of_stock = capacity <= 0
+            
+            results.append(
+                {
+                    "id": i.id,
+                    "name": i.name,
+                    "price": float(i.price),
+                    "category": i.category,
+                    "description": i.description,
+                    "image_url": i.image_url,
+                    "is_available": bool(i.is_available) and not is_out_of_stock,
+                    "is_low_stock": is_low,
+                    "is_out_of_stock": is_out_of_stock,
+                    "capacity": float(capacity),
+                }
+            )
+        return results
 
     def add_order(self, *, session_id: int, items: list[dict], handled_by: Optional[int]) -> dict[str, Any] | tuple[dict[str, Any], int]:
         sess = self.repo.get_session(session_id)
@@ -75,33 +100,34 @@ class OrderService:
         ingredient_needs = {}
         for item in items:
             menu_item_id = item.get("menu_item_id")
-            qty = item.get("quantity", 1)
+            qty = float(item.get("quantity", 1))
             menu_item = MenuItem.query.get(menu_item_id)
 
             recipe = MenuItemIngredient.query.filter_by(menu_item_id=menu_item_id).all()
             if recipe:
                 for comp in recipe:
-                    needed = int(qty * comp.quantity_required)
+                    ratio = float(comp.conversion_ratio or 1.0)
+                    needed = qty * float(comp.quantity_required) * ratio
                     if comp.ingredient_item_id not in ingredient_needs:
-                        ingredient_needs[comp.ingredient_item_id] = [0, []]
+                        ingredient_needs[comp.ingredient_item_id] = [0.0, []]
                     ingredient_needs[comp.ingredient_item_id][0] += needed
                     ingredient_needs[comp.ingredient_item_id][1].append(menu_item.name)
             else:
                 inv = InventoryItem.query.filter_by(menu_item_id=menu_item_id).first()
                 if inv:
                     if menu_item_id not in ingredient_needs:
-                        ingredient_needs[menu_item_id] = [0, []]
+                        ingredient_needs[menu_item_id] = [0.0, []]
                     ingredient_needs[menu_item_id][0] += qty
                     ingredient_needs[menu_item_id][1].append(menu_item.name)
 
         for ing_id, (needed_qty, meals) in ingredient_needs.items():
             inv = InventoryItem.query.filter_by(menu_item_id=ing_id).first()
-            current_stock = inv.stock_qty if inv else 0
+            current_stock = float(inv.stock_qty) if inv else 0.0
             if current_stock < needed_qty:
                 ing_item = MenuItem.query.get(ing_id)
                 ing_name = ing_item.name if ing_item else "Ingredient"
                 meal_list = ", ".join(set(meals))
-                return {"error": f"Insufficient stock for '{ing_name}' (Need {needed_qty}, Have {current_stock}) to prepare {meal_list}."}, 400
+                return {"error": f"Insufficient stock for '{ing_name}' (Need {needed_qty:.2f}, Have {current_stock:.2f}) to prepare {meal_list}."}, 400
 
         order_id = self.repo.add_order_with_items(session_id=session_id, handled_by=handled_by, items=items)
         

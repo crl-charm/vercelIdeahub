@@ -242,6 +242,8 @@ function loadCheckoutRecords() {
                     <th>Food Bill</th>
                     <th>Payment</th>
                     <th>Total</th>
+                    <th>Tendered</th>
+                    <th>Change</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -256,6 +258,8 @@ function loadCheckoutRecords() {
                       <td>₱${record.food_bill.toFixed(2)}</td>
                       <td>${paymentBadge(record.payment_method)}</td>
                       <td><strong>₱${record.total_bill.toFixed(2)}</strong></td>
+                      <td>${record.payment_method === 'cash' && record.amount_tendered !== null ? '₱' + record.amount_tendered.toFixed(2) : '—'}</td>
+                      <td>${record.payment_method === 'cash' && record.change_given !== null ? '₱' + record.change_given.toFixed(2) : '—'}</td>
                     </tr>
                   `).join("")}
                 </tbody>
@@ -296,6 +300,16 @@ function loadCheckoutRecords() {
                     <span class="checkout-card-label">Food Bill:</span>
                     <span class="checkout-card-value">₱${record.food_bill.toFixed(2)}</span>
                   </div>
+                  ${record.payment_method === 'cash' && record.amount_tendered !== null ? `
+                  <div class="checkout-card-row text-success">
+                    <span class="checkout-card-label">Amount Given:</span>
+                    <span class="checkout-card-value fw-semibold">₱${record.amount_tendered.toFixed(2)}</span>
+                  </div>
+                  <div class="checkout-card-row text-success">
+                    <span class="checkout-card-label">Change:</span>
+                    <span class="checkout-card-value fw-semibold">₱${record.change_given.toFixed(2)}</span>
+                  </div>
+                  ` : ''}
                 </div>
                 <div class="checkout-card-footer">
                   <span class="checkout-card-total">₱${record.total_bill.toFixed(2)}</span>

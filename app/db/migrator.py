@@ -23,6 +23,15 @@ class SchemaMigrator:
             # Phase 3: Drop the obsolete reservations table if it exists
             db.session.execute(text("DROP TABLE IF EXISTS reservations"))
             db.session.commit()
+            
+            # Safe MySQL column modifications to support decimal stock
+            try:
+                db.session.execute(text("ALTER TABLE inventory_items MODIFY COLUMN stock_qty DECIMAL(10,2) NOT NULL DEFAULT 0.00"))
+                db.session.execute(text("ALTER TABLE inventory_logs MODIFY COLUMN change_qty DECIMAL(10,2) NOT NULL"))
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print(f"⚠ Database column modification failed/skipped (possibly SQLite or already modified): {e}")
         except Exception as e:
             print(f"⚠ Database migration skipped (database unavailable): {e}")
             return
@@ -86,6 +95,11 @@ class SchemaMigrator:
                 "ALTER TABLE customer_sessions ADD COLUMN amount_tendered DECIMAL(10,2) NULL",
             ),
             (
+                "transactions",
+                "amount_tendered",
+                "ALTER TABLE transactions ADD COLUMN amount_tendered DECIMAL(10,2) NULL",
+            ),
+            (
                 "menu_items",
                 "is_available",
                 "ALTER TABLE menu_items ADD COLUMN is_available BOOLEAN DEFAULT TRUE",
@@ -121,6 +135,16 @@ class SchemaMigrator:
                 "receivables",
                 "incurred_date",
                 "ALTER TABLE receivables ADD COLUMN incurred_date DATE NULL",
+            ),
+            (
+                "menu_item_ingredients",
+                "unit",
+                "ALTER TABLE menu_item_ingredients ADD COLUMN unit VARCHAR(50) NULL",
+            ),
+            (
+                "menu_item_ingredients",
+                "conversion_ratio",
+                "ALTER TABLE menu_item_ingredients ADD COLUMN conversion_ratio DECIMAL(10,4) NOT NULL DEFAULT 1.0000",
             ),
         ]
 

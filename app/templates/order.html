@@ -822,10 +822,18 @@ function renderMenuItems() {
   filtered.forEach(item => {
     const card = document.createElement("div");
     card.className = item.is_available === false ? "menu-item-card unavailable" : "menu-item-card";
+
+    let nameHtml = `<h6 class="menu-item-name">${item.name}</h6>`;
+    if (item.is_out_of_stock) {
+      nameHtml = `<h6 class="menu-item-name" style="color: #ff9800 !important;">${item.name} <span class="badge bg-danger ms-1" style="font-size: 0.65rem; font-weight: normal; vertical-align: middle;">Out of Stock</span></h6>`;
+    } else if (item.is_low_stock) {
+      nameHtml = `<h6 class="menu-item-name" style="color: #ff9800 !important;">${item.name} <span class="badge bg-warning text-dark ms-1" style="font-size: 0.65rem; font-weight: normal; vertical-align: middle;">Low Stock</span></h6>`;
+    }
+
     card.innerHTML = `
       <div class="menu-item-image">${item.image_url ? `<img src="${item.image_url}" alt="${item.name}">` : '🍽️'}</div>
       <div class="menu-item-content">
-        <h6 class="menu-item-name">${item.name}</h6>
+        ${nameHtml}
         <div class="menu-item-price">₱${Number(item.price).toFixed(2)}</div>
         ${item.is_available === false
           ? `<button type="button" class="add-to-cart-btn unavailable-btn" onclick="showUnavailable('${item.name.replace(/'/g, "\\'")}')">Not Available</button>`

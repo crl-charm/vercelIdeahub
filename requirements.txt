@@ -13,5 +13,8 @@ qrcode
 Pillow
 python-dotenv
 openpyxl
+gunicorn
+eventlet
+
 
 

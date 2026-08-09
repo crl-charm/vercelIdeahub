@@ -47,26 +47,32 @@ class InventoryRepository:
         db.session.flush()
         return item
 
-    def deduct(self, item_id: int, qty: int, reason: str, user_id: Optional[int]) -> bool:
+    def deduct(self, item_id: int, qty: float | Decimal, reason: str, user_id: Optional[int]) -> bool:
+        from decimal import Decimal
         item = self.get_item(item_id)
-        if not item or item.stock_qty < qty:
+        if not item:
             return False
-        item.stock_qty -= qty
+        qty_dec = Decimal(str(qty))
+        if Decimal(str(item.stock_qty)) < qty_dec:
+            return False
+        item.stock_qty = Decimal(str(item.stock_qty)) - qty_dec
         item.updated_at = datetime.utcnow()
         log = InventoryLog(
-            inventory_item_id=item_id, change_qty=-qty, reason=reason, changed_by=user_id
+            inventory_item_id=item_id, change_qty=-qty_dec, reason=reason, changed_by=user_id
         )
         db.session.add(log)
         return True
 
-    def add(self, item_id: int, qty: int, reason: str, user_id: Optional[int]) -> bool:
+    def add(self, item_id: int, qty: float | Decimal, reason: str, user_id: Optional[int]) -> bool:
+        from decimal import Decimal
         item = self.get_item(item_id)
         if not item:
             return False
-        item.stock_qty += qty
+        qty_dec = Decimal(str(qty))
+        item.stock_qty = Decimal(str(item.stock_qty or 0)) + qty_dec
         item.updated_at = datetime.utcnow()
         log = InventoryLog(
-            inventory_item_id=item_id, change_qty=qty, reason=reason, changed_by=user_id
+            inventory_item_id=item_id, change_qty=qty_dec, reason=reason, changed_by=user_id
         )
         db.session.add(log)
         return True
