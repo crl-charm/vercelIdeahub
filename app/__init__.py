@@ -142,27 +142,32 @@ def create_app():
 
 def configure_logging(app):
     """Configure comprehensive logging for security and debugging"""
+    handlers = [logging.StreamHandler()]
+    try:
+        log_dir = os.environ.get('UPLOAD_FOLDER', os.path.dirname(__file__))
+        handlers.append(logging.FileHandler(os.path.join(log_dir, 'app.log')))
+    except Exception:
+        pass
+
     if not app.debug:
-        # Production logging
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('app.log'),
-                logging.StreamHandler()
-            ]
+            handlers=handlers
         )
 
-        # Security-specific logger
         security_logger = logging.getLogger('security')
         security_logger.setLevel(logging.INFO)
-        security_handler = logging.FileHandler('security.log')
-        security_handler.setFormatter(logging.Formatter(
-            '%(asctime)s - SECURITY - %(levelname)s - %(message)s'
-        ))
-        security_logger.addHandler(security_handler)
+        try:
+            log_dir = os.environ.get('UPLOAD_FOLDER', os.path.dirname(__file__))
+            security_handler = logging.FileHandler(os.path.join(log_dir, 'security.log'))
+            security_handler.setFormatter(logging.Formatter(
+                '%(asctime)s - SECURITY - %(levelname)s - %(message)s'
+            ))
+            security_logger.addHandler(security_handler)
+        except Exception:
+            security_logger.addHandler(logging.StreamHandler())
     else:
-        # Development logging
         logging.basicConfig(
             level=logging.DEBUG,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

@@ -13,9 +13,12 @@ from app.db.seeder import DatabaseSeeder
 app = create_app()
 
 if not os.environ.get("VERCEL"):
-    with app.app_context():
-        SchemaMigrator(db, app).run()
-        DatabaseSeeder(db, app).run()
+    try:
+        with app.app_context():
+            SchemaMigrator(db, app).run()
+            DatabaseSeeder(db, app).run()
+    except Exception as err:
+        print(f"Startup migration warning: {err}")
 
 
 if __name__ == "__main__":
