@@ -5,7 +5,7 @@ services:
     region: oregon
     branch: main
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --worker-class gthread -w 1 --threads 100 -b 0.0.0.0:$PORT app:app
+    startCommand: gunicorn --worker-class gthread -w 1 --threads 100 app:app
     envVars:
       - key: FLASK_ENV
         value: production
