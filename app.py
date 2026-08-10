@@ -1,7 +1,10 @@
-import eventlet
-eventlet.monkey_patch()
-
 import os
+
+try:
+    import eventlet
+    eventlet.monkey_patch()
+except Exception:
+    pass
 
 from app import create_app, db, socketio
 from app.db.migrator import SchemaMigrator
