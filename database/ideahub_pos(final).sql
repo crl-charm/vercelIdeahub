@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 10, 2026 at 03:26 PM
+-- Generation Time: Aug 10, 2026 at 11:02 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -44,7 +44,7 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `full_name`, `username`, `created_at`, `password`, `failed_login_attempts`, `locked_until`, `last_login`, `password_changed_at`) VALUES
-(1, 'Admin', 'admin', '2026-04-28 11:41:20', '$2b$12$h/6nkTgbAYZKGsbQLfe2tOp0C0bytAt19HYrkxkCEC1dU350oNDEW', 0, NULL, '2026-08-10 13:23:43', '2026-05-21 14:06:50');
+(1, 'Admin', 'admin', '2026-04-28 11:41:20', '$2b$12$D6B4Qe54/QcA/TD.gYwzXeTZwjSO8Lq.8Un0ykNjEXNPx3LB//VJu', 0, NULL, '2026-08-10 19:56:28', '2026-08-10 18:53:53');
 
 -- --------------------------------------------------------
 
@@ -85,7 +85,8 @@ INSERT INTO `boardroom_bookings` (`id`, `customer_name`, `date`, `start_time`, `
 (8, 'varl', '2026-05-21', '07:40:00', '08:00:00', 4, 'study', 'cancelled', '2026-05-20 12:19:06', NULL, NULL, '2026-05-21 08:00:00', NULL, 0, 'it'),
 (9, 'varl', '2026-05-20', '10:10:00', '17:15:00', 5, 'study', 'completed', '2026-05-20 14:52:43', 23, '2026-05-20 14:53:10', '2026-05-20 17:15:00', '2026-05-21 13:18:13', 75, 'it'),
 (10, 'saver', '2026-05-22', '08:06:00', '16:00:00', 5, 'study', 'booked', '2026-05-22 06:48:27', NULL, NULL, '2026-05-22 16:00:00', NULL, 0, 'it'),
-(11, 'Jireh', '2026-08-10', '10:00:00', '14:00:00', 4, 'Hangout', 'completed', '2026-08-09 15:48:43', 35, '2026-08-09 16:17:37', '2026-08-10 14:00:00', '2026-08-09 16:30:39', 0, 'Teacher');
+(11, 'Jireh', '2026-08-10', '10:00:00', '14:00:00', 4, 'Hangout', 'completed', '2026-08-09 15:48:43', 35, '2026-08-09 16:17:37', '2026-08-10 14:00:00', '2026-08-09 16:30:39', 0, 'Teacher'),
+(12, 'Rybelle', '2026-08-11', '07:00:00', '08:00:00', 10, '', 'completed', '2026-08-10 20:01:08', 45, '2026-08-10 20:01:14', '2026-08-11 08:00:00', '2026-08-10 20:01:42', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -140,7 +141,17 @@ INSERT INTO `customer_sessions` (`id`, `customer_name`, `school`, `course`, `spa
 (32, 'Saver', '', '', 1, '2026-06-02 07:22:38', '2026-06-29 08:23:04', 'completed', 1, 'bdo', NULL),
 (33, 'siomai', 'ui', 'it', 1, '2026-07-20 13:30:04', '2026-07-22 12:36:05', 'completed', 1, 'gcash', NULL),
 (34, 'charm', 'ui', 'it', 1, '2026-07-22 13:02:28', '2026-08-09 15:34:02', 'completed', 1, 'bpi', NULL),
-(35, 'Jireh', 'Boardroom Booking', 'Teacher', 3, '2026-08-09 16:17:37', '2026-08-09 16:30:39', 'completed', 4, 'cash', 500.00);
+(35, 'Jireh', 'Boardroom Booking', 'Teacher', 3, '2026-08-09 16:17:37', '2026-08-09 16:30:39', 'completed', 4, 'cash', 500.00),
+(36, 'Clardk', 'ui', 'it', 1, '2026-08-10 16:06:55', '2026-08-10 16:17:18', 'completed', 1, 'cash', 500.00),
+(37, 'batman', 'ui', 'it', 2, '2026-08-10 16:23:33', '2026-08-10 16:26:08', 'completed', 1, 'cash', 600.00),
+(38, 'jason', 'isat', 'hm', 2, '2026-08-10 16:26:26', '2026-08-10 16:26:53', 'completed', 1, 'gcash', NULL),
+(39, 'test', 'test', 'it', 2, '2026-08-10 18:03:04', '2026-08-10 18:03:40', 'completed', 1, 'cash', 500.00),
+(40, 'edward', 'ui', 'it', 1, '2026-08-10 19:19:35', '2026-08-10 19:23:11', 'completed', 1, 'cash', 500.00),
+(41, 'gcash', 'ui', 'it', 2, '2026-08-10 19:20:30', '2026-08-10 19:45:33', 'completed', 1, 'gcash', NULL),
+(42, 'BDO', 'ui', 'it', 2, '2026-08-10 19:20:56', '2026-08-10 19:45:36', 'completed', 1, 'bdo', NULL),
+(43, 'BPI', 'ui', 'it', 2, '2026-08-10 19:21:51', '2026-08-10 19:45:39', 'completed', 1, 'bpi', NULL),
+(44, 'check', 'ui', 'it', 2, '2026-08-10 19:57:48', NULL, 'active', 1, 'cash', NULL),
+(45, 'Rybelle', 'Boardroom Booking', 'N/A', 3, '2026-08-10 20:01:14', '2026-08-10 20:01:42', 'completed', 10, 'cash', 100.00);
 
 -- --------------------------------------------------------
 
@@ -176,7 +187,8 @@ INSERT INTO `daily_sales_reports` (`id`, `report_date`, `total_revenue`, `total_
 (14, '2026-05-26', 4562.59, 150.00, 4412.59, 0, 0, 2, '2026-05-26 07:23:04', 'try'),
 (15, '2026-05-28', 553.56, 0.00, 553.56, 3, 3, 2, '2026-05-28 14:42:12', 'try'),
 (16, '2026-06-29', 22613.29, 0.00, 22613.29, 0, 0, 2, '2026-06-29 09:09:42', ''),
-(17, '2026-08-10', 0.00, 0.00, 0.00, 0, 0, 2, '2026-08-09 16:31:03', 'Testagain');
+(17, '2026-08-10', 1621.94, 0.00, 1621.94, 6, 4, 2, '2026-08-09 16:31:03', 'testliwat'),
+(32, '2026-08-11', 0.00, 113.52, -113.52, 0, 0, 2, '2026-08-10 19:11:35', 'test');
 
 -- --------------------------------------------------------
 
@@ -215,7 +227,21 @@ INSERT INTO `expenses` (`id`, `category`, `description`, `amount`, `expense_date
 (17, 'transport', 'pleti', 150.00, '2026-05-26', 2, '2026-05-26 07:22:41'),
 (18, 'supplies', 'test', 10.00, '2026-05-08', 2, '2026-05-28 13:00:45'),
 (19, 'supplies', 'test', 10.00, '2026-05-08', 2, '2026-05-28 13:20:16'),
-(20, 'supplies', 'test', 10.00, '2026-05-08', 2, '2026-06-02 08:29:59');
+(20, 'supplies', 'test', 10.00, '2026-05-08', 2, '2026-06-02 08:29:59'),
+(30, 'utilities', 'Test utility', 12.34, '2026-08-11', 2, '2026-08-10 17:59:38'),
+(31, 'utilities', 'Test utility', 12.34, '2026-08-11', 2, '2026-08-10 18:00:19'),
+(32, 'utilities', 'Test utility', 12.34, '2026-08-11', 2, '2026-08-10 18:00:32'),
+(34, 'utilities', 'Test utility', 12.34, '2026-08-11', 2, '2026-08-10 18:20:14'),
+(35, 'utilities', 'Smoke test expense', 12.34, '2026-08-11', 2, '2026-08-10 18:22:36'),
+(36, 'utilities', 'Smoke test expense', 12.34, '2026-08-11', 2, '2026-08-10 18:22:59'),
+(37, 'utilities', 'Smoke test expense', 12.34, '2026-08-11', 2, '2026-08-10 18:23:27'),
+(38, 'utilities', 'Smoke test expense', 12.34, '2026-08-11', 2, '2026-08-10 18:23:48'),
+(39, 'utilities', 'Smoke test expense', 12.34, '2026-08-11', 2, '2026-08-10 18:24:09'),
+(40, 'utilities', 'Validation expense', 1.23, '2026-08-11', 2, '2026-08-10 18:41:49'),
+(41, 'utilities', 'Validation expense', 1.23, '2026-08-11', 2, '2026-08-10 18:54:16'),
+(42, 'supplies', 'test liwat', 123.00, '2026-08-11', 2, '2026-08-10 19:12:25'),
+(43, 'food', 'ttesttt', 334.00, '2026-08-10', 2, '2026-08-10 19:17:22'),
+(44, 'transport', 'testttagain', 1233.00, '2026-08-10', 2, '2026-08-10 19:17:39');
 
 -- --------------------------------------------------------
 
@@ -293,7 +319,7 @@ CREATE TABLE `inventory_items` (
 --
 
 INSERT INTO `inventory_items` (`id`, `menu_item_id`, `stock_qty`, `low_stock_threshold`, `unit`, `created_at`, `updated_at`) VALUES
-(20, 96, 49.00, 10, 'pcs', '2026-07-20 14:00:53', '2026-08-09 16:25:45'),
+(20, 96, 45.00, 10, 'pcs', '2026-07-20 14:00:53', '2026-08-10 19:19:57'),
 (21, 96, 50.00, 10, 'pcs', '2026-07-20 14:01:15', '2026-07-20 14:01:15'),
 (22, 83, 0.00, 10, 'pieces', '2026-07-20 14:13:35', '2026-07-20 14:13:35'),
 (23, 84, 0.00, 10, 'pieces', '2026-07-20 14:13:35', '2026-07-20 14:13:35'),
@@ -343,10 +369,12 @@ INSERT INTO `inventory_items` (`id`, `menu_item_id`, `stock_qty`, `low_stock_thr
 (67, 141, 4.00, 1, 'trays', '2026-07-20 14:49:45', '2026-07-20 14:49:45'),
 (68, 133, 0.00, 10, 'pieces', '2026-07-22 12:44:22', '2026-07-22 12:44:22'),
 (70, 131, 0.00, 10, 'pieces', '2026-07-22 13:34:37', '2026-07-22 16:25:30'),
-(71, 144, 3.00, 1, 'klg', '2026-07-22 14:29:05', '2026-08-09 16:25:45'),
-(72, 145, 3.92, 1, 'packs', '2026-08-09 15:30:05', '2026-08-09 15:33:08'),
-(73, 146, 3.00, 1, 'klg', '2026-08-09 16:24:17', '2026-08-09 16:25:44'),
-(74, 147, 3.00, 1, 'packs', '2026-08-09 16:26:32', '2026-08-09 16:28:08');
+(71, 144, 1.00, 1, 'klg', '2026-07-22 14:29:05', '2026-08-10 18:03:17'),
+(72, 145, 3.68, 1, 'packs', '2026-08-09 15:30:05', '2026-08-10 19:19:57'),
+(73, 146, 0.00, 1, 'klg', '2026-08-09 16:24:17', '2026-08-10 16:26:37'),
+(74, 147, 3.00, 1, 'packs', '2026-08-09 16:26:32', '2026-08-10 19:21:59'),
+(75, 148, 2.75, 1, 'klg', '2026-08-10 16:06:06', '2026-08-10 19:21:25'),
+(76, 149, 3.84, 1, 'packs', '2026-08-10 16:07:50', '2026-08-10 19:21:59');
 
 -- --------------------------------------------------------
 
@@ -380,7 +408,43 @@ INSERT INTO `inventory_logs` (`id`, `inventory_item_id`, `change_qty`, `reason`,
 (24, 71, -1.00, 'Order deduction for Bangus Silog', NULL, '2026-08-09 16:25:45'),
 (25, 20, -1.00, 'Order deduction', NULL, '2026-08-09 16:25:45'),
 (26, 74, 0.00, 'admin linked to Coke/Royal: req=1.0 pieces (ratio 0.0005)', 2, '2026-08-09 16:27:46'),
-(27, 74, 0.00, 'Order deduction for Coke/Royal', NULL, '2026-08-09 16:28:08');
+(27, 74, 0.00, 'Order deduction for Coke/Royal', NULL, '2026-08-09 16:28:08'),
+(28, 75, 0.00, 'System linked to Pork Chop: req=1.0 pieces (ratio 0.2500)', NULL, '2026-08-10 16:06:30'),
+(29, 74, 0.00, 'Order deduction for Coke/Royal', NULL, '2026-08-10 16:07:04'),
+(30, 75, -0.25, 'Order deduction for Pork Chop', NULL, '2026-08-10 16:07:04'),
+(31, 76, 0.00, 'System linked to Bottled Water: req=1.0 pieces (ratio 1.0000)', NULL, '2026-08-10 16:08:03'),
+(32, 76, 0.00, 'System linked to Bottled Water: req=1.0 pieces (ratio 0.0100)', NULL, '2026-08-10 16:09:36'),
+(33, 76, 0.00, 'System linked to Bottled Water: req=1.0 pieces (ratio 1.0000)', NULL, '2026-08-10 16:10:12'),
+(34, 76, 0.00, 'System linked to Bottled Water: req=1.0 pieces (ratio 0.0100)', NULL, '2026-08-10 16:10:31'),
+(35, 76, -0.02, 'Order deduction for Bottled Water', NULL, '2026-08-10 16:10:47'),
+(36, 74, 0.00, 'Order deduction for Coke/Royal', NULL, '2026-08-10 16:16:52'),
+(37, 76, -0.01, 'Order deduction for Bottled Water', NULL, '2026-08-10 16:16:52'),
+(38, 73, -1.00, 'Order deduction for Chicken-Wings Bonanza', NULL, '2026-08-10 16:16:52'),
+(39, 72, -0.08, 'Order deduction for Siomai Silog', NULL, '2026-08-10 16:16:52'),
+(40, 20, -1.00, 'Order deduction', NULL, '2026-08-10 16:16:52'),
+(41, 76, -0.01, 'Order deduction for Bottled Water', NULL, '2026-08-10 16:23:51'),
+(42, 74, 0.00, 'Order deduction for Coke/Royal', NULL, '2026-08-10 16:23:51'),
+(43, 71, -1.00, 'Order deduction for Bangus Silog', NULL, '2026-08-10 16:23:51'),
+(44, 73, -1.00, 'Order deduction for Chicken-Wings Bonanza', NULL, '2026-08-10 16:23:51'),
+(45, 75, -0.25, 'Order deduction for Pork Chop', NULL, '2026-08-10 16:23:51'),
+(46, 72, -0.08, 'Order deduction for Siomai Silog', NULL, '2026-08-10 16:23:51'),
+(47, 20, -1.00, 'Order deduction', NULL, '2026-08-10 16:23:51'),
+(48, 74, 0.00, 'Order deduction for Coke/Royal', NULL, '2026-08-10 16:26:37'),
+(49, 73, -1.00, 'Order deduction for Chicken-Wings Bonanza', NULL, '2026-08-10 16:26:37'),
+(50, 74, 0.00, 'Order deduction for Coke/Royal', NULL, '2026-08-10 18:03:17'),
+(51, 76, -0.01, 'Order deduction for Bottled Water', NULL, '2026-08-10 18:03:17'),
+(52, 71, -1.00, 'Order deduction for Bangus Silog', NULL, '2026-08-10 18:03:17'),
+(53, 75, -0.25, 'Order deduction for Pork Chop', NULL, '2026-08-10 18:03:17'),
+(54, 20, -1.00, 'Order deduction', NULL, '2026-08-10 18:03:17'),
+(55, 76, -0.01, 'Order deduction for Bottled Water', NULL, '2026-08-10 19:19:57'),
+(56, 74, 0.00, 'Order deduction for Coke/Royal', NULL, '2026-08-10 19:19:57'),
+(57, 72, -0.08, 'Order deduction for Siomai Silog', NULL, '2026-08-10 19:19:57'),
+(58, 75, -0.25, 'Order deduction for Pork Chop', NULL, '2026-08-10 19:19:57'),
+(59, 20, -1.00, 'Order deduction', NULL, '2026-08-10 19:19:57'),
+(60, 76, -0.07, 'Order deduction for Bottled Water', NULL, '2026-08-10 19:20:39'),
+(61, 75, -0.25, 'Order deduction for Pork Chop', NULL, '2026-08-10 19:21:25'),
+(62, 74, 0.00, 'Order deduction for Coke/Royal', NULL, '2026-08-10 19:21:59'),
+(63, 76, -0.03, 'Order deduction for Bottled Water', NULL, '2026-08-10 19:21:59');
 
 -- --------------------------------------------------------
 
@@ -509,7 +573,9 @@ INSERT INTO `menu_items` (`id`, `name`, `price`, `category`, `status`, `image_ur
 (144, 'Fish bangus', 0.00, 'ingredient', 'active', NULL, 1, NULL, '2026-07-22 14:29:05', '2026-07-22 14:29:05'),
 (145, 'Sioai', 0.00, 'ingredient', 'active', NULL, 1, NULL, '2026-08-09 15:30:05', '2026-08-09 15:30:05'),
 (146, 'Chicken wings', 0.00, 'ingredient', 'active', NULL, 1, NULL, '2026-08-09 16:24:17', '2026-08-09 16:24:17'),
-(147, 'Coke', 0.00, 'ingredient', 'active', NULL, 1, NULL, '2026-08-09 16:26:32', '2026-08-09 16:26:32');
+(147, 'Coke', 0.00, 'ingredient', 'active', NULL, 1, NULL, '2026-08-09 16:26:32', '2026-08-09 16:26:32'),
+(148, 'Pork', 0.00, 'ingredient', 'active', NULL, 1, NULL, '2026-08-10 16:06:06', '2026-08-10 16:06:06'),
+(149, 'Bottled Water', 0.00, 'ingredient', 'active', NULL, 1, NULL, '2026-08-10 16:07:50', '2026-08-10 16:07:50');
 
 -- --------------------------------------------------------
 
@@ -537,7 +603,9 @@ INSERT INTO `menu_item_ingredients` (`id`, `menu_item_id`, `ingredient_item_id`,
 (8, 83, 144, 1.00, NULL, 1.0000),
 (10, 91, 145, 4.00, 'pieces', 0.0200),
 (11, 84, 146, 2.00, 'pieces', 0.5000),
-(12, 124, 147, 1.00, 'pieces', 0.0005);
+(12, 124, 147, 1.00, 'pieces', 0.0005),
+(13, 131, 148, 1.00, 'pieces', 0.2500),
+(17, 103, 149, 1.00, 'pieces', 0.0100);
 
 -- --------------------------------------------------------
 
@@ -602,7 +670,17 @@ INSERT INTO `orders` (`id`, `customer_session_id`, `created_at`, `status`, `hand
 (46, 34, '2026-07-22 13:02:49', 'done', 2),
 (47, 34, '2026-08-09 15:33:08', 'done', 2),
 (48, 35, '2026-08-09 16:25:44', 'done', 2),
-(49, 35, '2026-08-09 16:28:08', 'done', 2);
+(49, 35, '2026-08-09 16:28:08', 'done', 2),
+(50, 36, '2026-08-10 16:07:04', 'done', 2),
+(51, 36, '2026-08-10 16:10:47', 'done', 2),
+(52, 36, '2026-08-10 16:16:52', 'done', 2),
+(53, 37, '2026-08-10 16:23:51', 'done', 22),
+(54, 38, '2026-08-10 16:26:37', 'done', 22),
+(55, 39, '2026-08-10 18:03:17', 'done', 2),
+(56, 40, '2026-08-10 19:19:57', 'done', 2),
+(57, 41, '2026-08-10 19:20:39', 'done', 2),
+(58, 42, '2026-08-10 19:21:25', 'done', 2),
+(59, 43, '2026-08-10 19:21:59', 'done', 2);
 
 -- --------------------------------------------------------
 
@@ -663,7 +741,37 @@ INSERT INTO `order_items` (`id`, `order_id`, `menu_item_id`, `quantity`, `price`
 (98, 48, 84, 1, 109.00, 'done'),
 (99, 48, 83, 1, 145.00, 'done'),
 (100, 48, 96, 1, 59.00, 'done'),
-(101, 49, 124, 2, 25.00, 'done');
+(101, 49, 124, 2, 25.00, 'done'),
+(102, 50, 124, 1, 25.00, 'done'),
+(103, 50, 131, 1, 145.00, 'done'),
+(105, 52, 124, 1, 25.00, 'done'),
+(106, 52, 103, 1, 20.00, 'done'),
+(107, 52, 84, 1, 109.00, 'done'),
+(108, 52, 91, 1, 90.00, 'done'),
+(109, 52, 96, 1, 59.00, 'done'),
+(110, 53, 103, 1, 20.00, 'done'),
+(111, 53, 124, 1, 25.00, 'done'),
+(112, 53, 83, 1, 145.00, 'done'),
+(113, 53, 84, 1, 109.00, 'done'),
+(114, 53, 131, 1, 145.00, 'done'),
+(115, 53, 91, 1, 90.00, 'done'),
+(116, 53, 96, 1, 59.00, 'done'),
+(117, 54, 124, 2, 25.00, 'done'),
+(118, 54, 84, 1, 109.00, 'done'),
+(119, 55, 124, 1, 25.00, 'done'),
+(120, 55, 103, 1, 20.00, 'done'),
+(121, 55, 83, 1, 145.00, 'done'),
+(122, 55, 131, 1, 145.00, 'done'),
+(123, 55, 96, 1, 59.00, 'done'),
+(124, 56, 103, 1, 20.00, 'done'),
+(125, 56, 124, 1, 25.00, 'done'),
+(126, 56, 91, 1, 90.00, 'done'),
+(127, 56, 131, 1, 145.00, 'done'),
+(128, 56, 96, 1, 59.00, 'done'),
+(129, 57, 103, 7, 20.00, 'done'),
+(130, 58, 131, 1, 145.00, 'done'),
+(131, 59, 124, 2, 25.00, 'done'),
+(132, 59, 103, 3, 20.00, 'done');
 
 -- --------------------------------------------------------
 
@@ -692,7 +800,17 @@ INSERT INTO `payables` (`id`, `creditor_name`, `items_description`, `amount_owed
 (1, 'Calamansi Juice', '2', 330.00, '2026-05-26', '2026-05-19', 'Paid', 0.00, 2, '2026-05-26 06:44:22'),
 (2, 'catyjh', '5', 5000.00, '2026-05-28', '2026-05-28', 'Paid', 0.00, 2, '2026-05-28 14:54:36'),
 (3, 'water', 'water', 1000.00, '2026-06-06', '2026-05-29', 'Paid', 0.00, 2, '2026-05-29 13:27:18'),
-(4, 'Egg Supplier', '4 trays', 340.00, '2026-07-06', '2026-06-29', 'Paid', 340.00, 2, '2026-06-29 08:24:40');
+(4, 'Egg Supplier', '4 trays', 340.00, '2026-07-06', '2026-06-29', 'Paid', 340.00, 2, '2026-06-29 08:24:40'),
+(16, 'Test Creditor', 'Test items', 55.55, '2026-08-20', '2026-08-11', 'Unpaid', 0.00, 2, '2026-08-10 17:59:38'),
+(17, 'Test Creditor', 'Test items', 55.55, '2026-08-20', '2026-08-11', 'Unpaid', 0.00, 2, '2026-08-10 18:00:19'),
+(18, 'Test Creditor', 'Test items', 55.55, '2026-08-20', '2026-08-11', 'Unpaid', 0.00, 2, '2026-08-10 18:00:32'),
+(20, 'Test Creditor', 'Test items', 55.55, '2026-08-20', '2026-08-11', 'Unpaid', 0.00, 2, '2026-08-10 18:20:14'),
+(21, 'Test Creditor', 'Test service', 55.55, '2026-08-20', '2026-08-11', 'Unpaid', 0.00, 2, '2026-08-10 18:23:48'),
+(22, 'Test Creditor', 'Test service', 55.55, '2026-08-20', '2026-08-11', 'Unpaid', 0.00, 2, '2026-08-10 18:24:09'),
+(23, 'ValCred', 'x', 5.50, '2026-08-20', '2026-08-11', 'Unpaid', 0.00, 2, '2026-08-10 18:41:49'),
+(24, 'ValCred', 'x', 5.50, '2026-08-20', '2026-08-11', 'Unpaid', 0.00, 2, '2026-08-10 18:54:16'),
+(26, 'test', 'test', 123.00, '2026-08-11', '2026-08-10', 'Unpaid', 0.00, 2, '2026-08-10 19:13:19'),
+(27, 'carl', 'carl', 123.00, '2026-08-13', '2026-08-11', 'Partially Paid', 12.00, 2, '2026-08-10 19:15:04');
 
 -- --------------------------------------------------------
 
@@ -739,7 +857,14 @@ INSERT INTO `receivables` (`id`, `customer_name`, `customer_contact`, `items_des
 (19, 'paolo', '09089089098', 'water', 99.95, '2026-06-10', 1, 0.00, 2, NULL, '2026-05-28 14:35:13', 'rybelle', '2026-05-28 14:41:44', '2026-05-28'),
 (20, 'Rybelle', '09089089098', 'kjk,nk', 999.96, '2026-06-06', 1, 0.00, 2, NULL, '2026-05-28 14:51:17', 'rybelle', '2026-06-02 07:03:43', '2026-05-28'),
 (21, 'Rybelle', '09089089098', 'bangus silog', 100.00, '2026-06-06', 1, 0.00, 2, NULL, '2026-05-29 13:24:43', 'rybelle', '2026-06-02 13:10:26', '2026-05-29'),
-(24, 'Rybelle', '09089089098', 'siomai', 229.99, '2026-06-03', 1, 0.00, 2, NULL, '2026-06-02 13:10:20', 'Carl', '2026-06-02 13:10:26', '2026-06-02');
+(24, 'Rybelle', '09089089098', 'siomai', 229.99, '2026-06-03', 1, 0.00, 2, NULL, '2026-06-02 13:10:20', 'Carl', '2026-06-02 13:10:26', '2026-06-02'),
+(31, 'Test Customer', '1234567890', 'Service', 66.66, '2026-08-20', 1, 0.00, 2, NULL, '2026-08-10 17:59:38', 'admin', '2026-08-10 19:18:25', '2026-08-11'),
+(32, 'Test Customer', '1234567890', 'Service', 66.66, '2026-08-20', 1, 0.00, 2, NULL, '2026-08-10 18:00:19', 'admin', '2026-08-10 19:18:25', '2026-08-11'),
+(33, 'Test Customer', '1234567890', 'Service', 66.66, '2026-08-20', 1, 0.00, 2, NULL, '2026-08-10 18:00:32', 'admin', '2026-08-10 19:18:25', '2026-08-11'),
+(35, 'Test Customer', '1234567890', 'Service', 66.66, '2026-08-20', 1, 0.00, 2, NULL, '2026-08-10 18:20:14', 'admin', '2026-08-10 19:18:25', '2026-08-11'),
+(36, 'Test Customer', '1234567890', 'Service', 66.66, '2026-08-20', 1, 0.00, 2, NULL, '2026-08-10 18:23:48', NULL, '2026-08-10 19:18:25', '2026-08-11'),
+(37, 'Test Customer', '1234567890', 'Service', 66.66, '2026-08-20', 1, 0.00, 2, NULL, '2026-08-10 18:24:09', NULL, '2026-08-10 19:18:25', '2026-08-11'),
+(38, 'test liwat', '099387875', 'test', 123.00, '2026-08-12', 0, 0.00, 2, NULL, '2026-08-10 19:13:04', 'Superman', NULL, '2026-08-10');
 
 -- --------------------------------------------------------
 
@@ -791,7 +916,15 @@ INSERT INTO `soft_balance_entries` (`id`, `balance_date`, `period`, `total_reven
 (25, '2026-05-28', 'PM', 553.56, 0.00, 553.56, 'try', 2, '2026-05-28 14:42:12'),
 (26, '2026-05-08', 'AM', 1706.76, 330.00, 1376.76, 'smoke', 2, '2026-06-02 08:29:59'),
 (27, '2026-06-29', 'PM', 22613.29, 0.00, 22613.29, '', 2, '2026-06-29 09:09:42'),
-(28, '2026-08-10', 'AM', 0.00, 0.00, 0.00, 'Testagain', 2, '2026-08-09 16:31:03');
+(28, '2026-08-10', 'AM', 0.00, 0.00, 0.00, 'Testagain', 2, '2026-08-09 16:31:03'),
+(48, '2026-08-11', 'AM', 0.00, 12.34, -12.34, 'Test soft balance', 2, '2026-08-10 17:59:38'),
+(49, '2026-08-11', 'AM', 0.00, 24.68, -24.68, 'Test soft balance', 2, '2026-08-10 18:00:19'),
+(50, '2026-08-11', 'AM', 0.00, 37.02, -37.02, 'Test soft balance', 2, '2026-08-10 18:00:32'),
+(58, '2026-08-11', 'AM', 0.00, 49.36, -49.36, 'Test soft balance', 2, '2026-08-10 18:20:14'),
+(59, '2026-08-11', 'AM', 0.00, 98.72, -98.72, 'Test soft balance', 2, '2026-08-10 18:23:48'),
+(60, '2026-08-11', 'AM', 0.00, 111.06, -111.06, 'Test soft balance', 2, '2026-08-10 18:24:09'),
+(65, '2026-08-11', 'PM', 0.00, 113.52, -113.52, 'test', 2, '2026-08-10 19:11:35'),
+(66, '2026-08-10', 'PM', 1621.94, 0.00, 1621.94, 'testliwat', 2, '2026-08-10 19:11:52');
 
 -- --------------------------------------------------------
 
@@ -1011,13 +1144,14 @@ INSERT INTO `staff_attendance` (`id`, `user_id`, `time_in`, `time_out`) VALUES
 (208, 2, '2026-07-22 14:27:25', '2026-07-22 16:28:37'),
 (209, 2, '2026-07-22 16:28:58', '2026-07-22 16:29:18'),
 (211, 2, '2026-08-09 15:45:53', '2026-08-09 15:47:20'),
-(212, 20, '2026-08-09 15:47:23', '2026-08-09 16:22:27'),
 (213, 2, '2026-08-09 16:02:46', '2026-08-09 16:12:36'),
 (214, 2, '2026-08-09 16:12:36', '2026-08-09 16:22:32'),
 (215, 2, '2026-08-09 16:22:32', '2026-08-09 16:22:57'),
 (216, 2, '2026-08-09 16:23:11', '2026-08-09 16:31:38'),
-(217, 20, '2026-08-09 16:31:41', '2026-08-09 16:31:44'),
-(218, 2, '2026-08-09 16:31:47', '2026-08-09 16:32:18');
+(218, 2, '2026-08-09 16:31:47', '2026-08-09 16:32:18'),
+(219, 22, '2026-08-10 16:23:14', '2026-08-10 16:27:00'),
+(220, 22, '2026-08-10 19:45:24', '2026-08-10 19:58:34'),
+(221, 22, '2026-08-10 19:59:15', NULL);
 
 -- --------------------------------------------------------
 
@@ -1103,7 +1237,16 @@ INSERT INTO `transactions` (`id`, `session_id`, `time_bill`, `food_bill`, `total
 (32, 32, 6491.37, 119.00, 6610.37, '2026-06-29 08:23:04', 'bdo', NULL),
 (33, 33, 471.10, 110.00, 581.10, '2026-07-22 12:36:05', 'gcash', NULL),
 (34, 34, 4346.13, 199.00, 4545.13, '2026-08-09 15:34:02', 'bpi', NULL),
-(35, 35, 65.25, 363.00, 428.25, '2026-08-09 16:30:39', 'cash', 500.00);
+(35, 35, 65.25, 363.00, 428.25, '2026-08-09 16:30:39', 'cash', 500.00),
+(36, 36, 1.73, 473.00, 474.73, '2026-08-10 16:17:18', 'cash', 500.00),
+(37, 37, 0.86, 593.00, 593.86, '2026-08-10 16:26:08', 'cash', 600.00),
+(38, 38, 0.15, 159.00, 159.15, '2026-08-10 16:26:53', 'gcash', NULL),
+(39, 39, 0.20, 394.00, 394.20, '2026-08-10 18:03:40', 'cash', 500.00),
+(40, 40, 0.60, 339.00, 339.60, '2026-08-10 19:23:11', 'cash', 500.00),
+(41, 41, 8.35, 140.00, 148.35, '2026-08-10 19:45:33', 'gcash', NULL),
+(42, 42, 8.22, 145.00, 153.22, '2026-08-10 19:45:36', 'bdo', NULL),
+(43, 43, 7.94, 110.00, 117.94, '2026-08-10 19:45:39', 'bpi', NULL),
+(44, 45, 2.37, 0.00, 2.37, '2026-08-10 20:01:42', 'cash', 100.00);
 
 -- --------------------------------------------------------
 
@@ -1131,8 +1274,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `full_name`, `username`, `password`, `role`, `job_role`, `created_at`, `failed_login_attempts`, `locked_until`, `last_login`, `password_changed_at`, `is_active`) VALUES
-(2, 'Admin', 'admin', '$2b$12$h/6nkTgbAYZKGsbQLfe2tOp0C0bytAt19HYrkxkCEC1dU350oNDEW', 'admin', 'admin', '2026-04-28 11:41:20', 0, NULL, '2026-08-09 16:31:47', '2026-05-21 14:06:50', 0),
-(20, 'AJ Kurt', 'AJ K', '$2b$12$bxl7ahcFJ8BqhgsUpUd.DuOlvgW48icPXPcZewoCE6Rra.l9YeqA6', 'staff', 'general', '2026-08-09 15:47:13', 0, NULL, '2026-08-09 16:31:41', '2026-08-09 15:47:13', 1);
+(2, 'Admin', 'admin', '$2b$12$D6B4Qe54/QcA/TD.gYwzXeTZwjSO8Lq.8Un0ykNjEXNPx3LB//VJu', 'admin', 'admin', '2026-04-28 11:41:20', 0, NULL, '2026-08-09 16:31:47', '2026-05-21 14:06:50', 0),
+(22, 'Clark Kent', 'Superman', '$2b$12$TJ8CLREQPkaUdRYjbe2YG.dNYBMlZV.xpCMw/ZqfrkqGITNJS.wMm', 'staff', 'cashier', '2026-08-10 16:23:01', 0, NULL, '2026-08-10 19:59:15', '2026-08-10 16:23:01', 1);
 
 --
 -- Indexes for dumped tables
@@ -1328,25 +1471,25 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `boardroom_bookings`
 --
 ALTER TABLE `boardroom_bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `customer_sessions`
 --
 ALTER TABLE `customer_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT for table `daily_sales_reports`
 --
 ALTER TABLE `daily_sales_reports`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `expenses`
 --
 ALTER TABLE `expenses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `finance_budgets`
@@ -1364,13 +1507,13 @@ ALTER TABLE `finance_transactions`
 -- AUTO_INCREMENT for table `inventory_items`
 --
 ALTER TABLE `inventory_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
 
 --
 -- AUTO_INCREMENT for table `inventory_logs`
 --
 ALTER TABLE `inventory_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT for table `lounge_bookings`
@@ -1388,43 +1531,43 @@ ALTER TABLE `menu_categories`
 -- AUTO_INCREMENT for table `menu_items`
 --
 ALTER TABLE `menu_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=148;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=150;
 
 --
 -- AUTO_INCREMENT for table `menu_item_ingredients`
 --
 ALTER TABLE `menu_item_ingredients`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
 
 --
 -- AUTO_INCREMENT for table `payables`
 --
 ALTER TABLE `payables`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `receivables`
 --
 ALTER TABLE `receivables`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `soft_balance_entries`
 --
 ALTER TABLE `soft_balance_entries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
 
 --
 -- AUTO_INCREMENT for table `space_price_history`
@@ -1442,7 +1585,7 @@ ALTER TABLE `space_types`
 -- AUTO_INCREMENT for table `staff_attendance`
 --
 ALTER TABLE `staff_attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=219;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=222;
 
 --
 -- AUTO_INCREMENT for table `staff_performance_logs`
@@ -1454,13 +1597,13 @@ ALTER TABLE `staff_performance_logs`
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- Constraints for dumped tables
