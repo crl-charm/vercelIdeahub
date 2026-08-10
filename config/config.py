@@ -25,6 +25,13 @@ class Config:
     # Database
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL") or "mysql+pymysql://root:@localhost/ideahub_pos"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 280,
+        "pool_timeout": 15,
+        "pool_size": 10,
+        "max_overflow": 5,
+    }
 
     # Security Headers
     SECURITY_HEADERS = {

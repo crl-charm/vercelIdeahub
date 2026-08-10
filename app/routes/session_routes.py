@@ -83,10 +83,9 @@ def preview_checkout(session_id):
 @session_bp.route("/api/checkout-records")
 @login_required
 def checkout_records():
-    page = request.args.get("page", type=int)
-    per_page = request.args.get("per_page", type=int)
-    if per_page is not None:
-        per_page = min(per_page, 100)
+    page = request.args.get("page", 1, type=int) or 1
+    per_page = request.args.get("per_page", 50, type=int) or 50
+    per_page = min(per_page, 100)
     transactions = _service.checkout_records(page=page, per_page=per_page)
     tx_items = transactions.items if hasattr(transactions, "items") else transactions
 
