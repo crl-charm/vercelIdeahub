@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, date
+from decimal import Decimal
 from typing import Optional
 
 from app import db
@@ -31,7 +32,7 @@ class ReceivableRepository:
         customer_name: str,
         customer_contact: str,
         items_description: str,
-        amount_owed: float,
+        amount_owed: Decimal,
         due_date: date,
         created_by: int,
         session_id: Optional[int],

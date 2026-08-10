@@ -1,18 +1,31 @@
 from __future__ import annotations
 
+import logging
+
 from flask import Blueprint, jsonify, request, render_template, session
 
 from app.core import get_notifier
 from app.repositories.inventory_repository import InventoryRepository
 from app.services.inventory_service import InventoryService
 from app.utils.auth import admin_required
+from app.utils.inventory_helpers import is_ingredient_category
 from app.models.menu_item import MenuItem
 from app import db, csrf
 from app.core.socketio_handlers import emit_inventory_update
 
+logger = logging.getLogger(__name__)
+
 inventory_bp = Blueprint("inventory", __name__, url_prefix="/admin/inventory")
 
 _service = InventoryService(repo=InventoryRepository())
+
+
+def _inventory_log_user_id(session_user_id: int | None) -> int | None:
+    if not session_user_id:
+        return None
+    from app.models.user import User
+
+    return session_user_id if User.query.get(session_user_id) else None
 
 
 @inventory_bp.route("", methods=["GET"])
@@ -37,9 +50,16 @@ def api_create_item() -> tuple:
     menu_item_id = data.get("menu_item_id")
     ingredient_name = (data.get("ingredient_name") or "").strip()
     if not menu_item_id and ingredient_name:
-        existing = MenuItem.query.filter(MenuItem.name.ilike(ingredient_name)).first()
-        if existing:
-            menu_item_id = existing.id
+        # Only match existing items if they are categorized as raw ingredients
+        existing_items = MenuItem.query.filter(MenuItem.status != "deleted", MenuItem.name.ilike(ingredient_name)).all()
+        matching_ing = None
+        for item in existing_items:
+            if is_ingredient_category(item.category):
+                matching_ing = item
+                break
+        
+        if matching_ing:
+            menu_item_id = matching_ing.id
         else:
             created = MenuItem(name=ingredient_name, price=0, category="ingredient", is_available=True)
             db.session.add(created)
@@ -137,11 +157,13 @@ def api_recipe_inventory() -> tuple:
 @inventory_bp.route("/api/dashboard-items", methods=["GET"])
 @admin_required
 def api_dashboard_items() -> tuple:
+    summary = _service.get_inventory_summary()
     return jsonify(
         {
             "success": True,
             "data": _service.build_recipe_inventory_items(),
             "direct_stock": _service.build_direct_stock_items(),
+            "summary": summary,
         }
     ), 200
 
@@ -161,106 +183,181 @@ def add_recipe_ingredient() -> tuple:
     data = request.get_json() or {}
     menu_item_id = data.get("menu_item_id")
     ingredient_item_id = data.get("ingredient_item_id")
-    
+
+    # Log submitted IDs (Task 2)
+    logger.info(
+        "add_recipe_ingredient submitted menu_item_id=%s ingredient_item_id=%s",
+        menu_item_id,
+        ingredient_item_id,
+    )
+
+    if not menu_item_id or not ingredient_item_id:
+        return jsonify({
+            "success": False,
+            "error": "MISSING_FIELDS",
+            "message": "Missing menu_item_id or ingredient_item_id",
+        }), 400
+
+    if menu_item_id == ingredient_item_id:
+        return jsonify({
+            "success": False,
+            "error": "INVALID_MAPPING",
+            "message": "A meal cannot be linked to itself as an ingredient",
+        }), 400
+
+    # 1. Menu item exists validation
+    meal = MenuItem.query.get(menu_item_id)
+    if not meal or meal.status == "deleted":
+        return jsonify({
+            "success": False,
+            "error": "MENU_ITEM_NOT_FOUND",
+            "message": "Menu item not found.",
+        }), 404
+
+    if is_ingredient_category(meal.category):
+        return jsonify({
+            "success": False,
+            "error": "INVALID_MEAL",
+            "message": "menu_item_id must be a sellable meal",
+        }), 400
+
+    # 2. Ingredient item exists validation
+    ingredient = MenuItem.query.get(ingredient_item_id)
+    if not ingredient or ingredient.status == "deleted":
+        return jsonify({
+            "success": False,
+            "error": "INGREDIENT_NOT_FOUND",
+            "message": "Ingredient item not found.",
+        }), 404
+
+    # 3. Ingredient category validation
+    if not is_ingredient_category(ingredient.category):
+        logger.info(
+            "add_recipe_ingredient invalid category menu_item_id=%s ingredient_item_id=%s category=%r",
+            menu_item_id,
+            ingredient_item_id,
+            ingredient.category,
+        )
+        return jsonify({
+            "success": False,
+            "error": "INVALID_INGREDIENT",
+            "message": "Selected item is not categorized as an ingredient.",
+        }), 400
+
+    # Log final validated IDs and stored category (Task 2)
+    logger.info(
+        "add_recipe_ingredient final validated menu_item_id=%s ingredient_item_id=%s",
+        menu_item_id,
+        ingredient_item_id,
+    )
+    logger.info(
+        "add_recipe_ingredient stored ingredient category=%s",
+        ingredient.category,
+    )
+
     try:
         qty = float(data.get("quantity_required", 1.0))
         if qty <= 0:
-            return jsonify({"success": False, "error": "Quantity required must be greater than zero"}), 400
+            return jsonify({
+                "success": False,
+                "error": "INVALID_QUANTITY",
+                "message": "Quantity required must be greater than zero",
+            }), 400
     except (ValueError, TypeError):
-        return jsonify({"success": False, "error": "Quantity required must be a valid number"}), 400
+        return jsonify({
+            "success": False,
+            "error": "INVALID_QUANTITY",
+            "message": "Quantity required must be a valid number",
+        }), 400
 
     unit = data.get("unit")
     if unit:
         unit = str(unit).strip().lower()
         VALID_UNITS = {"pieces", "klg", "grams", "trays", "packs", "liters", "ml"}
         if unit not in VALID_UNITS:
-            return jsonify({"success": False, "error": f"Invalid unit. Must be one of: {', '.join(VALID_UNITS)}"}), 400
+            return jsonify({
+                "success": False,
+                "error": "INVALID_UNIT",
+                "message": f"Invalid unit. Must be one of: {', '.join(VALID_UNITS)}",
+            }), 400
     else:
         unit = None
 
     try:
         conversion_ratio = float(data.get("conversion_ratio", 1.0))
         if conversion_ratio <= 0:
-            return jsonify({"success": False, "error": "Conversion ratio must be greater than zero"}), 400
+            return jsonify({
+                "success": False,
+                "error": "INVALID_RATIO",
+                "message": "Conversion ratio must be greater than zero",
+            }), 400
     except (ValueError, TypeError):
-        return jsonify({"success": False, "error": "Conversion ratio must be a valid number"}), 400
-
-    if not menu_item_id or not ingredient_item_id:
-        return jsonify({"success": False, "error": "Missing menu_item_id or ingredient_item_id"}), 400
-
-    if menu_item_id == ingredient_item_id:
-        return jsonify({"success": False, "error": "A meal cannot be linked to itself as an ingredient"}), 400
-
-    ingredient = MenuItem.query.get(ingredient_item_id)
-    if not ingredient or ingredient.category != "ingredient":
-        return jsonify({"success": False, "error": "ingredient_item_id must be a raw ingredient"}), 400
-
-    meal = MenuItem.query.get(menu_item_id)
-    if not meal or meal.category == "ingredient":
-        return jsonify({"success": False, "error": "menu_item_id must be a sellable meal"}), 400
+        return jsonify({
+            "success": False,
+            "error": "INVALID_RATIO",
+            "message": "Conversion ratio must be a valid number",
+        }), 400
 
     inv_item = _service.ensure_inventory_row(int(ingredient_item_id))
 
+    # 4. Recipe mapping does not already exist validation
     existing = MenuItemIngredient.query.filter_by(
         menu_item_id=menu_item_id,
         ingredient_item_id=ingredient_item_id,
     ).first()
-    
+
     if existing:
-        old_ratio = float(existing.conversion_ratio or 1.0)
-        old_qty = float(existing.quantity_required)
-        old_unit = existing.unit
-        
-        existing.quantity_required = qty
-        existing.unit = unit
-        existing.conversion_ratio = conversion_ratio
-        
-        # Write zero-change audit log if anything changed
-        if old_ratio != conversion_ratio or old_qty != qty or old_unit != unit:
-            from app.models.user import User
-            from app.models.inventory import InventoryLog
-            user = User.query.get(session.get("user_id")) if session.get("user_id") else None
-            username = user.username if user else "System"
-            log_reason = f"{username} updated recipe for {meal.name}: req={qty} {unit or 'pcs'} (ratio {conversion_ratio:.4f})"
-            log_reason = log_reason[:100]
-            log = InventoryLog(
-                inventory_item_id=inv_item.id,
-                change_qty=0.00,
-                reason=log_reason,
-                changed_by=session.get("user_id")
-            )
-            db.session.add(log)
-    else:
-        new_map = MenuItemIngredient(
-            menu_item_id=menu_item_id,
-            ingredient_item_id=ingredient_item_id,
-            quantity_required=qty,
-            unit=unit,
-            conversion_ratio=conversion_ratio,
+        logger.info(
+            "add_recipe_ingredient duplicate check failed: mapping already exists menu_item_id=%s ingredient_item_id=%s",
+            menu_item_id,
+            ingredient_item_id,
         )
-        db.session.add(new_map)
-        
-        # Write audit log
-        from app.models.user import User
-        from app.models.inventory import InventoryLog
-        user = User.query.get(session.get("user_id")) if session.get("user_id") else None
-        username = user.username if user else "System"
-        log_reason = f"{username} linked to {meal.name}: req={qty} {unit or 'pcs'} (ratio {conversion_ratio:.4f})"
-        log_reason = log_reason[:100]
-        log = InventoryLog(
-            inventory_item_id=inv_item.id,
-            change_qty=0.00,
-            reason=log_reason,
-            changed_by=session.get("user_id")
-        )
-        db.session.add(log)
+        return jsonify({
+            "success": False,
+            "error": "MAPPING_ALREADY_EXISTS",
+            "message": "Recipe mapping already exists.",
+        }), 400
+
+    # 5. Create the mapping
+    new_map = MenuItemIngredient(
+        menu_item_id=menu_item_id,
+        ingredient_item_id=ingredient_item_id,
+        quantity_required=qty,
+        unit=unit,
+        conversion_ratio=conversion_ratio,
+    )
+    db.session.add(new_map)
+
+    from app.models.user import User
+    from app.models.inventory import InventoryLog
+    user = User.query.get(session.get("user_id")) if session.get("user_id") else None
+    username = user.username if user else "System"
+    log_reason = f"{username} linked to {meal.name}: req={qty} {unit or 'pcs'} (ratio {conversion_ratio:.4f})"
+    log_reason = log_reason[:100]
+    log = InventoryLog(
+        inventory_item_id=inv_item.id,
+        change_qty=0.00,
+        reason=log_reason,
+        changed_by=_inventory_log_user_id(session.get("user_id")),
+    )
+    db.session.add(log)
 
     try:
         db.session.commit()
-        return jsonify({"success": True}), 200
+        # Log successful creation (Task 2)
+        logger.info(
+            "add_recipe_ingredient mapping successfully created menu_item_id=%s ingredient_item_id=%s",
+            menu_item_id,
+            ingredient_item_id,
+        )
+        return jsonify({
+            "success": True,
+            "message": "Ingredient added to recipe.",
+        }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        logger.exception("add_recipe_ingredient failed")
+        return jsonify({"success": False, "error": "SERVER_ERROR", "message": str(e)}), 500
 
 
 @inventory_bp.route("/api/recipes/<int:recipe_id>", methods=["DELETE"])
@@ -305,12 +402,12 @@ def list_ingredients() -> tuple:
 @admin_required
 def list_meals() -> tuple:
     q = request.args.get("q", "").strip()
-    query = MenuItem.query.filter(
-        MenuItem.category != "ingredient",
-        MenuItem.status != "deleted",
-    )
+    query = MenuItem.query.filter(MenuItem.status != "deleted")
     if q:
         query = query.filter(MenuItem.name.ilike(f"%{q}%"))
-    meals = query.order_by(MenuItem.name).all()
+    meals = [
+        m for m in query.order_by(MenuItem.name).all()
+        if not is_ingredient_category(m.category)
+    ]
     data = [{"id": m.id, "name": m.name} for m in meals]
     return jsonify({"success": True, "data": data}), 200

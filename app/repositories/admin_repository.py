@@ -4,7 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 
 from app import db
-from app.models import CustomerSession, Order, OrderItem, SpaceType, StaffAttendance, User, StaffPerformanceLog
+from app.models import Admin, CustomerSession, Order, OrderItem, SpaceType, StaffAttendance, User, StaffPerformanceLog
 
 
 class AdminRepository:
@@ -25,8 +25,11 @@ class AdminRepository:
         return User.query.filter_by(id=user_id, role="staff").first()
 
     def username_exists_for_other(self, username: str, user_id: int) -> bool:
-        existing = User.query.filter_by(username=username).first()
-        return bool(existing and existing.id != user_id)
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user and existing_user.id != user_id:
+            return True
+        existing_admin = Admin.query.filter_by(username=username).first()
+        return bool(existing_admin)
 
     def delete_staff_attendance(self, user_id: int) -> None:
         StaffAttendance.query.filter_by(user_id=user_id).delete(synchronize_session=False)

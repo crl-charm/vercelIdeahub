@@ -40,9 +40,14 @@ def api_list_reports() -> tuple:
 def api_generate_report() -> tuple:
     data = request.get_json()
     report_date = date.fromisoformat(data.get("report_date"))
+    user_id = session.get("user_id")
+    
+    if not user_id:
+        return api_error("User session not found", status=400)
+    
     result = _service.generate_report(
         report_date=report_date,
-        generated_by=session.get("user_id"),
+        generated_by=user_id,
         notes=data.get("notes"),
     )
     return api_ok(result.get("data"), status=201)
@@ -110,10 +115,15 @@ def api_create_soft_balance() -> tuple:
     data = request.get_json()
     balance_date = date.fromisoformat(data.get("balance_date"))
     period = (data.get("period") or "AM").upper()
+    user_id = session.get("user_id")
+    
+    if not user_id:
+        return api_error("User session not found", status=400)
+    
     result = _service.create_soft_balance(
         balance_date=balance_date,
         period=period,
-        generated_by=session.get("user_id"),
+        generated_by=user_id,
         notes=data.get("notes"),
     )
     return api_ok(result.get("data"), status=201)

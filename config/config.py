@@ -43,7 +43,9 @@ class Config:
 
     # Session Security
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    # Use Lax in development/local mode so cookies work over HTTP.
+    # Use None in production only when HTTPS is enabled and cross-site access is required.
+    SESSION_COOKIE_SAMESITE = 'Lax' if os.environ.get('FLASK_ENV') != 'production' else 'None'
     SESSION_COOKIE_SECURE = os.environ.get('FLASK_ENV') == 'production'
     PERMANENT_SESSION_LIFETIME = 7200  # 2 hours
 
@@ -52,7 +54,7 @@ class Config:
     RATELIMIT_STORAGE_URL = "memory://"
 
     # CORS Settings (restrictive)
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:5000,http://127.0.0.1:5000').split(',')
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:5000,http://127.0.0.1:5000,http://192.168.68.106:5000').split(',')
 
     # Password Policy
     PASSWORD_MIN_LENGTH = 12

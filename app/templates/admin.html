@@ -1132,8 +1132,16 @@
 
 
   // DELETE USER
-  function deleteUser(id, name) {
-    if (!confirm(`Delete staff "${name}"? This cannot be undone.`)) return;
+  async function deleteUser(id, name) {
+    const confirmed = await showConfirmDialog({
+      title: "Delete Staff",
+      message: `Are you sure you want to delete staff "${name}"? This action cannot be undone.`,
+      confirmText: "Delete Staff",
+      confirmClass: "btn-danger",
+      iconType: "delete",
+      icon: '<i class="bi bi-trash3 fs-1 text-danger"></i>'
+    });
+    if (!confirmed) return;
 
     csrfFetch(`/api/admin/users/${id}`, {
       method: "DELETE"

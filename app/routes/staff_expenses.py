@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, render_template
+from flask import Blueprint, jsonify, request, render_template, session
 
 from app.repositories.expense_repository import ExpenseRepository
 from app.services.expense_service import ExpenseService
@@ -25,3 +25,27 @@ def view_expenses() -> str:
 def api_list_expenses() -> tuple:
     expenses = _service.list_all()
     return jsonify({"success": True, "data": expenses}), 200
+
+
+@staff_expenses_bp.route("/api/expenses", methods=["POST"])
+@login_required
+def api_create_expense() -> tuple:
+    data = request.get_json(silent=True) or {}
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return jsonify({"success": False, "error": "User session not found"}), 400
+
+    try:
+        amount = float(data.get("amount"))
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Invalid amount"}), 400
+
+    result = _service.create(
+        category=data.get("category"),
+        description=data.get("description"),
+        amount=amount,
+        expense_date=data.get("expense_date"),
+        logged_by=user_id,
+    )
+    return jsonify(result), 201

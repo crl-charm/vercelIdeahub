@@ -16,7 +16,7 @@ class MenuRepository:
         return (
             MenuItem.query.filter(
                 or_(MenuItem.status.is_(None), MenuItem.status != "deleted"),
-                or_(MenuItem.category.is_(None), db.func.lower(MenuItem.category) != "ingredient")
+                or_(MenuItem.category.is_(None), db.func.trim(db.func.lower(MenuItem.category)) != "ingredient")
             )
             .order_by(MenuItem.name)
             .all()
@@ -27,7 +27,7 @@ class MenuRepository:
             MenuItem.query.filter_by(is_available=True)
             .filter(
                 or_(MenuItem.status.is_(None), MenuItem.status != "deleted"),
-                or_(MenuItem.category.is_(None), db.func.lower(MenuItem.category) != "ingredient")
+                or_(MenuItem.category.is_(None), db.func.trim(db.func.lower(MenuItem.category)) != "ingredient")
             )
             .order_by(MenuItem.name)
             .all()
@@ -38,7 +38,7 @@ class MenuRepository:
         return (
             MenuItem.query.filter(
                 or_(MenuItem.status.is_(None), MenuItem.status != "deleted"),
-                or_(MenuItem.category.is_(None), db.func.lower(MenuItem.category) != "ingredient")
+                or_(MenuItem.category.is_(None), db.func.trim(db.func.lower(MenuItem.category)) != "ingredient")
             )
             .order_by(MenuItem.category.asc(), MenuItem.name.asc())
             .all()

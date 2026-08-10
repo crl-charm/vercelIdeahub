@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal
 from typing import Any, Optional
 
 from app.repositories.receivable_repository import ReceivableRepository
@@ -57,8 +58,9 @@ class ReceivableService:
     ) -> dict[str, Any]:
         due = date.fromisoformat(due_date)
         incurred = date.fromisoformat(incurred_date) if incurred_date else None
+        amount_decimal = Decimal(str(amount_owed))
         receivable = self.repo.create(
-            customer_name, customer_contact, items_description, amount_owed, due, created_by, session_id, approved_by_staff, incurred
+            customer_name, customer_contact, items_description, amount_decimal, due, created_by, session_id, approved_by_staff, incurred
         )
         self.repo.save()
         return {"success": True, "data": {"id": receivable.id}}

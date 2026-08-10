@@ -3,6 +3,7 @@ from __future__ import annotations
 from flask import Blueprint, jsonify, request, render_template, session
 import logging
 
+from app import csrf
 from app.repositories.payable_repository import PayableRepository
 from app.services.payable_service import PayableService
 from app.utils.auth import admin_required
@@ -28,10 +29,15 @@ def api_list_payables() -> tuple:
 
 @payables_bp.route("/api/payables", methods=["POST"])
 @admin_required
+@csrf.exempt
 def api_create_payable() -> tuple:
     data = request.get_json() or {}
     amount_owed = float(data.get("amount_owed") or 0)
     creditor_name = data.get("creditor_name")
+    user_id = session.get("user_id")
+    
+    if not user_id:
+        return jsonify({"success": False, "error": "User session not found"}), 400
     
     result = _service.create(
         creditor_name=creditor_name,
@@ -39,7 +45,7 @@ def api_create_payable() -> tuple:
         amount_owed=amount_owed,
         due_date=data.get("due_date"),
         incurred_date=data.get("incurred_date"),
-        created_by=session.get("user_id"),
+        created_by=user_id,
     )
     if result.get("success"):
         security_logger.info(

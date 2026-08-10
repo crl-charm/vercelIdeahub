@@ -34,12 +34,17 @@ def api_list_expenses() -> tuple:
 @csrf.exempt
 def api_create_expense() -> tuple:
     data = request.get_json()
+    user_id = session.get("user_id")
+    
+    if not user_id:
+        return jsonify({"success": False, "error": "User session not found"}), 400
+    
     result = _service.create(
         category=data.get("category"),
         description=data.get("description"),
         amount=float(data.get("amount")),
         expense_date=data.get("expense_date"),
-        logged_by=session.get("user_id"),
+        logged_by=user_id,
     )
     if result.get("success"):
         emit_expenses_update('create', result.get("data", {}))

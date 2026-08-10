@@ -27,7 +27,8 @@ class InventoryRepository:
 
     def list_low_stock(self) -> list[InventoryItem]:
         return InventoryItem.query.filter(
-            InventoryItem.stock_qty < InventoryItem.low_stock_threshold
+            InventoryItem.stock_qty > 0,
+            InventoryItem.stock_qty <= InventoryItem.low_stock_threshold,
         ).all()
 
     def create(

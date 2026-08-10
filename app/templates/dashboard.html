@@ -294,9 +294,16 @@ function goToOrder(sessionId) {
 
 
 // VOID ITEM
-function voidItem(itemId, sessionId) {
-
-    if (!confirm("Remove this item?")) return;
+async function voidItem(itemId, sessionId) {
+    const confirmed = await showConfirmDialog({
+        title: "Remove Order Item",
+        message: "Are you sure you want to remove this item from the order?",
+        confirmText: "Remove Item",
+        confirmClass: "btn-danger",
+        iconType: "delete",
+        icon: '<i class="bi bi-trash3 fs-1 text-danger"></i>'
+    });
+    if (!confirmed) return;
 
     csrfFetch(`/api/void-item/${itemId}`, {
         method: "DELETE"
@@ -352,7 +359,7 @@ function viewOrder(sessionId) {
 
             document.getElementById("receipt-body").innerHTML = `
                 <div style="text-align:center;">
-                    <h4>IdeaHub</h4>
+                    <h4>IdeaFlow</h4>
                     <hr>
                 </div>
 

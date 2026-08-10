@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 from app.dto.serializers import serialize_user
-from app.models import User
+from app.models import Admin, User
 from app.repositories.admin_repository import AdminRepository
 
 
@@ -31,18 +31,18 @@ class AdminService:
         if len(full_name) < 2:
             return {"error": "Full name must be at least 2 characters."}, 400
 
-        # Password strength validation is now handled in User model
+        if job_role not in valid_job_roles:
+            return {"error": "Invalid job role."}, 400
+
+        if User.query.filter_by(username=username).first() or Admin.query.filter_by(username=username).first():
+            return {"error": "Username already exists."}, 409
+
+        # Password strength validation is handled in User model
         try:
             user = User(full_name=full_name, username=username, role=role, job_role=job_role)
             user.set_password(password)
         except ValueError as e:
             return {"error": str(e)}, 400
-
-        if job_role not in valid_job_roles:
-            return {"error": "Invalid job role."}, 400
-
-        if User.query.filter_by(username=username).first():
-            return {"error": "Username already exists."}, 409
 
         self.repo.add(user)
         self.repo.save()

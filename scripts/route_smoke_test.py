@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from app import create_app, db
 from app.db.migrator import SchemaMigrator
 from app.db.seeder import DatabaseSeeder
-from app.models.user import User
+from app.models import Admin, User
 
 
 @dataclass
@@ -28,7 +28,7 @@ def run() -> int:
     with app.app_context():
         SchemaMigrator(db, app).run()
         DatabaseSeeder(db, app).run()
-        admin = User.query.filter_by(username="admin").first() or User.query.first()
+        admin = Admin.query.filter_by(username="admin").first() or User.query.filter_by(username="admin").first() or Admin.query.first() or User.query.first()
 
     if not admin:
         print("ERROR: no user record available for authenticated route checks.")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy import text, inspect
+from app.models import Admin
 from app.models.finance import FinanceBudget, FinanceTransaction
 from app.models.soft_balance import SoftBalanceEntry
 from app.models.space_price_history import SpacePriceHistory
@@ -58,6 +59,11 @@ class SchemaMigrator:
                 "users",
                 "job_role",
                 "ALTER TABLE users ADD COLUMN job_role VARCHAR(50) NOT NULL DEFAULT 'general'",
+            ),
+            (
+                "users",
+                "is_active",
+                "ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE",
             ),
             ("orders", "handled_by", "ALTER TABLE orders ADD COLUMN handled_by INT NULL"),
             (

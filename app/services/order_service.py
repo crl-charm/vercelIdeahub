@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
@@ -8,6 +9,8 @@ from typing import Any, Optional
 from app.core.interfaces import Notifier
 from app.models import MenuItem
 from app.repositories.order_repository import OrderRepository
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_item_status(status: str | None) -> str:
@@ -42,25 +45,13 @@ class OrderService:
         from app.repositories.inventory_repository import InventoryRepository
 
         inv_service = InventoryService(repo=InventoryRepository())
-        try:
-            inv_items = inv_service.build_recipe_inventory_items()
-            inv_data = {item["id"]: item for item in inv_items}
-        except Exception:
-            inv_data = {}
-
         items = self.repo.list_menu_items()
         results = []
         for i in items:
-            inv_info = inv_data.get(i.id, {})
-            # If item is not in inventory database, default capacity to a high number (e.g. 99)
-            # or treat it as direct item. Since build_recipe_inventory_items includes all non-ingredient items,
-            # they should normally be present.
-            capacity = inv_info.get("capacity", 99.0)
-            is_low = inv_info.get("is_low", False)
-            
-            # Out of stock if capacity is 0 or less
-            is_out_of_stock = capacity <= 0
-            
+            cap = inv_service.calculate_recipe_capacity(i.id)
+            capacity = float(cap.get("capacity", 0))
+            is_out_of_stock = capacity <= 0 or cap.get("is_out_of_stock", False)
+
             results.append(
                 {
                     "id": i.id,
@@ -70,14 +61,26 @@ class OrderService:
                     "description": i.description,
                     "image_url": i.image_url,
                     "is_available": bool(i.is_available) and not is_out_of_stock,
-                    "is_low_stock": is_low,
+                    "is_low_stock": cap.get("is_low", False),
                     "is_out_of_stock": is_out_of_stock,
-                    "capacity": float(capacity),
+                    "capacity": capacity,
                 }
             )
         return results
 
     def add_order(self, *, session_id: int, items: list[dict], handled_by: Optional[int]) -> dict[str, Any] | tuple[dict[str, Any], int]:
+        # Resolve handled_by to a valid User ID (to avoid foreign key IntegrityError for admin accounts)
+        if handled_by:
+            from app.models import User
+            if not User.query.get(handled_by):
+                from flask import session as flask_session
+                username = flask_session.get("username")
+                u = User.query.filter_by(username=username).first()
+                if u:
+                    handled_by = u.id
+                else:
+                    handled_by = None
+
         sess = self.repo.get_session(session_id)
         if not sess:
             return {"error": "Session not found"}, 404
@@ -93,41 +96,42 @@ class OrderService:
             if not menu_item.is_available:
                 return {"error": f"{menu_item.name} is not available"}, 400
 
-        # Validate ingredient stock availability
-        from app.models.menu_item import MenuItemIngredient
-        from app.models.inventory import InventoryItem
-
-        ingredient_needs = {}
+        # Targeted Backend Diagnostics for Task 2
         for item in items:
             menu_item_id = item.get("menu_item_id")
             qty = float(item.get("quantity", 1))
             menu_item = MenuItem.query.get(menu_item_id)
-
-            recipe = MenuItemIngredient.query.filter_by(menu_item_id=menu_item_id).all()
-            if recipe:
+            if menu_item:
+                logger.info("add_order diagnostics: MenuItem ID: %s, Name: %s", menu_item.id, menu_item.name)
+                
+                from app.models.menu_item import MenuItemIngredient
+                from app.models.inventory import InventoryItem
+                
+                recipe = MenuItemIngredient.query.filter_by(menu_item_id=menu_item.id).all()
+                logger.info("add_order diagnostics: Recipe mappings found: %d", len(recipe))
                 for comp in recipe:
-                    ratio = float(comp.conversion_ratio or 1.0)
-                    needed = qty * float(comp.quantity_required) * ratio
-                    if comp.ingredient_item_id not in ingredient_needs:
-                        ingredient_needs[comp.ingredient_item_id] = [0.0, []]
-                    ingredient_needs[comp.ingredient_item_id][0] += needed
-                    ingredient_needs[comp.ingredient_item_id][1].append(menu_item.name)
-            else:
-                inv = InventoryItem.query.filter_by(menu_item_id=menu_item_id).first()
-                if inv:
-                    if menu_item_id not in ingredient_needs:
-                        ingredient_needs[menu_item_id] = [0.0, []]
-                    ingredient_needs[menu_item_id][0] += qty
-                    ingredient_needs[menu_item_id][1].append(menu_item.name)
+                    ing = MenuItem.query.get(comp.ingredient_item_id)
+                    ing_name = ing.name if ing else "Unknown"
+                    ing_cat = ing.category if ing else "None"
+                    logger.info("add_order diagnostics: Ingredient ID: %s, Name: %s, Category: %s", comp.ingredient_item_id, ing_name, ing_cat)
+                    
+                    inv = InventoryItem.query.filter_by(menu_item_id=comp.ingredient_item_id).first()
+                    logger.info("add_order diagnostics: InventoryItem exists: %s", inv is not None)
+                    if inv:
+                        ratio = float(comp.conversion_ratio or 1.0)
+                        needed = qty * float(comp.quantity_required) * ratio
+                        logger.info("add_order diagnostics: Ingredient ID: %s, Required Qty: %s, Available Qty: %s", comp.ingredient_item_id, needed, inv.stock_qty)
+                    else:
+                        logger.info("add_order diagnostics: Ingredient ID: %s, Required Qty: %s, Available Qty: 0 (No Inventory Row)", comp.ingredient_item_id, qty * float(comp.quantity_required))
 
-        for ing_id, (needed_qty, meals) in ingredient_needs.items():
-            inv = InventoryItem.query.filter_by(menu_item_id=ing_id).first()
-            current_stock = float(inv.stock_qty) if inv else 0.0
-            if current_stock < needed_qty:
-                ing_item = MenuItem.query.get(ing_id)
-                ing_name = ing_item.name if ing_item else "Ingredient"
-                meal_list = ", ".join(set(meals))
-                return {"error": f"Insufficient stock for '{ing_name}' (Need {needed_qty:.2f}, Have {current_stock:.2f}) to prepare {meal_list}."}, 400
+        from app.repositories.inventory_repository import InventoryRepository
+        from app.services.inventory_service import InventoryService
+
+        inv_service = InventoryService(repo=InventoryRepository())
+        stock_error = inv_service.validate_order_stock(items)
+        if stock_error:
+            logger.info("add_order validation failure: %s", stock_error)
+            return stock_error, 400
 
         order_id = self.repo.add_order_with_items(session_id=session_id, handled_by=handled_by, items=items)
         

@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  <title>{% block title %}IdeaHub{% endblock %}</title>
+  <title>{% block title %}IdeaFlow{% endblock %}</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -288,9 +288,10 @@
   <!-- TOP NAVBAR -->
   <nav class="navbar navbar-expand-md mobile-top-bar navbar-light bg-white shadow-sm px-3 px-md-4">
 
-    <a class="navbar-brand mb-0" href="/dashboard">
-      <img src="{{ url_for('static', filename='css/images/logo.png') }}" alt="IdeaHub" class="site-logo"
+    <a class="navbar-brand mb-0 d-flex align-items-center gap-2" href="/dashboard">
+      <img src="{{ url_for('static', filename='css/images/logo.png') }}" alt="IdeaFlow" class="site-logo"
         style="height: 40px;" />
+      <span class="fw-bold text-dark d-none d-sm-inline" style="font-size: 1.1rem;">IdeaFlow</span>
     </a>
 
     <div class="d-flex align-items-center gap-2 ms-auto d-md-none">
@@ -429,7 +430,7 @@
       </button>
       {% endif %}
 
-      <button class="btn w-100 text-start mb-2 sidebar-btn nav-btn" onclick="window.location.href='/admin/receivables'">
+      <button class="btn w-100 text-start mb-2 sidebar-btn nav-btn" onclick="window.location.href='{{ '/admin/receivables' if session.get('role') == 'admin' else '/receivables-view' }}'">
         <i class="bi bi-people me-2"></i>Receivables
         <span id="debt-badge" class="badge bg-danger ms-1"
           style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
@@ -722,6 +723,11 @@
 
       async function navigate(url, clickedEl) {
         if (!url || url.startsWith("#") || url.startsWith("javascript:")) return;
+        if (url === "/logout") {
+          window.location.href = url;
+          return;
+        }
+
         window.history.pushState({}, "", url);
         document.querySelectorAll(".top-nav-link, .nav-btn").forEach((node) => node.classList.remove("active"));
         if (clickedEl) clickedEl.classList.add("active");

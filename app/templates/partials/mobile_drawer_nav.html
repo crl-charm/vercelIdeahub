@@ -54,7 +54,7 @@
 </button>
 {% endif %}
 
-<button type="button" class="btn w-100 text-start mb-2 drawer-nav-btn nav-btn" data-href="/admin/receivables">
+<button type="button" class="btn w-100 text-start mb-2 drawer-nav-btn nav-btn" data-href="{{ '/admin/receivables' if session.get('role') == 'admin' else '/receivables-view' }}">
   <i class="bi bi-people me-2"></i>Receivables
   <span class="debt-badge-drawer badge bg-danger ms-1" style="display:none; font-size: 11px; padding: 3px 6px;">0</span>
 </button>

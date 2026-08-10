@@ -20,13 +20,13 @@ try:
         columns = [col['name'] for col in inspector.get_columns('users')]
         print(f"User table columns: {columns}")
 
-        # Check for admin user
-        result = db.session.execute(db.text("SELECT id, username, failed_login_attempts, locked_until FROM users WHERE username = 'admin'"))
-        user_row = result.fetchone()
-        if user_row:
-            print(f"Admin user found: {user_row}")
+        # Check for admin user in admins table
+        result = db.session.execute(db.text("SELECT id, username, failed_login_attempts, locked_until FROM admins WHERE username = 'admin'"))
+        admin_row = result.fetchone()
+        if admin_row:
+            print(f"Admin user found: {admin_row}")
         else:
-            print("No admin user found")
+            print("No admin user found in admins table")
 
 except Exception as e:
     print(f"Error: {e}")

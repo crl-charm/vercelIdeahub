@@ -2,9 +2,8 @@ import pytest
 from decimal import Decimal
 from datetime import datetime, UTC
 from app import create_app, db
-from app.models import MenuItem, MenuItemIngredient, Order, OrderItem
+from app.models import Admin, MenuItem, MenuItemIngredient, Order, OrderItem, User
 from app.models.inventory import InventoryItem, InventoryLog
-from app.models.user import User
 from app.db.migrator import SchemaMigrator
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.inventory_repository import InventoryRepository
@@ -21,11 +20,11 @@ def app():
     with application.app_context():
         db.create_all()
         SchemaMigrator(db, application).run()
-        # Seed test admin user if not present
-        admin = User.query.filter_by(username="admin").first()
+        # Seed test admin account if not present
+        admin = Admin.query.filter_by(username="admin").first()
         if not admin:
-            admin = User(full_name="Admin", username="admin", role="admin")
-            admin.set_password("Admin123!")
+            admin = Admin(full_name="System Admin", username="admin")
+            admin.set_password("Admin123!@#$")
             db.session.add(admin)
             db.session.commit()
     return application
@@ -83,7 +82,7 @@ class TestRecipeConversions:
 
     def test_recipe_linking_validation(self, app, client):
         with app.app_context():
-            admin = User.query.filter_by(username="admin").first()
+            admin = Admin.query.filter_by(username="admin").first()
             admin_id = admin.id if admin else 1
 
         _set_auth_session(client, role="admin", user_id=admin_id)
@@ -132,7 +131,7 @@ class TestRecipeConversions:
 
     def test_linking_math_and_audit_logging(self, app, client):
         with app.app_context():
-            admin = User.query.filter_by(username="admin").first()
+            admin = Admin.query.filter_by(username="admin").first()
             admin_id = admin.id if admin else 1
 
         _set_auth_session(client, role="admin", user_id=admin_id)

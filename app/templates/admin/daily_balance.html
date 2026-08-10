@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Daily Sales Balance - IdeaHub{% endblock %}
+{% block title %}Daily Sales Balance - IdeaFlow{% endblock %}
 
 {% block content %}
 
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Poll today's live stats every 15 seconds
   window.createSmartPoller(async function() {
     try {
-      const r = await fetch('/admin/daily-balance/api/today-stats');
+      const r = await fetch('/admin/daily-balance/api/today-stats', { credentials: 'include' });
       if (!r.ok) return;
       const res = await r.json();
       if (res.success) {
@@ -352,7 +352,7 @@ function setDateFilterPreset(preset) {
 }
 
 function loadReports() {
-  fetch('/admin/daily-balance/api/reports').then(r => r.json()).then(data => {
+  fetch('/admin/daily-balance/api/reports', { credentials: 'include' }).then(r => r.json()).then(data => {
     if (data.success) {
       reportsCache = data.data;
       renderFilteredReports();
@@ -360,7 +360,7 @@ function loadReports() {
   });
 
   // Load today's live stats immediately
-  fetch('/admin/daily-balance/api/today-stats').then(r => r.json()).then(res => {
+  fetch('/admin/daily-balance/api/today-stats', { credentials: 'include' }).then(r => r.json()).then(res => {
     if (res.success) {
       const stats = res.data;
       document.getElementById('today-receivables-collected').textContent = stats.receivables_collected_today.toFixed(2);
@@ -514,7 +514,7 @@ function renderFilteredReports() {
 }
 
 function loadSoftBalances() {
-  fetch('/admin/daily-balance/api/soft-balances').then(r => r.json()).then(data => {
+  fetch('/admin/daily-balance/api/soft-balances', { credentials: 'include' }).then(r => r.json()).then(data => {
     if (data.success) {
       softBalancesCache = data.data;
       // Trigger soft balances filter rendering

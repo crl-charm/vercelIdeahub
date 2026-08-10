@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, request, render_template, session
 
+from app import csrf
 from app.repositories.receivable_repository import ReceivableRepository
 from app.services.receivable_service import ReceivableService
 from app.utils.auth import admin_required
@@ -28,15 +29,21 @@ def api_list_receivables() -> tuple:
 
 @receivables_bp.route("/api/receivables", methods=["POST"])
 @admin_required
+@csrf.exempt
 def api_create_receivable() -> tuple:
     data = request.get_json()
+    user_id = session.get("user_id")
+    
+    if not user_id:
+        return jsonify({"success": False, "error": "User session not found"}), 400
+    
     result = _service.create(
         customer_name=data.get("customer_name"),
         customer_contact=data.get("customer_contact"),
         items_description=data.get("items_description"),
         amount_owed=float(data.get("amount_owed")),
         due_date=data.get("due_date"),
-        created_by=session.get("user_id"),
+        created_by=user_id,
         session_id=data.get("session_id"),
         approved_by_staff=data.get("approved_by_staff"),
         incurred_date=data.get("incurred_date"),

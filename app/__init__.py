@@ -105,6 +105,7 @@ def create_app():
     from app.routes.staff_expenses import staff_expenses_bp
     from app.routes.receivables import receivables_bp
     from app.routes.payables import payables_bp
+    from app.routes.staff_receivables import staff_receivables_bp
     from app.routes.staff_performance import staff_performance_bp
     from app.routes.analytics import analytics_bp
     from app.controllers.analytics_controller import AnalyticsController
@@ -115,6 +116,7 @@ def create_app():
     register_admin_blueprint(app, expenses_bp)
     app.register_blueprint(staff_expenses_bp)
     register_admin_blueprint(app, receivables_bp)
+    app.register_blueprint(staff_receivables_bp)
     register_admin_blueprint(app, payables_bp)
     register_admin_blueprint(app, staff_performance_bp)
     register_admin_blueprint(app, analytics_bp)

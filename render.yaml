@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ideahub-web
+    env: python
+    region: oregon
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -k eventlet -w 1 -b 0.0.0.0:$PORT app:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        value: "<set-this-in-render>"
+      - key: DATABASE_URL
+        value: "<railway-mysql-connection-string>"
+      - key: CORS_ORIGINS
+        value: "https://<your-render-service>.onrender.com"
+    disk:
+      mountPath: /tmp/uploads
+      sizeGB: 1

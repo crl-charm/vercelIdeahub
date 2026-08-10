@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from typing import Optional
 
 from app import db
@@ -18,7 +19,7 @@ class PayableRepository:
         self,
         creditor_name: str,
         items_description: str,
-        amount_owed: float,
+        amount_owed: Decimal,
         due_date: date,
         incurred_date: date,
         created_by: int,

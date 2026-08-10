@@ -899,8 +899,19 @@ function loadCurrentOrders() {
     .catch(err => showToast("Failed to load current orders.", "error"));
 }
 
-function voidExistingItem(itemId) {
-  if (!confirm("Remove this order item?")) return;
+async function voidExistingItem(itemId) {
+  const item = currentOrders.find(i => i.id === itemId);
+  const itemName = item ? item.item_name : "this order item";
+  const confirmed = await showConfirmDialog({
+    title: "Remove Order Item",
+    message: `Are you sure you want to remove "${itemName}" from this order?`,
+    confirmText: "Remove Item",
+    confirmClass: "btn-danger",
+    iconType: "delete",
+    icon: '<i class="bi bi-trash3 fs-1 text-danger"></i>'
+  });
+  if (!confirmed) return;
+
   csrfFetch(`/api/void-item/${itemId}`, { method: "DELETE" })
     .then(res => res.json())
     .then(data => {
@@ -1022,14 +1033,19 @@ function submitOrder() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: sessionId, items: items })
   })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        showToast(data.error, "error");
-        submitBtn.disabled = false;
-        submitBtn.innerText = "Place Order";
-        return;
+    .then(async res => {
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        data = {};
       }
+      if (!res.ok) {
+        throw new Error(data.message || data.error || "Unable to place order.");
+      }
+      return data;
+    })
+    .then(data => {
       showToast("Order placed successfully! 🎉", "success");
       cart = [];
       renderCart();
@@ -1038,7 +1054,7 @@ function submitOrder() {
       submitBtn.innerText = "Place Order";
     })
     .catch(err => {
-      showToast("Failed to place order. Please try again.", "error");
+      showToast(err.message || "Failed to place order. Please try again.", "error");
       submitBtn.disabled = false;
       submitBtn.innerText = "Place Order";
     });
