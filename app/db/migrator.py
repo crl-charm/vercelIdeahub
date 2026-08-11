@@ -211,6 +211,31 @@ class SchemaMigrator:
                 "idx_bookings_status_end",
                 "CREATE INDEX idx_bookings_status_end ON boardroom_bookings (status, expected_end_at)",
             ),
+            (
+                "receivables",
+                "idx_receivables_paid_due",
+                "CREATE INDEX idx_receivables_paid_due ON receivables (paid, due_date)",
+            ),
+            (
+                "expenses",
+                "idx_expenses_date_cat",
+                "CREATE INDEX idx_expenses_date_cat ON expenses (expense_date, category)",
+            ),
+            (
+                "orders",
+                "idx_orders_status_created",
+                "CREATE INDEX idx_orders_status_created ON orders (status, created_at)",
+            ),
+            (
+                "customer_sessions",
+                "idx_sessions_status_timein",
+                "CREATE INDEX idx_sessions_status_timein ON customer_sessions (status, time_in)",
+            ),
+            (
+                "inventory_logs",
+                "idx_inventory_logs_item_created",
+                "CREATE INDEX idx_inventory_logs_item_created ON inventory_logs (inventory_item_id, created_at)",
+            ),
         ]
 
         table_indexes = {}
@@ -233,4 +258,4 @@ class SchemaMigrator:
                 print(f"[OK] Created index {index_name} on {table_name}")
             except Exception as exc:
                 db.session.rollback()
-                print(f"⚠ Index {index_name} skipped: {exc}")
+                print(f"[WARNING] Index {index_name} skipped: {exc}")

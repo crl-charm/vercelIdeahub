@@ -11,7 +11,9 @@ def restore():
         client_flag=pymysql.constants.CLIENT.MULTI_STATEMENTS
     )
     try:
-        sql_file = os.path.join('database', 'ideahub_pos.sql')
+        sql_file = os.path.join('database', 'ideahub_pos(final).sql')
+        if not os.path.exists(sql_file):
+            sql_file = os.path.join('database', 'ideahub_pos.sql')
         print(f"Reading SQL file: {sql_file}...")
         with open(sql_file, 'r', encoding='utf-8') as f:
             sql = f.read()

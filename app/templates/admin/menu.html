@@ -804,7 +804,7 @@
     grid.innerHTML = filtered.map(item => `
     <div class="menu-card">
       <div class="menu-card-image">
-        ${item.image_url ? `<img src="${item.image_url}" alt="${item.name}">` : '<div class="menu-card-image-placeholder">🖼️</div>'}
+        ${item.image_url ? `<img loading="lazy" decoding="async" src="${item.image_url}" alt="${item.name}">` : '<div class="menu-card-image-placeholder">🖼️</div>'}
         <span class="menu-card-badge">${item.category}</span>
       </div>
       <div class="menu-card-body">

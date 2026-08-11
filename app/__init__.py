@@ -52,6 +52,13 @@ def create_app():
     # Configure CORS restrictively
     CORS(app, origins=app.config['CORS_ORIGINS'], supports_credentials=True)
 
+    # Enable response compression (Gzip) for faster HTML, JS, CSS, and API responses
+    try:
+        from flask_compress import Compress
+        Compress(app)
+    except ImportError:
+        pass
+
     # Configure logging
     configure_logging(app)
 
@@ -200,10 +207,15 @@ def register_security_middleware(app):
 
     @app.after_request
     def apply_security_headers(response):
-        """Apply security headers to response"""
+        """Apply security headers and static asset cache controls to response"""
         security_headers = getattr(g, 'security_headers', {})
         for header, value in security_headers.items():
             response.headers[header] = value
+
+        # Aggressive browser caching for static files and uploaded images
+        if request.path.startswith('/static/'):
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+
         return response
 
     @app.errorhandler(404)

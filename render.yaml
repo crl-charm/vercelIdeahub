@@ -5,7 +5,7 @@ services:
     region: oregon
     branch: main
     buildCommand: pip install --disable-pip-version-check -r requirements.txt
-    startCommand: gunicorn --worker-class gthread -w 1 --threads 100 wsgi:app
+    startCommand: gunicorn --worker-class gthread -w 2 --threads 8 wsgi:app
     envVars:
       - key: FLASK_ENV
         value: production

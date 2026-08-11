@@ -831,7 +831,7 @@ function renderMenuItems() {
     }
 
     card.innerHTML = `
-      <div class="menu-item-image">${item.image_url ? `<img src="${item.image_url}" alt="${item.name}">` : '🍽️'}</div>
+      <div class="menu-item-image">${item.image_url ? `<img loading="lazy" decoding="async" src="${item.image_url}" alt="${item.name}">` : '🍽️'}</div>
       <div class="menu-item-content">
         ${nameHtml}
         <div class="menu-item-price">₱${Number(item.price).toFixed(2)}</div>

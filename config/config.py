@@ -29,8 +29,8 @@ class Config:
         "pool_pre_ping": True,
         "pool_recycle": 280,
         "pool_timeout": 15,
-        "pool_size": 10,
-        "max_overflow": 5,
+        "pool_size": 20,
+        "max_overflow": 10,
     }
 
     # Security Headers

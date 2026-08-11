@@ -73,13 +73,13 @@ def validate_and_save_image(file):
                 rgb_img.paste(img, mask=img.split()[3])
                 img = rgb_img
             
-            # Resize if too large (max 1200px)
-            if img.width > 1200:
-                ratio = 1200 / img.width
+            # Resize if too large (max 800px width for fast loading)
+            if img.width > 800:
+                ratio = 800 / img.width
                 new_height = int(img.height * ratio)
-                img = img.resize((1200, new_height), Image.Resampling.LANCZOS)
+                img = img.resize((800, new_height), Image.Resampling.LANCZOS)
             
-            img.save(filepath, quality=85, optimize=True)
+            img.save(filepath, quality=80, optimize=True)
         except ImportError:
             # Fallback: save without optimization
             file.seek(0)

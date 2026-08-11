@@ -523,7 +523,7 @@ function renderMenuItems() {
   grid.innerHTML = filtered.map(item => `
     <div class="menu-item-card">
       <div class="menu-item-image">
-        ${item.image_url ? `<img src="${item.image_url}" alt="${item.name}">` : '<div class="menu-item-placeholder">🖼️</div>'}
+        ${item.image_url ? `<img loading="lazy" decoding="async" src="${item.image_url}" alt="${item.name}">` : '<div class="menu-item-placeholder">🖼️</div>'}
         <span class="menu-item-badge">${item.category}</span>
       </div>
       <div class="menu-item-content">
