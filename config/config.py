@@ -23,15 +23,27 @@ class Config:
     SECRET_KEY = _secret_key
 
     # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL") or "mysql+pymysql://root:@localhost/ideahub_pos"
+    _raw_db_uri = os.environ.get("DATABASE_URL") or "mysql+pymysql://root:@localhost/ideahub_pos"
+    # PyMySQL does not support ssl_mode/ssl-mode in query string directly; handle SSL via connect_args
+    _needs_ssl = "aivencloud.com" in _raw_db_uri or "ssl_mode" in _raw_db_uri or "ssl-mode" in _raw_db_uri
+    if "?" in _raw_db_uri and ("ssl_mode" in _raw_db_uri or "ssl-mode" in _raw_db_uri):
+        _base_uri = _raw_db_uri.split("?")[0]
+        SQLALCHEMY_DATABASE_URI = _base_uri
+    else:
+        SQLALCHEMY_DATABASE_URI = _raw_db_uri
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
+    _engine_options = {
         "pool_pre_ping": True,
         "pool_recycle": 280,
         "pool_timeout": 15,
         "pool_size": 20,
         "max_overflow": 10,
     }
+    if _needs_ssl:
+        _engine_options["connect_args"] = {"ssl": {}}
+
+    SQLALCHEMY_ENGINE_OPTIONS = _engine_options
 
     # Security Headers
     SECURITY_HEADERS = {
